@@ -164,6 +164,7 @@ BattleScene загружается только на время боя.
 
 - GlobalLifetimeScope
 - GlobalMapRoot
+- GlobalSceneRoot
 - PlanetRenderer
 - GlobalCamera
 - GlobalUI
@@ -205,7 +206,20 @@ ExitBattleState
 SaveLoadState
 ~~~
 
-## 4.2 EnterBattle Flow
+## 4.2 New Game Flow
+
+1. MainMenu/UI sends `NewGameRequest` to `GenerateWorldState`.
+2. `GenerateWorldState` reads `GlobalGenerationConfig`.
+3. `IWorldGenerator` creates `WorldModel`.
+4. Optional selected culture applies player start cell, culture id and credits.
+5. `SaveService` creates current `SaveModel` from the generated world.
+6. `LoadGlobalState` loads/activates `GlobalScene`.
+7. `GlobalMapState` becomes active.
+
+`NewGameRequest` may override seed and culture, but it must not carry faction
+count or gameplay balance values. Those come from configs.
+
+## 4.3 EnterBattle Flow
 
 1. GlobalMapState detects encounter.
 2. Create BattleGenerationRequest.
@@ -217,14 +231,14 @@ SaveLoadState
 8. Spawn units/player/vehicles.
 9. Switch to BattleState.
 
-## 4.3 ExitBattle Flow
+## 4.4 ExitBattle Flow
 
 1. BattleResult is produced.
 2. Stop BattleWorld.
 3. Return all views to pools.
 4. Unload BattleScene.
 5. Load/activate GlobalScene.
-6. Apply BattleResult to WorldModel.
+6. Apply BattleResult to SaveModel.
 7. Return to GlobalMapState.
 
 # 5. Project Folder Structure
@@ -332,7 +346,28 @@ GlobalGenerationConfig
 InputConfig optional
 ~~~
 
-## 6.3 UnitConfig
+Количество активных фракций определяется массивом `ConfigDatabase.Factions`.
+`WorldGenerationRequest` не передаёт количество фракций. Стартовые ресурсы,
+сила и столица каждой фракции задаются в её `FactionConfig`.
+
+Текущая модель влияния `Influence4` поддерживает до 4 активных слотов влияния.
+Это ограничение модели влияния, а не параметр интерфейса генерации.
+
+## 6.3 FactionConfig
+
+~~~csharp
+public sealed class FactionConfig
+{
+    public int Id;
+    public string Name;
+    public Color Color;
+    public int StartingCredits;
+    public int StartingStrength;
+    public int CapitalCellId;
+}
+~~~
+
+## 6.4 UnitConfig
 
 ~~~csharp
 public sealed class UnitConfig
@@ -355,7 +390,7 @@ public sealed class UnitConfig
 }
 ~~~
 
-## 6.4 WeaponConfig
+## 6.5 WeaponConfig
 
 ~~~csharp
 public sealed class WeaponConfig
@@ -377,7 +412,7 @@ public sealed class WeaponConfig
 }
 ~~~
 
-## 6.5 ArmorConfig
+## 6.6 ArmorConfig
 
 ~~~csharp
 public sealed class ArmorConfig
@@ -391,7 +426,7 @@ public sealed class ArmorConfig
 }
 ~~~
 
-## 6.6 AIConfig
+## 6.7 AIConfig
 
 ~~~csharp
 public sealed class AIConfig
@@ -406,7 +441,7 @@ public sealed class AIConfig
 }
 ~~~
 
-## 6.7 VehicleConfig
+## 6.8 VehicleConfig
 
 ~~~csharp
 public sealed class VehicleConfig
@@ -422,6 +457,28 @@ public sealed class VehicleConfig
     public WeaponConfig Weapon;
 
     public string ViewPrefabAddress;
+}
+~~~
+
+## 6.9 BattleMapGenerationConfig
+
+~~~csharp
+public sealed class BattleMapGenerationConfig
+{
+    public int Width;
+    public int Height;
+
+    public int DefaultMoveCost;
+    public int RoadMoveCost;
+    public int DefaultCover;
+    public int SettlementCover;
+    public int MaxTileHeight;
+
+    public int RoadColumn;
+    public int RoadWidth;
+
+    public int AttackerSpawnColumns;
+    public int DefenderSpawnColumns;
 }
 ~~~
 
@@ -446,6 +503,14 @@ public sealed class VehicleConfig
 - маркерам
 
 Запрещено вручную собирать visual hierarchy через new GameObject().
+
+Это жёсткое правило проекта, не рекомендация:
+
+- Runtime-код не создаёт визуальные иерархии вручную.
+- Runtime-код не задаёт визуальные размеры, offsets, sorting, anchors, цвета, tween durations или layout-числа.
+- Runtime-код может только инстанцировать готовый prefab через фабрику/пул и передать ему gameplay-состояние.
+- Editor tooling может создавать production-prefab assets только как ассеты проекта, а не как скрытый gameplay shortcut.
+- Любой временный placeholder тоже должен быть prefab-based и иметь настройки в prefab/settings-компонентах.
 
 ## 7.2 Prefab Owns View Settings
 
@@ -496,6 +561,18 @@ Gameplay numbers live in configs.
 View numbers live in prefabs.
 Code contains no magic numbers.
 ~~~
+
+Запрещено добавлять hardcoded gameplay или view values ради ускорения разработки.
+
+Если системе нужен параметр, он должен прийти из одного из источников:
+
+- gameplay config
+- prefab settings component
+- scene/lifetime scope reference
+- save/runtime model state
+- input event/state
+
+Если подходящего источника ещё нет, сначала создаётся источник данных, а не временный hardcode.
 
 # 8. TextMeshPro Rule
 
@@ -653,12 +730,17 @@ public struct WorldCell
 ~~~csharp
 public struct Influence4
 {
+    public const int Capacity = 4;
+
     public float F0;
     public float F1;
     public float F2;
     public float F3;
 }
 ~~~
+
+`F0..F3` — это слоты влияния. Игровой `FactionId` берётся из
+`FactionConfig.Id`; слот влияния не должен подменять id фракции.
 
 ## 10.4 CellNeighbours
 
@@ -773,9 +855,19 @@ public sealed class BattleModel
     public int Height;
 
     public BattleTile[] Tiles;
+    public BattleSpawnPoint[] AttackerSpawnPoints;
+    public BattleSpawnPoint[] DefenderSpawnPoints;
 
     public BattleArmyData Attacker;
     public BattleArmyData Defender;
+}
+~~~
+
+~~~csharp
+public struct BattleSpawnPoint
+{
+    public int X;
+    public int Y;
 }
 ~~~
 
@@ -847,7 +939,50 @@ public struct HealthComponent
 
 public struct TeamComponent
 {
+    public BattleTeamType Value;
+}
+
+public struct FactionComponent
+{
     public int Value;
+}
+
+public struct MovementStatsComponent
+{
+    public float MoveSpeed;
+    public float RotationSpeed;
+}
+
+public struct WeaponStatsComponent
+{
+    public int WeaponConfigId;
+    public WeaponType Type;
+    public DamageType DamageType;
+    public int Damage;
+    public float Range;
+    public float Cooldown;
+    public float ProjectileSpeed;
+    public bool IsProjectile;
+    public bool UsesParabolicTrajectory;
+    public float ExplosionRadius;
+}
+
+public struct ArmorStatsComponent
+{
+    public int ArmorConfigId;
+    public int BallisticProtection;
+    public int EnergyProtection;
+    public int ExplosionProtection;
+}
+
+public struct AIStatsComponent
+{
+    public int AIConfigId;
+    public AIType Type;
+    public float ThinkInterval;
+    public float TargetSearchRadius;
+    public float PreferredAttackDistance;
+    public float RetreatHealthPercent;
 }
 
 public struct TargetComponent
@@ -870,6 +1005,12 @@ public struct ViewRefComponent
     public int ViewId;
 }
 ~~~
+
+`ConfigDrivenBattleWorldFactory` converts `BattleModel` armies into Morpeh
+entities. It reads `UnitConfig`, `WeaponConfig`, `ArmorConfig`, and `AIConfig`
+once during world creation and stores runtime-ready values in ECS components.
+The factory does not create views or manual GameObject hierarchies; view
+creation belongs to the prefab pool/view sync layer.
 
 ## 14.2 Player Components
 
@@ -1098,6 +1239,10 @@ Output:
 - spawn points
 - optional debug data
 
+`ConfigDrivenBattleMapGenerator` produces the gameplay `BattleTile[]` and
+spawn points from `BattleMapGenerationConfig`. Visual Tilemap rendering is a
+separate layer and must not be read by AI/pathfinding at runtime.
+
 # 19. Pathfinding and Movement
 
 ## 19.1 Forbidden
@@ -1168,7 +1313,22 @@ View не может:
 - менять Health
 - решать попадания
 
-## 21.2 InfantryView
+## 21.2 Global Map Rendering
+
+`GlobalSceneRoot` получает текущий `SaveModel` и вызывает `IGlobalMapPresenter`.
+
+`IGlobalMapPresenter`:
+
+- читает `WorldModel`
+- создаёт cell/player/army views только через `IPrefabFactory`
+- берёт layout numbers из `GlobalMapViewSettings`
+- берёт biome/faction colors из configs
+- не генерирует мир и не меняет gameplay state
+
+`IWorldCellLayout` отделяет способ раскладки сот от presenter. Текущая
+configured grid layout является заменяемой стратегией для раннего global view.
+
+## 21.3 InfantryView
 
 ~~~csharp
 public sealed class InfantryView : MonoBehaviour
@@ -1183,7 +1343,7 @@ public sealed class InfantryView : MonoBehaviour
 }
 ~~~
 
-## 21.3 InfantryViewSettings
+## 21.4 InfantryViewSettings
 
 ~~~csharp
 public sealed class InfantryViewSettings : MonoBehaviour
@@ -1378,6 +1538,7 @@ public struct BattleLootEntry
 {
     public int ItemConfigId;
     public int Amount;
+    public int Durability;
 }
 ~~~
 
@@ -1439,15 +1600,18 @@ Special slots accept only Special.
 ~~~csharp
 public sealed class BattleResult
 {
+    public BattleOutcome Outcome;
+    public int SourceCellId;
     public int WinnerFactionId;
 
     public bool PlayerSurvived;
-
-    public int AttackerSurvivors;
-    public int DefenderSurvivors;
+    public bool HasPlayerPartyUpdate;
 
     public int CreditsReward;
-    public List<BattleLootEntry> Loot;
+    public SquadData[] PlayerParty;
+    public BattleArmyUpdate[] ArmyUpdates;
+    public BattleInfluenceChange[] InfluenceChanges;
+    public BattleLootEntry[] Loot;
 }
 ~~~
 
@@ -1461,6 +1625,10 @@ After battle:
 - update faction influence
 - remove destroyed armies
 - update player state
+
+`BattleResult` содержит уже рассчитанные изменения. `BattleResultApplier`
+не генерирует награды и не выбирает победителя; он только применяет результат
+к `SaveModel`.
 
 # 30. Save / Load
 
@@ -1530,6 +1698,13 @@ Debug commands must not be part of release UI.
 
 ## 32.1 Config Validation
 
+CultureConfig invalid if:
+
+- StartingCellId is outside generated world cells
+- StartingCredits < 0
+- no starting weapon
+- no starting armor
+
 UnitConfig invalid if:
 
 - no weapon
@@ -1550,7 +1725,30 @@ ArmorConfig invalid if:
 
 - any protection < 0
 
+BattleMapGenerationConfig invalid if:
+
+- Width <= 0
+- Height <= 0
+- move costs <= 0
+- tile byte values are outside byte range
+- RoadWidth <= 0
+- RoadColumn/RoadWidth are outside map width
+- attacker/defender spawn columns are outside map width
+- referenced biome TileSetConfig is missing
+
 ## 32.2 Prefab Validation
+
+Global map prefab invalid if:
+
+- no PlanetRenderer
+- no GlobalMapViewSettings
+- missing cell/player/army prefabs
+- cell/player/army prefabs miss required renderer/TextMeshPro refs
+- missing cell/marker roots
+- layout column count <= 0
+- cell spacing is not configured
+- cell visual scale <= 0
+- influence overlay alpha is outside 0..1
 
 Infantry prefab invalid if:
 
@@ -1622,12 +1820,18 @@ If performance drops:
 
 - generates visual Tilemap
 - generates BattleTile[]
+- generates attacker/defender spawn points
 - supports at least Plains, Forest, Desert, AshWastes, IndustrialRuins
 - does not use GameObject per tile
+
+Gameplay map generation is complete before visual Tilemap generation when
+`IBattleMapGenerator` returns a valid `BattleModel` from configs.
 
 ## 34.3 BotSpawnSystem Done When
 
 - spawns entities from UnitConfig
+- army size and spawn capacity are validated before entity creation
+- combat, movement, armor, and AI values come from configs
 - creates view via prefab pool
 - attaches ViewRefComponent
 - no manual GameObject hierarchy creation
@@ -1667,7 +1871,7 @@ If performance drops:
 - world labels use TextMeshPro
 - floating damage text uses TMP prefab
 
-# 35. MVP Technical Roadmap
+# 35. Prototype Technical Roadmap
 
 ## Phase 1 — Foundation
 
@@ -1682,7 +1886,7 @@ If performance drops:
 
 - test planet cells
 - biomes
-- 4 factions
+- configured factions
 - influence coloring
 - player global position
 - paused global time when idle

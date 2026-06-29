@@ -12,8 +12,17 @@ namespace MercLord.Battle.Generation
         public int Width;
         public int Height;
         public BattleTile[] Tiles = Array.Empty<BattleTile>();
+        public BattleSpawnPoint[] AttackerSpawnPoints = Array.Empty<BattleSpawnPoint>();
+        public BattleSpawnPoint[] DefenderSpawnPoints = Array.Empty<BattleSpawnPoint>();
         public BattleArmyData Attacker = new BattleArmyData();
         public BattleArmyData Defender = new BattleArmyData();
+    }
+
+    [Serializable]
+    public struct BattleSpawnPoint
+    {
+        public int X;
+        public int Y;
     }
 
     [Serializable]

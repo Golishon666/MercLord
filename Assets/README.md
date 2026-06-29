@@ -6,6 +6,9 @@ Core rules:
 
 - Gameplay values live in ScriptableObject configs.
 - Prefabs own visuals, hierarchy, anchors, sorting, and tween settings.
+- No hardcoded gameplay or view values in runtime code.
+- Runtime code instantiates configured prefabs through factories or pools; it does not build visual hierarchies by hand.
+- If a new value is needed, add it to a config, prefab settings component, scene reference, save model, or input state first.
 - Global simulation only advances when global time is active.
 - Battle logic belongs in ECS/data systems, not per-unit MonoBehaviour `Update`.
 - DOTween is visual-only.

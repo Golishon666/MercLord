@@ -2,15 +2,31 @@ using UnityEngine;
 
 namespace MercLord.Game.Configs
 {
+    [System.Serializable]
+    public struct DamageFormula
+    {
+        public int MinimumDamage;
+    }
+
+    [CreateAssetMenu(menuName = "MercLord/Configs/Combat Balance", fileName = "CombatBalanceConfig")]
+    public sealed class CombatBalanceConfig : IdentifiedConfig
+    {
+        [SerializeField] private DamageFormula damageFormula;
+
+        public DamageFormula DamageFormula => damageFormula;
+    }
+
     [CreateAssetMenu(menuName = "MercLord/Configs/Faction", fileName = "FactionConfig")]
     public sealed class FactionConfig : IdentifiedConfig
     {
-        [SerializeField] private Color color = Color.white;
+        [SerializeField] private Color color;
         [SerializeField] private int startingCredits;
+        [SerializeField] private int startingStrength;
         [SerializeField] private int capitalCellId = -1;
 
         public Color Color => color;
         public int StartingCredits => startingCredits;
+        public int StartingStrength => startingStrength;
         public int CapitalCellId => capitalCellId;
     }
 
@@ -152,12 +168,14 @@ namespace MercLord.Game.Configs
     public sealed class BiomeConfig : IdentifiedConfig
     {
         [SerializeField] private BiomeType biomeType;
-        [SerializeField] private Color mapColor = Color.gray;
+        [SerializeField] private Color mapColor;
         [SerializeField] private int tileSetId;
+        [SerializeField] private bool isPassableByDefault;
 
         public BiomeType BiomeType => biomeType;
         public Color MapColor => mapColor;
         public int TileSetId => tileSetId;
+        public bool IsPassableByDefault => isPassableByDefault;
     }
 
     [CreateAssetMenu(menuName = "MercLord/Configs/Tile Set", fileName = "TileSetConfig")]
@@ -172,22 +190,54 @@ namespace MercLord.Game.Configs
     public sealed class GlobalGenerationConfig : IdentifiedConfig
     {
         [SerializeField] private int seed;
-        [SerializeField] private int targetCellCount = 1024;
-        [SerializeField] private int factionCount = 4;
+        [SerializeField] private int targetCellCount;
+        [SerializeField] private int startingDay;
+        [SerializeField] private int playerStartCellId;
+        [SerializeField] private int playerStartingCredits;
+        [SerializeField] private float startingDominantInfluence;
+        [SerializeField] private int roadStride;
+        [SerializeField] private float defaultHeight;
+        [SerializeField] private float defaultMoisture;
+        [SerializeField] private float defaultTemperature;
 
         public int Seed => seed;
         public int TargetCellCount => targetCellCount;
-        public int FactionCount => factionCount;
+        public int StartingDay => startingDay;
+        public int PlayerStartCellId => playerStartCellId;
+        public int PlayerStartingCredits => playerStartingCredits;
+        public float StartingDominantInfluence => startingDominantInfluence;
+        public int RoadStride => roadStride;
+        public float DefaultHeight => defaultHeight;
+        public float DefaultMoisture => defaultMoisture;
+        public float DefaultTemperature => defaultTemperature;
     }
 
     [CreateAssetMenu(menuName = "MercLord/Configs/Battle Map Generation", fileName = "BattleMapGenerationConfig")]
     public sealed class BattleMapGenerationConfig : IdentifiedConfig
     {
-        [SerializeField] private int width = 128;
-        [SerializeField] private int height = 128;
+        [SerializeField] private int width;
+        [SerializeField] private int height;
+        [SerializeField] private int defaultMoveCost;
+        [SerializeField] private int roadMoveCost;
+        [SerializeField] private int defaultCover;
+        [SerializeField] private int settlementCover;
+        [SerializeField] private int maxTileHeight;
+        [SerializeField] private int roadColumn;
+        [SerializeField] private int roadWidth;
+        [SerializeField] private int attackerSpawnColumns;
+        [SerializeField] private int defenderSpawnColumns;
 
         public int Width => width;
         public int Height => height;
+        public int DefaultMoveCost => defaultMoveCost;
+        public int RoadMoveCost => roadMoveCost;
+        public int DefaultCover => defaultCover;
+        public int SettlementCover => settlementCover;
+        public int MaxTileHeight => maxTileHeight;
+        public int RoadColumn => roadColumn;
+        public int RoadWidth => roadWidth;
+        public int AttackerSpawnColumns => attackerSpawnColumns;
+        public int DefenderSpawnColumns => defenderSpawnColumns;
     }
 
     [System.Serializable]

@@ -1,19 +1,20 @@
 using System;
+using MercLord.Player.Inventory;
 
 namespace MercLord.Player.Equipment
 {
     [Serializable]
     public sealed class PlayerEquipment
     {
-        public string BodyArmorItemId;
-        public string HelmetItemId;
-        public string WeaponSlot1ItemId;
-        public string WeaponSlot2ItemId;
-        public string WeaponSlot3ItemId;
-        public string WeaponSlot4ItemId;
-        public string SpecialSlot1ItemId;
-        public string SpecialSlot2ItemId;
-        public string SpecialSlot3ItemId;
-        public string SpecialSlot4ItemId;
+        public ItemInstance BodyArmor;
+        public ItemInstance Helmet;
+        public ItemInstance WeaponSlot1;
+        public ItemInstance WeaponSlot2;
+        public ItemInstance WeaponSlot3;
+        public ItemInstance WeaponSlot4;
+        public ItemInstance SpecialSlot1;
+        public ItemInstance SpecialSlot2;
+        public ItemInstance SpecialSlot3;
+        public ItemInstance SpecialSlot4;
     }
 }

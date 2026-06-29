@@ -18,6 +18,7 @@ namespace MercLord.Game.Configs
         [SerializeField] private LootTableConfig[] lootTables = new LootTableConfig[0];
         [SerializeField] private BiomeConfig[] biomes = new BiomeConfig[0];
         [SerializeField] private TileSetConfig[] tileSets = new TileSetConfig[0];
+        [SerializeField] private CombatBalanceConfig combatBalance;
         [SerializeField] private GlobalGenerationConfig globalGeneration;
         [SerializeField] private BattleMapGenerationConfig battleMapGeneration;
 
@@ -33,6 +34,7 @@ namespace MercLord.Game.Configs
         public IReadOnlyList<LootTableConfig> LootTables => lootTables;
         public IReadOnlyList<BiomeConfig> Biomes => biomes;
         public IReadOnlyList<TileSetConfig> TileSets => tileSets;
+        public CombatBalanceConfig CombatBalance => combatBalance;
         public GlobalGenerationConfig GlobalGeneration => globalGeneration;
         public BattleMapGenerationConfig BattleMapGeneration => battleMapGeneration;
 

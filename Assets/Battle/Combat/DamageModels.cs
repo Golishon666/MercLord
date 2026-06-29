@@ -1,16 +1,18 @@
 using System;
 using MercLord.Game.Configs;
+using Scellecs.Morpeh;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace MercLord.Battle.Combat
 {
-    [Serializable]
     public struct DamageRequest
     {
-        public int SourceEntityId;
-        public int TargetEntityId;
+        public Entity Source;
+        public Entity Target;
+        public float2 HitPosition;
         public DamageType DamageType;
-        public int RawDamage;
+        public int Amount;
     }
 
     [Serializable]
@@ -21,15 +23,67 @@ namespace MercLord.Battle.Combat
         public int ExplosionProtection;
     }
 
-    public static class DamageResolver
+    [Serializable]
+    public struct HealthValues
     {
-        public static int ResolveFinalDamage(DamageRequest request, ArmorValues armor)
+        public int Current;
+        public int Max;
+
+        public bool IsDead => Current <= 0;
+    }
+
+    public readonly struct DamageResolution
+    {
+        public DamageResolution(DamageRequest request, int protection, int finalDamage, HealthValues healthAfterDamage)
         {
-            var protection = GetProtection(request.DamageType, armor);
-            return Mathf.Max(0, request.RawDamage - protection);
+            Request = request;
+            Protection = protection;
+            FinalDamage = finalDamage;
+            HealthAfterDamage = healthAfterDamage;
         }
 
-        private static int GetProtection(DamageType damageType, ArmorValues armor)
+        public DamageRequest Request { get; }
+        public int Protection { get; }
+        public int FinalDamage { get; }
+        public HealthValues HealthAfterDamage { get; }
+        public bool Killed => HealthAfterDamage.IsDead;
+    }
+
+    public interface IDamageSystem
+    {
+        DamageResolution ApplyDamage(
+            DamageRequest request,
+            ArmorValues armor,
+            HealthValues health,
+            DamageFormula formula);
+    }
+
+    public sealed class DamageSystem : IDamageSystem
+    {
+        public DamageResolution ApplyDamage(
+            DamageRequest request,
+            ArmorValues armor,
+            HealthValues health,
+            DamageFormula formula)
+        {
+            var protection = ArmorResolver.GetProtection(request.DamageType, armor);
+            var finalDamage = DamageResolver.ResolveFinalDamage(request.Amount, protection, formula);
+            health.Current = Mathf.Max(0, health.Current - finalDamage);
+            return new DamageResolution(request, protection, finalDamage, health);
+        }
+    }
+
+    public static class DamageResolver
+    {
+        public static int ResolveFinalDamage(int incomingDamage, int protection, DamageFormula formula)
+        {
+            return Mathf.Max(formula.MinimumDamage, incomingDamage - protection);
+        }
+    }
+
+    public static class ArmorResolver
+    {
+        public static int GetProtection(DamageType damageType, ArmorValues armor)
         {
             switch (damageType)
             {

@@ -3,6 +3,11 @@ using MercLord.Game.Configs;
 
 namespace MercLord.Global.Cells
 {
+    public static class WorldIds
+    {
+        public const int None = -1;
+    }
+
     [Serializable]
     public sealed class WorldModel
     {
@@ -36,12 +41,14 @@ namespace MercLord.Global.Cells
     [Serializable]
     public struct Influence4
     {
+        public const int Capacity = 4;
+
         public float F0;
         public float F1;
         public float F2;
         public float F3;
 
-        public int DominantFactionId
+        public int DominantFactionSlot
         {
             get
             {
@@ -67,6 +74,49 @@ namespace MercLord.Global.Cells
 
                 return bestId;
             }
+        }
+
+        public float Get(int factionSlot)
+        {
+            switch (factionSlot)
+            {
+                case 0:
+                    return F0;
+                case 1:
+                    return F1;
+                case 2:
+                    return F2;
+                case 3:
+                    return F3;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(factionSlot), GetSlotRangeError());
+            }
+        }
+
+        public void Set(int factionSlot, float value)
+        {
+            switch (factionSlot)
+            {
+                case 0:
+                    F0 = value;
+                    break;
+                case 1:
+                    F1 = value;
+                    break;
+                case 2:
+                    F2 = value;
+                    break;
+                case 3:
+                    F3 = value;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(factionSlot), GetSlotRangeError());
+            }
+        }
+
+        private static string GetSlotRangeError()
+        {
+            return $"Influence4 supports faction slots from 0 to {Capacity - 1}.";
         }
     }
 
