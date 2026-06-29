@@ -79,6 +79,7 @@ namespace MercLord.Game.Configs
         [SerializeField] private float projectileSpeed;
         [SerializeField] private bool isProjectile;
         [SerializeField] private bool usesParabolicTrajectory;
+        [SerializeField] private float parabolicArcHeight;
         [SerializeField] private float explosionRadius;
 
         public WeaponType Type => type;
@@ -89,6 +90,7 @@ namespace MercLord.Game.Configs
         public float ProjectileSpeed => projectileSpeed;
         public bool IsProjectile => isProjectile;
         public bool UsesParabolicTrajectory => usesParabolicTrajectory;
+        public float ParabolicArcHeight => parabolicArcHeight;
         public float ExplosionRadius => explosionRadius;
     }
 
@@ -143,9 +145,13 @@ namespace MercLord.Game.Configs
     {
         [SerializeField] private ItemCategory category;
         [SerializeField] private int price;
+        [SerializeField] private WeaponConfig weapon;
+        [SerializeField] private ArmorConfig armor;
 
         public ItemCategory Category => category;
         public int Price => price;
+        public WeaponConfig Weapon => weapon;
+        public ArmorConfig Armor => armor;
     }
 
     [CreateAssetMenu(menuName = "MercLord/Configs/Trade Good", fileName = "TradeGoodConfig")]
@@ -238,6 +244,22 @@ namespace MercLord.Game.Configs
         public int RoadWidth => roadWidth;
         public int AttackerSpawnColumns => attackerSpawnColumns;
         public int DefenderSpawnColumns => defenderSpawnColumns;
+    }
+
+    [CreateAssetMenu(menuName = "MercLord/Configs/Battle Simulation", fileName = "BattleSimulationConfig")]
+    public sealed class BattleSimulationConfig : IdentifiedConfig
+    {
+        [SerializeField] private float spatialHashCellSize;
+        [SerializeField] private UnitConfig playerUnit;
+        [SerializeField] private BattleSpawnSide playerSpawnSide;
+        [SerializeField] private int playerSpawnPointIndex;
+        [SerializeField] private float playerAimDotThreshold;
+
+        public float SpatialHashCellSize => spatialHashCellSize;
+        public UnitConfig PlayerUnit => playerUnit;
+        public BattleSpawnSide PlayerSpawnSide => playerSpawnSide;
+        public int PlayerSpawnPointIndex => playerSpawnPointIndex;
+        public float PlayerAimDotThreshold => playerAimDotThreshold;
     }
 
     [System.Serializable]

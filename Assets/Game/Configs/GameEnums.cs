@@ -62,4 +62,10 @@ namespace MercLord.Game.Configs
         TradeGood,
         Quest
     }
+
+    public enum BattleSpawnSide
+    {
+        Attacker,
+        Defender
+    }
 }

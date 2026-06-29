@@ -67,6 +67,7 @@ namespace MercLord.Battle.ECS.Components
         public float ProjectileSpeed;
         public bool IsProjectile;
         public bool UsesParabolicTrajectory;
+        public float ParabolicArcHeight;
         public float ExplosionRadius;
     }
 
@@ -86,6 +87,11 @@ namespace MercLord.Battle.ECS.Components
         public float TargetSearchRadius;
         public float PreferredAttackDistance;
         public float RetreatHealthPercent;
+    }
+
+    public struct AIThinkTimerComponent : IComponent
+    {
+        public float TimeUntilNextThink;
     }
 
     public struct TargetComponent : IComponent
@@ -159,6 +165,15 @@ namespace MercLord.Battle.ECS.Components
         public Entity Source;
         public Entity Target;
         public int WeaponConfigId;
+    }
+
+    public struct DamageRequestComponent : IComponent
+    {
+        public Entity Source;
+        public Entity Target;
+        public float2 HitPosition;
+        public DamageType DamageType;
+        public int Amount;
     }
 
     public struct DeadComponent : IComponent

@@ -174,6 +174,7 @@ BattleScene загружается только на время боя.
 Содержит:
 
 - BattleLifetimeScope
+- BattleSceneRoot
 - Tilemap Grid
 - BattleCamera
 - BattleUI
@@ -225,21 +226,29 @@ count or gameplay balance values. Those come from configs.
 2. Create BattleGenerationRequest.
 3. Save current global context.
 4. Enter EnterBattleState.
-5. Load BattleScene.
-6. Generate local map.
-7. Create BattleWorld.
-8. Spawn units/player/vehicles.
-9. Switch to BattleState.
+5. Generate local map.
+6. Create BattleWorld.
+7. Convert squads into entities.
+8. Store active BattleSession.
+9. Load BattleScene.
+10. BattleSceneRoot spawns prefab views for entities missing ViewRefComponent.
+11. Switch to BattleState.
+
+BattleSession is created before BattleScene loads so scene startup can bind
+views to the already active Morpeh world.
 
 ## 4.4 ExitBattle Flow
 
 1. BattleResult is produced.
 2. Stop BattleWorld.
 3. Return all views to pools.
-4. Unload BattleScene.
-5. Load/activate GlobalScene.
-6. Apply BattleResult to SaveModel.
+4. Clear active BattleSession.
+5. Apply BattleResult to SaveModel.
+6. Load/activate GlobalScene.
 7. Return to GlobalMapState.
+
+BattleResult must be applied before GlobalScene renders so the global map never
+briefly displays stale army, influence, inventory, or player data.
 
 # 5. Project Folder Structure
 
@@ -323,7 +332,9 @@ Assets/
 - price
 - loot values
 - AI intervals
+- spatial hash cell size
 - projectile speed
+- parabolic arc height
 - explosion radius
 
 ## 6.2 Config List
@@ -342,6 +353,7 @@ LootTableConfig
 BiomeConfig
 TileSetConfig
 BattleMapGenerationConfig
+BattleSimulationConfig
 GlobalGenerationConfig
 InputConfig optional
 ~~~
@@ -408,6 +420,7 @@ public sealed class WeaponConfig
 
     public bool IsProjectile;
     public bool UsesParabolicTrajectory;
+    public float ParabolicArcHeight;
     public float ExplosionRadius;
 }
 ~~~
@@ -441,7 +454,23 @@ public sealed class AIConfig
 }
 ~~~
 
-## 6.8 VehicleConfig
+## 6.8 BattleSimulationConfig
+
+~~~csharp
+public sealed class BattleSimulationConfig
+{
+    public int Id;
+    public string Name;
+
+    public float SpatialHashCellSize;
+    public UnitConfig PlayerUnit;
+    public BattleSpawnSide PlayerSpawnSide;
+    public int PlayerSpawnPointIndex;
+    public float PlayerAimDotThreshold;
+}
+~~~
+
+## 6.9 VehicleConfig
 
 ~~~csharp
 public sealed class VehicleConfig
@@ -890,14 +919,19 @@ public struct BattleTile
 1. Player encounters enemy army.
 2. Read current WorldCell.
 3. Create BattleGenerationRequest.
-4. Load BattleScene.
-5. Generate Tilemap.
-6. Generate BattleTile[].
-7. Create Morpeh BattleWorld.
-8. Convert squads into battle entities.
-9. Spawn player entity.
-10. Spawn vehicles/projectiles pools.
-11. Start battle systems.
+4. Generate BattleTile[].
+5. Create Morpeh BattleWorld.
+6. Convert squads into battle entities.
+7. Store BattleSession.
+8. Load BattleScene.
+9. BattleSceneRoot spawns prefab-backed unit views through BattleViewSpawner.
+10. Spawn player entity.
+11. Spawn vehicles/projectiles pools.
+12. Start battle systems.
+
+`IBattlePipeline.StartBattleAsync` creates a `BattleSession` containing the
+generated `BattleModel` and Morpeh `World`. It does not choose a winner or
+fabricate rewards. Battle systems produce `BattleResult` later.
 
 ## 13.2 End Battle
 
@@ -907,7 +941,7 @@ public struct BattleTile
 4. Add CreditsReward.
 5. Stop BattleWorld.
 6. Return views to pools.
-7. Unload BattleScene.
+7. Clear BattleSession.
 8. Apply result to WorldModel.
 9. Return to GlobalScene.
 
@@ -1101,12 +1135,38 @@ ViewAnimationSystem
 
 ## 15.2 System Rules
 
+- BattleSceneRoot owns one frame runner for the active BattleSession.
+- SpatialHashSystem rebuilds a reusable position index from alive battle
+  entities. Its cell size comes from BattleSimulationConfig.
+- BattlePlayerSpawner creates the player entity from
+  BattleSimulationConfig.PlayerUnit before views and runtime systems start.
+- PlayerInputSystem reads IBattleInputSource, writes PlayerInputComponent,
+  VelocityComponent and AttackRequestComponent, and never applies damage
+  directly.
+- PlayerInputSystem resolves the selected equipped weapon through
+  SaveModel.PlayerEquipment -> ItemConfig -> WeaponConfig.
+- TargetSearchSystem uses SpatialHashSystem and AIConfig.ThinkInterval to
+  stagger target scans. It must not scan every opponent for every bot.
+- DecisionSystem updates intent: VelocityComponent for movement and
+  AttackRequestComponent for attacks. PlayerControlled entities are excluded.
+- WeaponSystem consumes AttackRequestComponent, applies WeaponStatsComponent,
+  starts cooldowns, and emits direct DamageRequestComponent or projectile
+  entities.
+- ProjectileSystem and ParabolicProjectileSystem move projectile entities and
+  emit DamageRequestComponent on impact.
 - MovementSystem can run every frame.
+- MovementSystem updates PositionComponent from VelocityComponent and
+  MovementStatsComponent; movement speed comes from UnitConfig.
 - AI systems must use staggered update.
 - Target search must use Spatial Hash.
 - No O(N²) scan every frame.
 - No per-bot MonoBehaviour Update.
 - ViewSyncSystem is the only system that updates transforms.
+- ViewSyncSystem maps PositionComponent to prefab instance transform through
+  BattleViewCatalog and ViewRefComponent.
+- DamageSystem processes DamageRequestComponent entities, applies
+  CombatBalanceConfig damage formula, updates HealthComponent and sets
+  DeadComponent/BotStateType.Dead when health reaches zero.
 - Combat systems do not access SpriteRenderer or DOTween.
 
 # 16. Shared Combat Architecture
@@ -1193,9 +1253,9 @@ Energy damage → EnergyProtection
 Explosion damage → ExplosionProtection
 ~~~
 
-MVP formula:
+Base formula:
 
-`finalDamage = max(1, incomingDamage - protection)`
+`finalDamage = max(CombatBalanceConfig.MinimumDamage, incomingDamage - protection)`
 
 # 18. Local Tilemap Architecture
 
@@ -1434,9 +1494,23 @@ ECS Spawn System
 
 Боевые системы не создают views напрямую.
 
+`BattleViewSpawner` finds battle entities with `BotComponent` and without
+`ViewRefComponent`, resolves `UnitConfig.ViewPrefabAddress` through
+`BattleViewCatalog`, rents a prefab instance from `GameObjectPool`, and writes
+the resulting id to `ViewRefComponent`.
+
+Battle view position mapping is serialized in `BattleViewCatalog`. View
+prefab internals and presentation settings stay on the prefab components.
+`PrefabValidator` must validate `BattleSceneRoot`, `BattleLifetimeScope`, and
+`BattleViewCatalog` references before the battle scene is considered ready.
+
 # 24. Input Architecture
 
 ## 24.1 Use Unity Input System
+
+Unity Input System adapters feed battle input through IBattleInputSource.
+ECS battle systems depend on the input source contract, not directly on the
+Unity package API.
 
 Использовать Unity Input System.
 
@@ -1554,6 +1628,23 @@ public struct ItemInstance
     public int Durability;
 }
 ~~~
+
+## 28.1.1 ItemConfig Equipment Mapping
+
+~~~csharp
+public sealed class ItemConfig
+{
+    public ItemCategory Category;
+    public int Price;
+
+    public WeaponConfig Weapon;
+    public ArmorConfig Armor;
+}
+~~~
+
+Weapon equipment slots resolve to WeaponConfig through ItemConfig. Armor and
+helmet slots resolve to ArmorConfig through ItemConfig. Runtime systems must
+not hardcode weapon or armor ids.
 
 ## 28.2 PlayerInventory
 
@@ -1720,10 +1811,27 @@ WeaponConfig invalid if:
 - Range <= 0
 - Cooldown <= 0
 - ProjectileSpeed <= 0 for projectile weapons
+- ParabolicArcHeight <= 0 for parabolic weapons
+
+AIConfig invalid if:
+
+- ThinkInterval <= 0
+- TargetSearchRadius <= 0
+- PreferredAttackDistance < 0
+- RetreatHealthPercent is outside 0..1
 
 ArmorConfig invalid if:
 
 - any protection < 0
+
+BattleSimulationConfig invalid if:
+
+- SpatialHashCellSize <= 0
+- PlayerUnit is missing or not registered in ConfigDatabase
+- PlayerUnit.Category is not Player
+- PlayerSpawnPointIndex < 0
+- PlayerSpawnPointIndex is outside generated spawn capacity
+- PlayerAimDotThreshold is outside -1..1
 
 BattleMapGenerationConfig invalid if:
 

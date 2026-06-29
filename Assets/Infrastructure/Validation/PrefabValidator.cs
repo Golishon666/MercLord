@@ -153,6 +153,108 @@ namespace MercLord.Infrastructure.Validation
             return issues;
         }
 
+        public List<ValidationIssue> ValidateBattleScenePrefab(GameObject prefab)
+        {
+            var issues = new List<ValidationIssue>();
+            if (!ValidatePrefabRoot(prefab, issues))
+            {
+                return issues;
+            }
+
+            var scope = prefab.GetComponentInChildren<BattleLifetimeScope>(true);
+            if (scope == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, prefab, "Battle scene prefab is missing BattleLifetimeScope."));
+                return issues;
+            }
+
+            if (scope.SceneRoot == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, scope, "BattleLifetimeScope is missing BattleSceneRoot reference."));
+            }
+
+            if (scope.ViewCatalog == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, scope, "BattleLifetimeScope is missing BattleViewCatalog reference."));
+            }
+            else
+            {
+                issues.AddRange(ValidateBattleViewCatalog(scope.ViewCatalog));
+            }
+
+            if (scope.InputSource == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, scope, "BattleLifetimeScope is missing BattleInputSource reference."));
+            }
+
+            var sceneRoot = scope.SceneRoot != null
+                ? scope.SceneRoot
+                : prefab.GetComponentInChildren<BattleSceneRoot>(true);
+            if (sceneRoot == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, prefab, "Battle scene prefab is missing BattleSceneRoot."));
+                return issues;
+            }
+
+            if (sceneRoot.UnitViewRoot == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, sceneRoot, "BattleSceneRoot is missing unit view root."));
+            }
+
+            return issues;
+        }
+
+        public List<ValidationIssue> ValidateBattleViewCatalog(BattleViewCatalog catalog)
+        {
+            var issues = new List<ValidationIssue>();
+            if (catalog == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, null, "BattleViewCatalog reference is missing."));
+                return issues;
+            }
+
+            if (catalog.CellSize.x <= 0f || catalog.CellSize.y <= 0f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, "BattleViewCatalog cell size must be positive."));
+            }
+
+            var unitViews = catalog.UnitViews;
+            if (unitViews.Count == 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, "BattleViewCatalog must contain at least one unit view prefab."));
+            }
+
+            var usedAddresses = new HashSet<string>();
+            for (var entryIndex = 0; entryIndex < unitViews.Count; entryIndex++)
+            {
+                var entry = unitViews[entryIndex];
+                if (string.IsNullOrWhiteSpace(entry.Address))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, $"BattleViewCatalog unit view entry {entryIndex} has no address."));
+                }
+                else if (!usedAddresses.Add(entry.Address))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, $"BattleViewCatalog duplicates unit view address '{entry.Address}'."));
+                }
+
+                if (entry.Prefab == null)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, $"BattleViewCatalog unit view entry {entryIndex} has no prefab."));
+                    continue;
+                }
+
+                var hasUnitView =
+                    entry.Prefab.GetComponentInChildren<InfantryView>(true) != null ||
+                    entry.Prefab.GetComponentInChildren<VehicleView>(true) != null;
+                if (!hasUnitView)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, entry.Prefab, $"BattleViewCatalog prefab '{entry.Prefab.name}' has no supported battle unit view component."));
+                }
+            }
+
+            return issues;
+        }
+
         public List<ValidationIssue> ValidateTextPrefab(GameObject prefab)
         {
             var issues = new List<ValidationIssue>();

@@ -44,7 +44,11 @@ namespace MercLord.Bootstrap
 
             builder.Register<BattleGenerationRequestFactory>(Lifetime.Singleton).As<IBattleGenerationRequestFactory>();
             builder.Register<ConfigDrivenBattleMapGenerator>(Lifetime.Singleton).As<IBattleMapGenerator>();
+            builder.Register<BattleEntityFactory>(Lifetime.Singleton).As<IBattleEntityFactory>();
             builder.Register<ConfigDrivenBattleWorldFactory>(Lifetime.Singleton).As<IBattleWorldFactory>();
+            builder.Register<BattlePlayerSpawner>(Lifetime.Singleton).As<IBattlePlayerSpawner>();
+            builder.Register<BattleSessionService>(Lifetime.Singleton).As<IBattleSessionService>();
+            builder.Register<BattlePipeline>(Lifetime.Singleton).As<IBattlePipeline>();
             builder.Register<BattleResultApplier>(Lifetime.Singleton).As<IBattleResultApplier>();
             builder.Register<DamageSystem>(Lifetime.Singleton).As<IDamageSystem>();
             builder.Register<PrefabFactory>(Lifetime.Singleton).As<IPrefabFactory>();

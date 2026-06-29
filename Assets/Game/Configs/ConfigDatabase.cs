@@ -21,6 +21,7 @@ namespace MercLord.Game.Configs
         [SerializeField] private CombatBalanceConfig combatBalance;
         [SerializeField] private GlobalGenerationConfig globalGeneration;
         [SerializeField] private BattleMapGenerationConfig battleMapGeneration;
+        [SerializeField] private BattleSimulationConfig battleSimulation;
 
         public IReadOnlyList<FactionConfig> Factions => factions;
         public IReadOnlyList<CultureConfig> Cultures => cultures;
@@ -37,6 +38,7 @@ namespace MercLord.Game.Configs
         public CombatBalanceConfig CombatBalance => combatBalance;
         public GlobalGenerationConfig GlobalGeneration => globalGeneration;
         public BattleMapGenerationConfig BattleMapGeneration => battleMapGeneration;
+        public BattleSimulationConfig BattleSimulation => battleSimulation;
 
         public bool TryGetFaction(int id, out FactionConfig config) => TryFind(factions, id, out config);
         public bool TryGetCulture(int id, out CultureConfig config) => TryFind(cultures, id, out config);

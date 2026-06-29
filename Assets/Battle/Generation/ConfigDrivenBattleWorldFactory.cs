@@ -9,10 +9,14 @@ namespace MercLord.Battle.Generation
     public sealed class ConfigDrivenBattleWorldFactory : IBattleWorldFactory
     {
         private readonly ConfigDatabase configDatabase;
+        private readonly IBattleEntityFactory entityFactory;
 
-        public ConfigDrivenBattleWorldFactory(ConfigDatabase configDatabase)
+        public ConfigDrivenBattleWorldFactory(
+            ConfigDatabase configDatabase,
+            IBattleEntityFactory entityFactory)
         {
             this.configDatabase = configDatabase ?? throw new ArgumentNullException(nameof(configDatabase));
+            this.entityFactory = entityFactory ?? throw new ArgumentNullException(nameof(entityFactory));
         }
 
         public World CreateWorld(BattleModel model)
@@ -90,127 +94,20 @@ namespace MercLord.Battle.Generation
                 var unitConfig = GetUnitConfig(squad.UnitConfigId);
                 for (var unitIndex = 0; unitIndex < squad.Count; unitIndex++)
                 {
-                    CreateUnit(world, army.FactionId, team, unitConfig, spawnPoints[spawnIndex]);
+                    var spawnPoint = spawnPoints[spawnIndex];
+                    entityFactory.CreateUnit(
+                        world,
+                        new BattleEntitySpawnRequest(
+                            unitConfig,
+                            army.FactionId,
+                            team,
+                            new float2(spawnPoint.X, spawnPoint.Y),
+                            playerControlled: false,
+                            spawnIndex,
+                            unitCount));
                     spawnIndex++;
                 }
             }
-        }
-
-        private void CreateUnit(
-            World world,
-            int factionId,
-            BattleTeamType team,
-            UnitConfig unitConfig,
-            BattleSpawnPoint spawnPoint)
-        {
-            var entity = world.CreateEntity();
-
-            world.GetStash<BotComponent>().Set(entity, new BotComponent
-            {
-                UnitConfigId = unitConfig.Id
-            });
-
-            world.GetStash<TeamComponent>().Set(entity, new TeamComponent
-            {
-                Value = team
-            });
-
-            world.GetStash<FactionComponent>().Set(entity, new FactionComponent
-            {
-                Value = factionId
-            });
-
-            world.GetStash<PositionComponent>().Set(entity, new PositionComponent
-            {
-                Value = new float2(spawnPoint.X, spawnPoint.Y)
-            });
-
-            world.GetStash<VelocityComponent>().Set(entity, new VelocityComponent
-            {
-                Value = float2.zero
-            });
-
-            world.GetStash<HealthComponent>().Set(entity, new HealthComponent
-            {
-                Current = unitConfig.MaxHealth,
-                Max = unitConfig.MaxHealth
-            });
-
-            world.GetStash<MovementStatsComponent>().Set(entity, new MovementStatsComponent
-            {
-                MoveSpeed = unitConfig.MoveSpeed,
-                RotationSpeed = unitConfig.RotationSpeed
-            });
-
-            world.GetStash<WeaponStatsComponent>().Set(entity, CreateWeaponStats(unitConfig.Weapon));
-            world.GetStash<ArmorStatsComponent>().Set(entity, CreateArmorStats(unitConfig.Armor));
-            world.GetStash<AIStatsComponent>().Set(entity, CreateAIStats(unitConfig.AI));
-
-            world.GetStash<AttackCooldownComponent>().Set(entity, new AttackCooldownComponent
-            {
-                Value = 0f
-            });
-
-            world.GetStash<BotStateComponent>().Set(entity, new BotStateComponent
-            {
-                Value = BotStateType.Idle
-            });
-        }
-
-        private static WeaponStatsComponent CreateWeaponStats(WeaponConfig weapon)
-        {
-            if (weapon == null)
-            {
-                throw new InvalidOperationException("UnitConfig references a missing WeaponConfig.");
-            }
-
-            return new WeaponStatsComponent
-            {
-                WeaponConfigId = weapon.Id,
-                Type = weapon.Type,
-                DamageType = weapon.DamageType,
-                Damage = weapon.Damage,
-                Range = weapon.Range,
-                Cooldown = weapon.Cooldown,
-                ProjectileSpeed = weapon.ProjectileSpeed,
-                IsProjectile = weapon.IsProjectile,
-                UsesParabolicTrajectory = weapon.UsesParabolicTrajectory,
-                ExplosionRadius = weapon.ExplosionRadius
-            };
-        }
-
-        private static ArmorStatsComponent CreateArmorStats(ArmorConfig armor)
-        {
-            if (armor == null)
-            {
-                throw new InvalidOperationException("UnitConfig references a missing ArmorConfig.");
-            }
-
-            return new ArmorStatsComponent
-            {
-                ArmorConfigId = armor.Id,
-                BallisticProtection = armor.BallisticProtection,
-                EnergyProtection = armor.EnergyProtection,
-                ExplosionProtection = armor.ExplosionProtection
-            };
-        }
-
-        private static AIStatsComponent CreateAIStats(AIConfig ai)
-        {
-            if (ai == null)
-            {
-                throw new InvalidOperationException("UnitConfig references a missing AIConfig.");
-            }
-
-            return new AIStatsComponent
-            {
-                AIConfigId = ai.Id,
-                Type = ai.Type,
-                ThinkInterval = ai.ThinkInterval,
-                TargetSearchRadius = ai.TargetSearchRadius,
-                PreferredAttackDistance = ai.PreferredAttackDistance,
-                RetreatHealthPercent = ai.RetreatHealthPercent
-            };
         }
 
         private UnitConfig GetUnitConfig(int unitConfigId)

@@ -41,9 +41,12 @@ namespace MercLord.Infrastructure.Validation
             ValidateCultures(database, issues);
             ValidateUnits(database, issues);
             ValidateWeapons(database, issues);
+            ValidateAIConfigs(database, issues);
             ValidateArmors(database, issues);
+            ValidateItems(database, issues);
             ValidateGeneration(database, issues);
             ValidateCombatBalance(database, issues);
+            ValidateBattleSimulation(database, issues);
             return issues;
         }
 
@@ -72,10 +75,18 @@ namespace MercLord.Infrastructure.Validation
                 {
                     issues.Add(new ValidationIssue(ValidationSeverity.Error, culture, $"{culture.DisplayName} has no starting weapon."));
                 }
+                else if (!HasWeaponItem(database, culture.StartingWeapon))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, culture, $"{culture.DisplayName} starting weapon has no matching weapon ItemConfig."));
+                }
 
                 if (culture.StartingArmor == null)
                 {
                     issues.Add(new ValidationIssue(ValidationSeverity.Error, culture, $"{culture.DisplayName} has no starting armor."));
+                }
+                else if (!HasArmorItem(database, culture.StartingArmor))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, culture, $"{culture.DisplayName} starting armor has no matching armor ItemConfig."));
                 }
             }
         }
@@ -144,6 +155,42 @@ namespace MercLord.Infrastructure.Validation
                 {
                     issues.Add(new ValidationIssue(ValidationSeverity.Error, weapon, $"{weapon.DisplayName} projectile speed must be positive."));
                 }
+
+                if (weapon.UsesParabolicTrajectory && weapon.ParabolicArcHeight <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, weapon, $"{weapon.DisplayName} parabolic arc height must be positive."));
+                }
+            }
+        }
+
+        private static void ValidateAIConfigs(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            foreach (var ai in database.AIConfigs)
+            {
+                if (ai == null)
+                {
+                    continue;
+                }
+
+                if (ai.ThinkInterval <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, ai, $"{ai.DisplayName} think interval must be positive."));
+                }
+
+                if (ai.TargetSearchRadius <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, ai, $"{ai.DisplayName} target search radius must be positive."));
+                }
+
+                if (ai.PreferredAttackDistance < 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, ai, $"{ai.DisplayName} preferred attack distance cannot be negative."));
+                }
+
+                if (ai.RetreatHealthPercent < 0f || ai.RetreatHealthPercent > 1f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, ai, $"{ai.DisplayName} retreat health percent must be between zero and one."));
+                }
             }
         }
 
@@ -159,6 +206,48 @@ namespace MercLord.Infrastructure.Validation
                 if (armor.BallisticProtection < 0 || armor.EnergyProtection < 0 || armor.ExplosionProtection < 0)
                 {
                     issues.Add(new ValidationIssue(ValidationSeverity.Error, armor, $"{armor.DisplayName} has negative protection."));
+                }
+            }
+        }
+
+        private static void ValidateItems(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            foreach (var item in database.Items)
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                if (item.Price < 0)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} has negative price."));
+                }
+
+                if (item.Category == ItemCategory.Weapon)
+                {
+                    if (item.Weapon == null)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} weapon item has no WeaponConfig."));
+                    }
+                    else if (!database.TryGetWeapon(item.Weapon.Id, out _))
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} references a missing WeaponConfig."));
+                    }
+
+                    continue;
+                }
+
+                if (item.Category == ItemCategory.Armor || item.Category == ItemCategory.Helmet)
+                {
+                    if (item.Armor == null)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} armor item has no ArmorConfig."));
+                    }
+                    else if (!database.TryGetArmor(item.Armor.Id, out _))
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} references a missing ArmorConfig."));
+                    }
                 }
             }
         }
@@ -317,6 +406,111 @@ namespace MercLord.Infrastructure.Validation
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, database.CombatBalance, "Damage formula minimum damage cannot be negative."));
             }
+        }
+
+        private static void ValidateBattleSimulation(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            if (database.BattleSimulation == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database, "BattleSimulationConfig is missing."));
+                return;
+            }
+
+            if (database.BattleSimulation.SpatialHashCellSize <= 0f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation spatial hash cell size must be positive."));
+            }
+
+            if (database.BattleSimulation.PlayerUnit == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player unit must be assigned."));
+            }
+            else
+            {
+                var playerUnit = database.BattleSimulation.PlayerUnit;
+                if (!database.TryGetUnit(playerUnit.Id, out _))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player unit must be registered in ConfigDatabase."));
+                }
+
+                if (playerUnit.Category != UnitCategory.Player)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, playerUnit, $"{playerUnit.DisplayName} must use UnitCategory.Player to be used as the player unit."));
+                }
+            }
+
+            if (database.BattleSimulation.PlayerSpawnPointIndex < 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player spawn point index cannot be negative."));
+            }
+
+            if (database.BattleSimulation.PlayerAimDotThreshold < -1f ||
+                database.BattleSimulation.PlayerAimDotThreshold > 1f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player aim dot threshold must be between -1 and 1."));
+            }
+
+            ValidatePlayerSpawnCapacity(database, issues);
+        }
+
+        private static void ValidatePlayerSpawnCapacity(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            if (database.BattleMapGeneration == null || database.BattleSimulation == null)
+            {
+                return;
+            }
+
+            var map = database.BattleMapGeneration;
+            if (map.Height <= 0)
+            {
+                return;
+            }
+
+            var spawnColumns = database.BattleSimulation.PlayerSpawnSide == BattleSpawnSide.Attacker
+                ? map.AttackerSpawnColumns
+                : map.DefenderSpawnColumns;
+            if (spawnColumns <= 0)
+            {
+                return;
+            }
+
+            var capacity = map.Height * spawnColumns;
+            if (database.BattleSimulation.PlayerSpawnPointIndex >= capacity)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player spawn point index must fit generated spawn capacity."));
+            }
+        }
+
+        private static bool HasWeaponItem(ConfigDatabase database, WeaponConfig weapon)
+        {
+            foreach (var item in database.Items)
+            {
+                if (item != null &&
+                    item.Category == ItemCategory.Weapon &&
+                    item.Weapon != null &&
+                    item.Weapon.Id == weapon.Id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasArmorItem(ConfigDatabase database, ArmorConfig armor)
+        {
+            foreach (var item in database.Items)
+            {
+                if (item != null &&
+                    item.Category == ItemCategory.Armor &&
+                    item.Armor != null &&
+                    item.Armor.Id == armor.Id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void ValidateByteRange(
