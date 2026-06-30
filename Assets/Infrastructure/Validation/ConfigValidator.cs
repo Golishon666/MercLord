@@ -337,11 +337,6 @@ namespace MercLord.Infrastructure.Validation
                 return;
             }
 
-            if (database.Factions.Count > Influence4.Capacity)
-            {
-                issues.Add(new ValidationIssue(ValidationSeverity.Error, database, $"Influence4 supports up to {Influence4.Capacity} configured factions."));
-            }
-
             var usedFactionIds = new HashSet<int>();
             for (var factionSlot = 0; factionSlot < database.Factions.Count; factionSlot++)
             {

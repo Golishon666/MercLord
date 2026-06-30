@@ -1,0 +1,18 @@
+---
+description: Strict SOLID architecture rule for gameplay and generation code
+globs:
+  - "Assets/**/*.cs"
+alwaysApply: true
+---
+
+# SOLID Rule
+
+All gameplay, world-generation, rendering, and infrastructure code must strictly follow SOLID.
+
+- Single Responsibility: one class owns one reason to change. World generation orchestration, terrain generation, faction partitioning, road generation, river generation, rendering, camera control, and UI/debug actions must not be merged into one class.
+- Open/Closed: add new generation rules, biome logic, faction policies, or render strategies by adding focused collaborators or strategies, not by growing god classes.
+- Liskov Substitution: implementations of interfaces such as `IWorldGenerator` and `IInfluenceService` must remain substitutable and must not require hidden side effects.
+- Interface Segregation: keep interfaces narrow. Do not force systems to depend on terrain, faction, road, render, or UI methods they do not use.
+- Dependency Inversion: high-level orchestration depends on abstractions or focused collaborators. Avoid direct hard dependencies on unrelated systems when constructor injection or a small service object is appropriate.
+
+For the global map specifically, `SphericalWorldGenerator` must remain an orchestration pipeline. Terrain/noise, faction regions, roads, rivers, movement costs, and rendering must stay in separate focused types.

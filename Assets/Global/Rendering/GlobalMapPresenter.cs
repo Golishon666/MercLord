@@ -184,7 +184,7 @@ namespace MercLord.Global.Rendering
 
         private Color GetBiomeColor(BiomeType biomeType)
         {
-            for (var biomeIndex = 0; biomeIndex < configDatabase.Biomes.Count; biomeIndex++)
+            for (var biomeIndex = 0; configDatabase?.Biomes != null && biomeIndex < configDatabase.Biomes.Count; biomeIndex++)
             {
                 var biomeConfig = configDatabase.Biomes[biomeIndex];
                 if (biomeConfig != null && biomeConfig.BiomeType == biomeType)
@@ -193,7 +193,42 @@ namespace MercLord.Global.Rendering
                 }
             }
 
-            throw new InvalidOperationException($"Biome color is not configured for {biomeType}.");
+            return GetFallbackBiomeColor(biomeType);
+        }
+
+        private static Color GetFallbackBiomeColor(BiomeType biomeType)
+        {
+            switch (biomeType)
+            {
+                case BiomeType.Ocean:
+                    return new Color(0.04f, 0.19f, 0.42f, 1f);
+                case BiomeType.Coast:
+                    return new Color(0.64f, 0.61f, 0.42f, 1f);
+                case BiomeType.Forest:
+                    return new Color(0.08f, 0.33f, 0.18f, 1f);
+                case BiomeType.Desert:
+                    return new Color(0.72f, 0.61f, 0.31f, 1f);
+                case BiomeType.Snow:
+                    return new Color(0.78f, 0.86f, 0.89f, 1f);
+                case BiomeType.Swamp:
+                    return new Color(0.19f, 0.36f, 0.24f, 1f);
+                case BiomeType.Mountains:
+                    return new Color(0.39f, 0.40f, 0.41f, 1f);
+                case BiomeType.AshWastes:
+                    return new Color(0.22f, 0.20f, 0.19f, 1f);
+                case BiomeType.RustDesert:
+                    return new Color(0.59f, 0.31f, 0.19f, 1f);
+                case BiomeType.DeadForest:
+                    return new Color(0.22f, 0.28f, 0.22f, 1f);
+                case BiomeType.IndustrialRuins:
+                    return new Color(0.30f, 0.33f, 0.35f, 1f);
+                case BiomeType.DemonScar:
+                    return new Color(0.41f, 0.07f, 0.11f, 1f);
+                case BiomeType.ToxicSwamp:
+                    return new Color(0.24f, 0.42f, 0.12f, 1f);
+                default:
+                    return new Color(0.29f, 0.56f, 0.24f, 1f);
+            }
         }
 
         private Color GetFactionColor(int factionId)
@@ -218,12 +253,13 @@ namespace MercLord.Global.Rendering
         private static float GetInfluenceRatio(WorldModel worldModel, Influence4 influence, int dominantFactionSlot)
         {
             var totalInfluence = 0f;
-            for (var factionSlot = 0; factionSlot < worldModel.Factions.Length; factionSlot++)
+            var factionCount = Mathf.Min(worldModel.Factions.Length, influence.Count);
+            for (var factionSlot = 0; factionSlot < factionCount; factionSlot++)
             {
                 totalInfluence += influence.Get(factionSlot);
             }
 
-            if (totalInfluence <= 0f)
+            if (totalInfluence <= 0f || dominantFactionSlot < 0 || dominantFactionSlot >= influence.Count)
             {
                 return 0f;
             }

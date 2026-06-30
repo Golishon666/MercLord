@@ -19,6 +19,16 @@ TextMeshPro defines all text.
 Code must not hardcode tunable values.
 ~~~
 
+## SOLID Enforcement Rule
+
+All gameplay and generation code must strictly follow SOLID.
+
+- `SphericalWorldGenerator` and similar pipeline classes must orchestrate focused collaborators, not accumulate terrain, faction, road, river, rendering, UI, or camera logic in one class.
+- Terrain/noise, faction partitioning, roads, rivers, movement costs, rendering, and debug UI must stay in separate focused types.
+- New behavior should be added through small collaborators or strategies instead of expanding god classes.
+- Interfaces must remain narrow and substitutable.
+- High-level systems should depend on abstractions or focused services, not unrelated concrete systems.
+
 # 1. Technology Stack
 
 ## 1.1 Engine

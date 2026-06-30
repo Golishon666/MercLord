@@ -49,7 +49,9 @@ namespace MercLord.Game.StateMachine.States
                 ?? throw new InvalidOperationException("GlobalGenerationConfig is required to generate a new world.");
             var request = context.GetPayloadOrDefault(new NewGameRequest(globalConfig.Seed));
             var seed = request.Seed ?? globalConfig.Seed;
-            var worldModel = worldGenerator.Generate(new WorldGenerationRequest(seed, globalConfig.TargetCellCount));
+            var worldModel = await worldGenerator.GenerateAsync(
+                new WorldGenerationRequest(seed, globalConfig.TargetCellCount),
+                cancellationToken);
 
             var saveModel = saveService.CreateNew(worldModel);
             ApplyCultureStart(saveModel, request.CultureId);

@@ -8,10 +8,12 @@ namespace MercLord.Global.Rendering
     public sealed class GlobalSceneRoot : MonoBehaviour
     {
         [SerializeField] private PlanetRenderer planetRenderer;
+        [SerializeField] private ProceduralGlobalMapRenderer proceduralMapRenderer;
         private ISaveService saveService;
         private IGlobalMapPresenter globalMapPresenter;
 
         public PlanetRenderer PlanetRenderer => planetRenderer;
+        public ProceduralGlobalMapRenderer ProceduralMapRenderer => proceduralMapRenderer;
 
         [Inject]
         public void Construct(ISaveService saveService, IGlobalMapPresenter globalMapPresenter)
@@ -22,14 +24,20 @@ namespace MercLord.Global.Rendering
 
         private void Start()
         {
+            if (saveService?.Current?.World == null)
+            {
+                return;
+            }
+
+            if (proceduralMapRenderer != null)
+            {
+                proceduralMapRenderer.Render(saveService.Current.World);
+                return;
+            }
+
             if (planetRenderer == null)
             {
                 throw new InvalidOperationException("GlobalSceneRoot requires a PlanetRenderer reference.");
-            }
-
-            if (saveService?.Current?.World == null)
-            {
-                throw new InvalidOperationException("GlobalSceneRoot cannot render without an active world save.");
             }
 
             if (globalMapPresenter == null)
