@@ -10,7 +10,13 @@ namespace MercLord.Battle.ECS.Systems
 {
     public sealed class DecisionSystem : IBattleRuntimeSystem
     {
+        private const float TickInterval = 0.2f;
+
         private readonly List<Entity> actorBuffer = new List<Entity>();
+        private readonly List<Entity> candidateBuffer = new List<Entity>();
+        private readonly List<Entity> clusterBuffer = new List<Entity>();
+
+        private readonly SpatialHashSystem spatialHashSystem;
 
         private World world;
         private Filter filter;
@@ -20,8 +26,16 @@ namespace MercLord.Battle.ECS.Systems
         private Stash<WeaponStatsComponent> weapons;
         private Stash<AttackCooldownComponent> cooldowns;
         private Stash<AIStatsComponent> aiStats;
+        private Stash<TeamComponent> teams;
         private Stash<HealthComponent> healths;
         private Stash<AttackRequestComponent> attackRequests;
+        private Stash<DriverComponent> drivers;
+        private BattleCadenceTimer tickTimer;
+
+        public DecisionSystem(SpatialHashSystem spatialHashSystem)
+        {
+            this.spatialHashSystem = spatialHashSystem ?? throw new ArgumentNullException(nameof(spatialHashSystem));
+        }
 
         public void Initialize(BattleSession session)
         {
@@ -43,7 +57,9 @@ namespace MercLord.Battle.ECS.Systems
                 .With<WeaponStatsComponent>()
                 .With<AttackCooldownComponent>()
                 .With<AIStatsComponent>()
+                .With<TeamComponent>()
                 .Without<DeadComponent>()
+                .Without<DriverComponent>()
                 .Without<PlayerControlledComponent>()
                 .Build();
 
@@ -53,13 +69,21 @@ namespace MercLord.Battle.ECS.Systems
             weapons = world.GetStash<WeaponStatsComponent>();
             cooldowns = world.GetStash<AttackCooldownComponent>();
             aiStats = world.GetStash<AIStatsComponent>();
+            teams = world.GetStash<TeamComponent>();
             healths = world.GetStash<HealthComponent>();
             attackRequests = world.GetStash<AttackRequestComponent>();
+            drivers = world.GetStash<DriverComponent>();
+            tickTimer = new BattleCadenceTimer(TickInterval);
         }
 
         public void Tick(float deltaTime)
         {
             if (world == null || world.IsDisposed || filter == null)
+            {
+                return;
+            }
+
+            if (!tickTimer.Consume(deltaTime))
             {
                 return;
             }
@@ -76,6 +100,8 @@ namespace MercLord.Battle.ECS.Systems
             }
 
             actorBuffer.Clear();
+            candidateBuffer.Clear();
+            clusterBuffer.Clear();
         }
 
         public void Dispose()
@@ -86,6 +112,8 @@ namespace MercLord.Battle.ECS.Systems
             }
 
             actorBuffer.Clear();
+            candidateBuffer.Clear();
+            clusterBuffer.Clear();
             filter = null;
             world = null;
             positions = null;
@@ -94,8 +122,11 @@ namespace MercLord.Battle.ECS.Systems
             weapons = null;
             cooldowns = null;
             aiStats = null;
+            teams = null;
             healths = null;
             attackRequests = null;
+            drivers = null;
+            tickTimer = default;
         }
 
         private void Decide(Entity actor)
@@ -134,15 +165,37 @@ namespace MercLord.Battle.ECS.Systems
                 ? direction
                 : float2.zero;
 
-            var weaponRangeSquared = weapon.Range * weapon.Range;
             var cooldown = cooldowns.Get(actor);
-            if (distanceSquared <= weaponRangeSquared && cooldown.Value <= 0f)
+            if (cooldown.Value > 0f)
             {
-                var requestEntity = world.CreateEntity();
-                attackRequests.Set(requestEntity, new AttackRequestComponent
+                return;
+            }
+
+            var requestTarget = target;
+            var requestTargetPosition = targetPosition.Value;
+            if (ArtilleryClusterTargeting.TryFindBestCluster(
+                    world,
+                    spatialHashSystem,
+                    positions,
+                    healths,
+                    actorPosition.Value,
+                    teams.Get(actor).Value,
+                    weapon,
+                    candidateBuffer,
+                    clusterBuffer,
+                    out var clusterTargetPosition))
+            {
+                requestTarget = ArtilleryClusterTargeting.CreateTargetMarker(world, positions, clusterTargetPosition);
+                requestTargetPosition = clusterTargetPosition;
+            }
+
+            var weaponRangeSquared = weapon.Range * weapon.Range;
+            if (math.distancesq(actorPosition.Value, requestTargetPosition) <= weaponRangeSquared)
+            {
+                attackRequests.Set(world.CreateEntity(), new AttackRequestComponent
                 {
                     Source = actor,
-                    Target = target,
+                    Target = requestTarget,
                     WeaponConfigId = weapon.WeaponConfigId
                 });
             }
@@ -152,7 +205,8 @@ namespace MercLord.Battle.ECS.Systems
         {
             return world.Has(target) &&
                    positions.Has(target) &&
-                   healths.Has(target);
+                   healths.Has(target) &&
+                   !drivers.Has(target);
         }
 
         private bool ShouldRetreat(Entity actor, AIStatsComponent ai)

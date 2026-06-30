@@ -1,19 +1,27 @@
+using System;
 using MercLord.Game.Configs;
+using Cysharp.Threading.Tasks;
+using MercLord.Game.StateMachine;
 using MercLord.Global.Cells;
+using MercLord.Global.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using VContainer;
+using VContainer.Unity;
 
 namespace MercLord.Global.Rendering
 {
-    [ExecuteAlways]
-    public sealed class GlobalMapCellInfoController : MonoBehaviour
+    public sealed class GlobalMapCellInfoController : ITickable
     {
-        [SerializeField] private ProceduralGlobalMapRenderer mapRenderer;
-        [SerializeField] private GlobalMapDebugController debugController;
-        [SerializeField] private ConfigDatabase configDatabase;
-        [SerializeField] private GlobalMapCellTooltipView tooltipView;
-        [SerializeField] private Camera inputCamera;
+        private readonly ProceduralGlobalMapRenderer mapRenderer;
+        private readonly GlobalMapDebugController debugController;
+        private readonly ConfigDatabase configDatabase;
+        private readonly GlobalMapCellTooltipView tooltipView;
+        private readonly Camera inputCamera;
+        private readonly IGlobalBattleStarter battleStarter;
 
+        private GlobalBattleEncounterPromptView encounterPrompt;
+        private bool promptStartInProgress;
         private int selectedCellId = WorldIds.None;
 
         public ProceduralGlobalMapRenderer MapRenderer => mapRenderer;
@@ -21,22 +29,23 @@ namespace MercLord.Global.Rendering
         public GlobalMapCellTooltipView TooltipView => tooltipView;
         public Camera InputCamera => inputCamera;
 
-        public void Configure(
-            ProceduralGlobalMapRenderer renderer,
-            GlobalMapDebugController debug,
-            ConfigDatabase database,
-            GlobalMapCellTooltipView view,
-            Camera camera)
+        public GlobalMapCellInfoController(
+            GlobalSceneRoot sceneRoot,
+            ConfigDatabase configDatabase,
+            IObjectResolver resolver)
         {
-            mapRenderer = renderer;
-            debugController = debug;
-            configDatabase = database;
-            tooltipView = view;
-            inputCamera = camera;
+            mapRenderer = sceneRoot.ProceduralMapRenderer;
+            debugController = sceneRoot.DebugController;
+            this.configDatabase = configDatabase;
+            tooltipView = sceneRoot.TooltipView;
+            inputCamera = sceneRoot.InputCamera;
+            battleStarter = resolver.TryResolve<IGlobalBattleStarter>(out var resolvedBattleStarter)
+                ? resolvedBattleStarter
+                : null;
             RefreshDate();
         }
 
-        private void Update()
+        public void Tick()
         {
             RefreshDate();
 
@@ -71,6 +80,7 @@ namespace MercLord.Global.Rendering
             selectedCellId = cellId;
             mapRenderer.SelectCell(cellId);
             tooltipView?.Show(cell, GetFactionName(cell.OwnerFactionId), Input.mousePosition);
+            ShowEncounterPromptIfAvailable(cellId);
         }
 
         public void ClearSelection()
@@ -78,6 +88,7 @@ namespace MercLord.Global.Rendering
             selectedCellId = WorldIds.None;
             mapRenderer?.ClearSelection();
             tooltipView?.Hide();
+            encounterPrompt?.Hide();
         }
 
         private void RefreshDate()
@@ -101,6 +112,61 @@ namespace MercLord.Global.Rendering
             return configDatabase != null && configDatabase.TryGetFaction(factionId, out var faction)
                 ? faction.DisplayName
                 : $"Faction {factionId}";
+        }
+
+        private void ShowEncounterPromptIfAvailable(int cellId)
+        {
+            if (battleStarter == null ||
+                !battleStarter.TryGetPlayerBattleEncounter(cellId, out var encounter))
+            {
+                encounterPrompt?.Hide();
+                return;
+            }
+
+            EnsureEncounterPrompt().Show(
+                encounter,
+                GetFactionName(encounter.OpponentFactionId),
+                () => StartBattleFromPrompt(encounter.OpponentArmyId),
+                () => encounterPrompt?.Hide());
+        }
+
+        private GlobalBattleEncounterPromptView EnsureEncounterPrompt()
+        {
+            encounterPrompt ??= GlobalBattleEncounterPromptView.CreateRuntime();
+            return encounterPrompt;
+        }
+
+        private void StartBattleFromPrompt(int opponentArmyId)
+        {
+            if (promptStartInProgress)
+            {
+                return;
+            }
+
+            StartBattleFromPromptAsync(opponentArmyId).Forget();
+        }
+
+        private async UniTaskVoid StartBattleFromPromptAsync(int opponentArmyId)
+        {
+            promptStartInProgress = true;
+            encounterPrompt?.SetInteractable(false);
+            try
+            {
+                var started = battleStarter != null &&
+                              await battleStarter.TryStartPlayerBattleAsync(opponentArmyId);
+                if (!started)
+                {
+                    promptStartInProgress = false;
+                    encounterPrompt?.SetInteractable(true);
+                    encounterPrompt?.Hide();
+                }
+            }
+            catch (Exception exception)
+            {
+                promptStartInProgress = false;
+                encounterPrompt?.SetInteractable(true);
+                Debug.LogException(exception);
+            }
         }
     }
 }

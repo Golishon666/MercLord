@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 5002
   displayName: Foundation Global Generation
   seed: 1001
-  targetCellCount: 2048
+  targetCellCount: 240000
   startingDay: 1
   playerStartCellId: 4
   playerStartingCredits: 500

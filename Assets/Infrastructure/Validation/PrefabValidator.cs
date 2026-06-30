@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using MercLord.Bootstrap;
 using MercLord.Game.Configs;
 using MercLord.Game.UI;
+using MercLord.Battle.Projectiles;
 using MercLord.Battle.Rendering;
 using MercLord.Battle.Vehicles;
 using MercLord.Global.Rendering;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 namespace MercLord.Infrastructure.Validation
@@ -174,13 +176,11 @@ namespace MercLord.Infrastructure.Validation
             else
             {
                 ValidateRequiredSceneReference(settings.VertexColorMaterialTemplate, settings, "Procedural global map render settings are missing vertex color material template.", issues);
-                ValidateRequiredSceneReference(settings.BiomeMaterialTemplate, settings, "Procedural global map render settings are missing biome material template.", issues);
                 ValidateRequiredSceneReference(settings.IconMaterialTemplate, settings, "Procedural global map render settings are missing icon material template.", issues);
                 ValidateProceduralBiomeFallbackPalette(settings, issues);
             }
 
             ValidateProceduralMeshLayer(prefab, "Starfield Mesh", issues);
-            ValidateProceduralMeshLayer(prefab, "Biome Underlay Mesh", issues);
             ValidateProceduralMeshLayer(prefab, "Terrain Mesh", issues);
             ValidateProceduralMeshLayer(prefab, "Rivers Mesh", issues);
             ValidateProceduralMeshLayer(prefab, "Roads Mesh", issues);
@@ -201,43 +201,26 @@ namespace MercLord.Infrastructure.Validation
                 return issues;
             }
 
-            var bootstrap = sceneRoot.GetComponent<GlobalMapSceneBootstrap>();
-            if (bootstrap == null)
+            var scope = sceneRoot.GetComponent<GlobalLifetimeScope>();
+            if (scope == null)
             {
-                issues.Add(new ValidationIssue(ValidationSeverity.Error, sceneRoot, "Global map scene root is missing GlobalMapSceneBootstrap."));
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, sceneRoot, "Global map scene root is missing GlobalLifetimeScope."));
                 return issues;
             }
 
-            ValidateRequiredSceneReference(bootstrap.MapRenderer, bootstrap, "GlobalMapSceneBootstrap is missing ProceduralGlobalMapRenderer reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.DebugController, bootstrap, "GlobalMapSceneBootstrap is missing GlobalMapDebugController reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.CellInfoController, bootstrap, "GlobalMapSceneBootstrap is missing GlobalMapCellInfoController reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.CameraController, bootstrap, "GlobalMapSceneBootstrap is missing GlobalMapCameraController reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.TooltipView, bootstrap, "GlobalMapSceneBootstrap is missing GlobalMapCellTooltipView reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.OrbitalFollow, bootstrap, "GlobalMapSceneBootstrap is missing CinemachineOrbitalFollow reference.", issues);
-            ValidateRequiredSceneReference(bootstrap.InputCamera, bootstrap, "GlobalMapSceneBootstrap is missing input Camera reference.", issues);
-
-            if (bootstrap.CellInfoController != null)
+            var root = sceneRoot.GetComponent<GlobalSceneRoot>();
+            if (root == null)
             {
-                ValidateRequiredSceneReference(
-                    bootstrap.CellInfoController.InputCamera,
-                    bootstrap.CellInfoController,
-                    "GlobalMapCellInfoController is missing input Camera reference.",
-                    issues);
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, sceneRoot, "Global map scene root is missing GlobalSceneRoot."));
+                return issues;
             }
 
-            if (bootstrap.CameraController != null)
-            {
-                ValidateRequiredSceneReference(
-                    bootstrap.CameraController.OrbitalFollow,
-                    bootstrap.CameraController,
-                    "GlobalMapCameraController is missing CinemachineOrbitalFollow reference.",
-                    issues);
-                ValidateRequiredSceneReference(
-                    bootstrap.CameraController.MapRenderer,
-                    bootstrap.CameraController,
-                    "GlobalMapCameraController is missing ProceduralGlobalMapRenderer reference.",
-                    issues);
-            }
+            ValidateRequiredSceneReference(root.ConfigDatabase, root, "GlobalSceneRoot is missing ConfigDatabase reference.", issues);
+            ValidateRequiredSceneReference(root.ProceduralMapRenderer, root, "GlobalSceneRoot is missing ProceduralGlobalMapRenderer reference.", issues);
+            ValidateRequiredSceneReference(root.DebugController, root, "GlobalSceneRoot is missing GlobalMapDebugController reference.", issues);
+            ValidateRequiredSceneReference(root.TooltipView, root, "GlobalSceneRoot is missing GlobalMapCellTooltipView reference.", issues);
+            ValidateRequiredSceneReference(root.OrbitalFollow, root, "GlobalSceneRoot is missing CinemachineOrbitalFollow reference.", issues);
+            ValidateRequiredSceneReference(root.InputCamera, root, "GlobalSceneRoot is missing input Camera reference.", issues);
 
             return issues;
         }
@@ -276,6 +259,15 @@ namespace MercLord.Infrastructure.Validation
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, scope, "BattleLifetimeScope is missing BattleInputSource reference."));
             }
 
+            if (scope.TilemapView == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, scope, "BattleLifetimeScope is missing BattleTilemapView reference."));
+            }
+            else
+            {
+                ValidateBattleTilemapView(scope.TilemapView, issues);
+            }
+
             var sceneRoot = scope.SceneRoot != null
                 ? scope.SceneRoot
                 : prefab.GetComponentInChildren<BattleSceneRoot>(true);
@@ -291,6 +283,32 @@ namespace MercLord.Infrastructure.Validation
             }
 
             return issues;
+        }
+
+        private static void ValidateBattleTilemapView(
+            BattleTilemapView tilemapView,
+            ICollection<ValidationIssue> issues)
+        {
+            ValidateTilemapReference(tilemapView.GroundTilemap, tilemapView, "BattleTilemapView is missing GroundTilemap reference.", issues);
+            ValidateTilemapReference(tilemapView.RoadTilemap, tilemapView, "BattleTilemapView is missing RoadTilemap reference.", issues);
+            ValidateTilemapReference(tilemapView.ObstacleTilemap, tilemapView, "BattleTilemapView is missing ObstacleTilemap reference.", issues);
+            ValidateTilemapReference(tilemapView.DecorationTilemap, tilemapView, "BattleTilemapView is missing DecorationTilemap reference.", issues);
+            ValidateTilemapReference(tilemapView.OverlayTilemap, tilemapView, "BattleTilemapView is missing OverlayTilemap reference.", issues);
+            ValidateTilemapReference(tilemapView.DebugTilemap, tilemapView, "BattleTilemapView is missing DebugTilemap reference.", issues);
+        }
+
+        private static void ValidateTilemapReference(
+            Tilemap tilemap,
+            Object context,
+            string message,
+            ICollection<ValidationIssue> issues)
+        {
+            if (tilemap != null)
+            {
+                return;
+            }
+
+            issues.Add(new ValidationIssue(ValidationSeverity.Error, context, message));
         }
 
         public List<ValidationIssue> ValidateBootstrapScenePrefab(GameObject prefab)
@@ -370,6 +388,15 @@ namespace MercLord.Infrastructure.Validation
             if (catalog.CellSize.x <= 0f || catalog.CellSize.y <= 0f)
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, "BattleViewCatalog cell size must be positive."));
+            }
+
+            if (catalog.ProjectileViewPrefab == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog, "BattleViewCatalog projectile view prefab is missing."));
+            }
+            else if (catalog.ProjectileViewPrefab.GetComponentInChildren<ProjectileView>(true) == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, catalog.ProjectileViewPrefab, $"BattleViewCatalog projectile prefab '{catalog.ProjectileViewPrefab.name}' has no ProjectileView component."));
             }
 
             var unitViews = catalog.UnitViews;

@@ -8,8 +8,28 @@ using Unity.Mathematics;
 
 namespace MercLord.Battle.ECS.Systems
 {
+    public readonly struct SpatialHashBucketDebugInfo
+    {
+        public SpatialHashBucketDebugInfo(int cellX, int cellY, int entityCount, float cellSize)
+        {
+            CellX = cellX;
+            CellY = cellY;
+            EntityCount = Math.Max(0, entityCount);
+            CellSize = Math.Max(0f, cellSize);
+        }
+
+        public int CellX { get; }
+        public int CellY { get; }
+        public int EntityCount { get; }
+        public float CellSize { get; }
+        public float2 Min => new float2(CellX * CellSize, CellY * CellSize);
+        public float2 Max => new float2((CellX + 1) * CellSize, (CellY + 1) * CellSize);
+    }
+
     public sealed class SpatialHashSystem : IBattleRuntimeSystem
     {
+        private const float TickInterval = 0.05f;
+
         private readonly ConfigDatabase configDatabase;
         private readonly Dictionary<long, List<Entity>> buckets = new Dictionary<long, List<Entity>>();
 
@@ -17,12 +37,19 @@ namespace MercLord.Battle.ECS.Systems
         private Filter filter;
         private Stash<PositionComponent> positions;
         private Stash<TeamComponent> teams;
+        private Stash<DeadComponent> dead;
+        private Stash<DriverComponent> drivers;
         private float cellSize;
+        private BattleCadenceTimer tickTimer;
 
         public SpatialHashSystem(ConfigDatabase configDatabase)
         {
             this.configDatabase = configDatabase ?? throw new ArgumentNullException(nameof(configDatabase));
         }
+
+        public int ActiveBucketCount { get; private set; }
+        public int IndexedEntityCount { get; private set; }
+        public float CellSize => cellSize;
 
         public void Initialize(BattleSession session)
         {
@@ -49,15 +76,25 @@ namespace MercLord.Battle.ECS.Systems
                 .With<PositionComponent>()
                 .With<TeamComponent>()
                 .Without<DeadComponent>()
+                .Without<DriverComponent>()
                 .Build();
 
             positions = world.GetStash<PositionComponent>();
             teams = world.GetStash<TeamComponent>();
+            dead = world.GetStash<DeadComponent>();
+            drivers = world.GetStash<DriverComponent>();
+            tickTimer = new BattleCadenceTimer(TickInterval);
             Rebuild();
+            tickTimer.Consume(0f);
         }
 
         public void Tick(float deltaTime)
         {
+            if (!tickTimer.Consume(deltaTime))
+            {
+                return;
+            }
+
             Rebuild();
         }
 
@@ -78,7 +115,12 @@ namespace MercLord.Battle.ECS.Systems
             world = null;
             positions = null;
             teams = null;
+            dead = null;
+            drivers = null;
             cellSize = 0f;
+            tickTimer = default;
+            ActiveBucketCount = 0;
+            IndexedEntityCount = 0;
         }
 
         public void GetOpponentsInRange(
@@ -86,6 +128,53 @@ namespace MercLord.Battle.ECS.Systems
             float radius,
             BattleTeamType ownTeam,
             List<Entity> results)
+        {
+            QueryInRange(
+                center,
+                radius,
+                results,
+                entity => teams.Get(entity).Value != ownTeam);
+        }
+
+        public void GetEntitiesInRange(
+            float2 center,
+            float radius,
+            List<Entity> results)
+        {
+            QueryInRange(center, radius, results, null);
+        }
+
+        public void GetDebugBuckets(List<SpatialHashBucketDebugInfo> results)
+        {
+            if (results == null)
+            {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            results.Clear();
+            if (world == null || world.IsDisposed || cellSize <= 0f)
+            {
+                return;
+            }
+
+            foreach (var pair in buckets)
+            {
+                var bucket = pair.Value;
+                if (bucket == null || bucket.Count == 0)
+                {
+                    continue;
+                }
+
+                DecodeKey(pair.Key, out var cellX, out var cellY);
+                results.Add(new SpatialHashBucketDebugInfo(cellX, cellY, bucket.Count, cellSize));
+            }
+        }
+
+        private void QueryInRange(
+            float2 center,
+            float radius,
+            List<Entity> results,
+            Func<Entity, bool> predicate)
         {
             if (results == null)
             {
@@ -114,13 +203,16 @@ namespace MercLord.Battle.ECS.Systems
                     for (var entityIndex = 0; entityIndex < bucket.Count; entityIndex++)
                     {
                         var entity = bucket[entityIndex];
-                        if (!world.Has(entity) || !positions.Has(entity) || !teams.Has(entity))
+                        if (!world.Has(entity) ||
+                            !positions.Has(entity) ||
+                            !teams.Has(entity) ||
+                            dead.Has(entity) ||
+                            drivers.Has(entity))
                         {
                             continue;
                         }
 
-                        var team = teams.Get(entity);
-                        if (team.Value == ownTeam)
+                        if (predicate != null && !predicate(entity))
                         {
                             continue;
                         }
@@ -147,6 +239,8 @@ namespace MercLord.Battle.ECS.Systems
                 bucket.Clear();
             }
 
+            ActiveBucketCount = 0;
+            IndexedEntityCount = 0;
             foreach (var entity in filter)
             {
                 var position = positions.Get(entity);
@@ -158,7 +252,13 @@ namespace MercLord.Battle.ECS.Systems
                     buckets.Add(key, bucket);
                 }
 
+                if (bucket.Count == 0)
+                {
+                    ActiveBucketCount++;
+                }
+
                 bucket.Add(entity);
+                IndexedEntityCount++;
             }
         }
 
@@ -172,6 +272,12 @@ namespace MercLord.Battle.ECS.Systems
         private static long ToKey(int x, int y)
         {
             return ((long)x << 32) ^ (uint)y;
+        }
+
+        private static void DecodeKey(long key, out int x, out int y)
+        {
+            x = (int)(key >> 32);
+            y = unchecked((int)(key & 0xffffffff));
         }
     }
 }

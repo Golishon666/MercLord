@@ -1,40 +1,39 @@
 using Unity.Cinemachine;
 using UnityEngine;
+using VContainer.Unity;
 
 namespace MercLord.Global.Rendering
 {
-    public sealed class GlobalMapCameraController : MonoBehaviour
+    public sealed class GlobalMapCameraController : IStartable, ITickable
     {
         private const float MinimumVerticalAngle = -89f;
         private const float MaximumVerticalAngle = 89f;
 
-        [SerializeField] private CinemachineOrbitalFollow orbitalFollow;
-        [SerializeField] private GlobalMapDebugController debugController;
-        [SerializeField] private ProceduralGlobalMapRenderer mapRenderer;
-        [SerializeField] private float rotationSpeed = 0.35f;
-        [SerializeField] private float verticalSpeed = 0.25f;
-        [SerializeField] private float zoomSpeed = 4f;
-        [SerializeField] private float minRadius = 4.2f;
-        [SerializeField] private float maxRadius = 10.5f;
-        [SerializeField, Range(0f, 1f)] private float markerIconVisibilityZoomThreshold = 0.5f;
+        private readonly GlobalSceneRoot sceneRoot;
+        private readonly CinemachineOrbitalFollow orbitalFollow;
+        private readonly GlobalMapDebugController debugController;
+        private readonly ProceduralGlobalMapRenderer mapRenderer;
 
         public CinemachineOrbitalFollow OrbitalFollow => orbitalFollow;
         public GlobalMapDebugController DebugController => debugController;
         public ProceduralGlobalMapRenderer MapRenderer => mapRenderer;
 
-        public void Configure(
-            CinemachineOrbitalFollow follow,
-            GlobalMapDebugController debug,
-            ProceduralGlobalMapRenderer renderer)
+        public GlobalMapCameraController(GlobalSceneRoot sceneRoot)
         {
-            orbitalFollow = follow;
-            debugController = debug;
-            mapRenderer = renderer;
+            this.sceneRoot = sceneRoot;
+            orbitalFollow = sceneRoot.OrbitalFollow;
+            debugController = sceneRoot.DebugController;
+            mapRenderer = sceneRoot.ProceduralMapRenderer;
+        }
+
+        public void Start()
+        {
             ApplyOrbitLimits();
+            ClampZoom();
             UpdateMarkerIconVisibility();
         }
 
-        private void Update()
+        public void Tick()
         {
             if (orbitalFollow == null)
             {
@@ -43,6 +42,7 @@ namespace MercLord.Global.Rendering
 
             UpdateRotation();
             UpdateZoom();
+            ClampZoom();
             UpdateMarkerIconVisibility();
         }
 
@@ -60,8 +60,8 @@ namespace MercLord.Global.Rendering
 
             var horizontal = orbitalFollow.HorizontalAxis;
             var vertical = orbitalFollow.VerticalAxis;
-            horizontal.Value = horizontal.ClampValue(horizontal.Value + Input.GetAxisRaw("Mouse X") * rotationSpeed * 100f);
-            vertical.Value = vertical.ClampValue(vertical.Value - Input.GetAxisRaw("Mouse Y") * verticalSpeed * 100f);
+            horizontal.Value = horizontal.ClampValue(horizontal.Value + Input.GetAxisRaw("Mouse X") * sceneRoot.RotationSpeed * 100f);
+            vertical.Value = vertical.ClampValue(vertical.Value - Input.GetAxisRaw("Mouse Y") * sceneRoot.VerticalSpeed * 100f);
             orbitalFollow.HorizontalAxis = horizontal;
             orbitalFollow.VerticalAxis = vertical;
         }
@@ -93,7 +93,20 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            orbitalFollow.Radius = Mathf.Clamp(orbitalFollow.Radius - scroll * zoomSpeed * UnityEngine.Time.unscaledDeltaTime * 10f, minRadius, maxRadius);
+            orbitalFollow.Radius = Mathf.Clamp(
+                orbitalFollow.Radius - scroll * sceneRoot.ZoomSpeed * UnityEngine.Time.unscaledDeltaTime * 10f,
+                GetMinimumZoomRadius(),
+                GetMaximumZoomRadius());
+        }
+
+        private void ClampZoom()
+        {
+            if (orbitalFollow == null)
+            {
+                return;
+            }
+
+            orbitalFollow.Radius = Mathf.Clamp(orbitalFollow.Radius, GetMinimumZoomRadius(), GetMaximumZoomRadius());
         }
 
         private void UpdateMarkerIconVisibility()
@@ -103,8 +116,23 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            var zoomRatio = Mathf.InverseLerp(minRadius, maxRadius, orbitalFollow.Radius);
-            mapRenderer.SetMarkerIconsVisible(zoomRatio >= markerIconVisibilityZoomThreshold);
+            var zoomRatio = Mathf.InverseLerp(GetMinimumZoomRadius(), GetMaximumZoomRadius(), orbitalFollow.Radius);
+            mapRenderer.SetMarkerIconsVisible(zoomRatio >= sceneRoot.MarkerIconVisibilityZoomThreshold);
+        }
+
+        private float GetMinimumZoomRadius()
+        {
+            return GetMapSurfaceRadius() + sceneRoot.MinZoomSurfaceDistance;
+        }
+
+        private float GetMaximumZoomRadius()
+        {
+            return GetMapSurfaceRadius() + sceneRoot.MaxZoomSurfaceDistance;
+        }
+
+        private float GetMapSurfaceRadius()
+        {
+            return mapRenderer != null ? mapRenderer.PlanetRadius : 0f;
         }
     }
 }

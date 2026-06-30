@@ -17,6 +17,14 @@ namespace MercLord.Global.Rendering
             }
 
             builder.RegisterComponent(sceneRoot);
+            if (sceneRoot.ConfigDatabase != null)
+            {
+                builder.RegisterInstance(sceneRoot.ConfigDatabase);
+            }
+
+            builder.RegisterEntryPoint<GlobalSceneInitializer>();
+            builder.RegisterEntryPoint<GlobalMapCameraController>();
+            builder.RegisterEntryPoint<GlobalMapCellInfoController>();
         }
     }
 }

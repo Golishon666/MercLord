@@ -25,3 +25,11 @@ MonoBehaviour:
   roadWidth: 3
   attackerSpawnColumns: 12
   defenderSpawnColumns: 12
+  unitSpawnOffset: {x: 0.5, y: 0.5}
+  unitSpawnJitterRadius: 0.18
+  plainsCoverPatchCount: 18
+  plainsCoverPatchRadius: 2
+  forestCoverPatchCount: 34
+  forestCoverPatchRadius: 3
+  forestObstaclePatchCount: 18
+  forestObstaclePatchRadius: 2

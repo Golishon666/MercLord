@@ -27,6 +27,22 @@ namespace MercLord.Battle.ECS.Components
         Destroyed
     }
 
+    public enum SquadOrderType
+    {
+        AttackNearest,
+        FollowPlayer,
+        HoldPosition,
+        Retreat
+    }
+
+    public enum BattleLodLevel
+    {
+        Full,
+        Simplified,
+        Strategic,
+        Dead
+    }
+
     public struct BotComponent : IComponent
     {
         public int UnitConfigId;
@@ -56,6 +72,47 @@ namespace MercLord.Battle.ECS.Components
     public struct FactionComponent : IComponent
     {
         public int Value;
+    }
+
+    public struct SquadMemberComponent : IComponent
+    {
+        public int SquadId;
+        public int SlotIndex;
+        public int SquadSize;
+    }
+
+    public struct SquadComponent : IComponent
+    {
+        public int SquadId;
+        public int UnitConfigId;
+        public int FactionId;
+        public BattleTeamType Team;
+        public int MemberCount;
+    }
+
+    public struct SquadAnchorComponent : IComponent
+    {
+        public float2 Position;
+        public float2 ForwardDirection;
+    }
+
+    public struct SquadOrderComponent : IComponent
+    {
+        public SquadOrderType Value;
+        public float2 TargetPosition;
+    }
+
+    public struct SquadMoraleComponent : IComponent
+    {
+        public float Current;
+        public float Max;
+        public float RoutThreshold;
+        public bool IsRouted;
+    }
+
+    public struct FormationSlotComponent : IComponent
+    {
+        public float2 LocalOffset;
     }
 
     public struct MovementStatsComponent : IComponent
@@ -122,6 +179,12 @@ namespace MercLord.Battle.ECS.Components
         public int ViewId;
     }
 
+    public struct BattleLodComponent : IComponent
+    {
+        public BattleLodLevel Level;
+        public float DistanceToFocus;
+    }
+
     public struct PlayerControlledComponent : IComponent
     {
     }
@@ -167,6 +230,51 @@ namespace MercLord.Battle.ECS.Components
     public struct ExplosionOnImpactComponent : IComponent
     {
         public float Radius;
+    }
+
+    public struct ArtilleryWarningComponent : IComponent
+    {
+        public Entity Source;
+        public float Radius;
+        public float Duration;
+        public float RemainingTime;
+    }
+
+    public struct ArtilleryTargetMarkerComponent : IComponent
+    {
+    }
+
+    public struct HitscanTraceComponent : IComponent
+    {
+        public float2 Start;
+        public float2 End;
+        public float Duration;
+        public float RemainingTime;
+        public bool Hit;
+    }
+
+    public enum BattleAudioCueType
+    {
+        HitscanShot,
+        ProjectileShot,
+        ArtilleryShot,
+        MeleeSwing
+    }
+
+    public struct BattleAudioCueComponent : IComponent
+    {
+        public BattleAudioCueType Type;
+        public float2 Position;
+        public float Volume;
+        public float Pitch;
+    }
+
+    public struct BattleCameraShakeComponent : IComponent
+    {
+        public float2 Position;
+        public float Intensity;
+        public float Duration;
+        public float RemainingTime;
     }
 
     public struct AttackRequestComponent : IComponent

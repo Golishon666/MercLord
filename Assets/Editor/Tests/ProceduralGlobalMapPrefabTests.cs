@@ -33,8 +33,8 @@ namespace MercLord.Editor.Tests
             try
             {
                 var sceneRoot = scene.GetRootGameObjects()
-                    .FirstOrDefault(gameObject => gameObject.GetComponent<GlobalMapSceneBootstrap>() != null);
-                Assert.IsNotNull(sceneRoot, $"Missing GlobalMapSceneBootstrap root in {GlobalScenePath}.");
+                    .FirstOrDefault(gameObject => gameObject.GetComponent<GlobalLifetimeScope>() != null);
+                Assert.IsNotNull(sceneRoot, $"Missing GlobalLifetimeScope root in {GlobalScenePath}.");
 
                 var issues = new PrefabValidator().ValidateGlobalMapSceneRoot(sceneRoot);
                 var errors = issues.Where(issue => issue.Severity == ValidationSeverity.Error).ToArray();

@@ -22,6 +22,8 @@ namespace MercLord.Battle.ECS.Systems
         private Stash<DeadComponent> deadComponents;
         private Stash<BotStateComponent> botStates;
         private Stash<VehicleComponent> vehicles;
+        private Stash<DriverComponent> drivers;
+        private Stash<PositionComponent> positions;
 
         public DamageSystem(
             ConfigDatabase configDatabase,
@@ -59,6 +61,8 @@ namespace MercLord.Battle.ECS.Systems
             deadComponents = world.GetStash<DeadComponent>();
             botStates = world.GetStash<BotStateComponent>();
             vehicles = world.GetStash<VehicleComponent>();
+            drivers = world.GetStash<DriverComponent>();
+            positions = world.GetStash<PositionComponent>();
         }
 
         public void Tick(float deltaTime)
@@ -101,6 +105,8 @@ namespace MercLord.Battle.ECS.Systems
             deadComponents = null;
             botStates = null;
             vehicles = null;
+            drivers = null;
+            positions = null;
         }
 
         private void ApplyRequest(DamageRequestComponent request)
@@ -110,7 +116,7 @@ namespace MercLord.Battle.ECS.Systems
                 throw new InvalidOperationException("Damage request amount must be positive.");
             }
 
-            if (!world.Has(request.Target) || !healths.Has(request.Target))
+            if (!world.Has(request.Target) || !healths.Has(request.Target) || drivers.Has(request.Target))
             {
                 return;
             }
@@ -174,8 +180,35 @@ namespace MercLord.Battle.ECS.Systems
             ref var vehicle = ref vehicles.Get(target, out var hasVehicle);
             if (hasVehicle)
             {
+                KillVehicleDriver(target, vehicle.Driver);
                 vehicle.State = VehicleStateType.Destroyed;
                 vehicle.Driver = default;
+            }
+        }
+
+        private void KillVehicleDriver(Entity vehicleEntity, Entity driver)
+        {
+            if (!world.Has(driver))
+            {
+                return;
+            }
+
+            if (positions.Has(vehicleEntity) && positions.Has(driver))
+            {
+                positions.Get(driver).Value = positions.Get(vehicleEntity).Value;
+            }
+
+            if (drivers.Has(driver))
+            {
+                drivers.Remove(driver);
+            }
+
+            deadComponents.Set(driver, new DeadComponent());
+
+            ref var driverState = ref botStates.Get(driver, out var hasDriverState);
+            if (hasDriverState)
+            {
+                driverState.Value = BotStateType.Dead;
             }
         }
     }

@@ -10,6 +10,7 @@ namespace MercLord.Battle.Rendering
     {
         int SpawnUnitView(UnitConfig unitConfig, Transform parent);
         int SpawnVehicleView(VehicleConfig vehicleConfig, Transform parent);
+        int SpawnProjectileView(Transform parent);
         bool TryGetView(int viewId, out GameObject view);
         void ReleaseView(int viewId);
         void ReleaseAll();
@@ -22,6 +23,7 @@ namespace MercLord.Battle.Rendering
         private readonly BattleViewRegistry viewRegistry;
         private readonly Dictionary<string, GameObjectPool> unitViewPools =
             new Dictionary<string, GameObjectPool>(StringComparer.Ordinal);
+        private GameObjectPool projectileViewPool;
 
         public BattleViewFactory(
             IPrefabFactory prefabFactory,
@@ -67,6 +69,18 @@ namespace MercLord.Battle.Rendering
             var pool = GetUnitViewPool(vehicleConfig.ViewPrefabAddress, prefab, parent);
             var view = pool.Rent(parent);
             return viewRegistry.Register(view, pool);
+        }
+
+        public int SpawnProjectileView(Transform parent)
+        {
+            if (!viewCatalog.TryGetProjectileViewPrefab(out var prefab))
+            {
+                throw new InvalidOperationException("Battle view catalog is missing projectile view prefab.");
+            }
+
+            projectileViewPool ??= new GameObjectPool(prefabFactory, prefab, parent);
+            var view = projectileViewPool.Rent(parent);
+            return viewRegistry.Register(view, projectileViewPool);
         }
 
         public bool TryGetView(int viewId, out GameObject view)

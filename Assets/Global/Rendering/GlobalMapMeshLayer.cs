@@ -29,7 +29,10 @@ namespace MercLord.Global.Rendering
             meshRenderer.shadowCastingMode = shadowCastingMode;
             meshRenderer.receiveShadows = receiveShadows;
             SetVisible(mesh != null || !disableWhenEmpty);
-            SetEditorDirty(this);
+            if (!HasDontSaveFlag(mesh) && !HasDontSaveFlag(material))
+            {
+                SetEditorDirty(this);
+            }
         }
 
         public void Clear()
@@ -107,11 +110,17 @@ namespace MercLord.Global.Rendering
         private static void SetEditorDirty(UnityEngine.Object target)
         {
 #if UNITY_EDITOR
-            if (!Application.isPlaying && target != null)
+            if (!Application.isPlaying && target != null && !HasDontSaveFlag(target))
             {
                 UnityEditor.EditorUtility.SetDirty(target);
             }
 #endif
+        }
+
+        private static bool HasDontSaveFlag(UnityEngine.Object target)
+        {
+            const HideFlags dontSaveFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            return target != null && (target.hideFlags & dontSaveFlags) != 0;
         }
     }
 }

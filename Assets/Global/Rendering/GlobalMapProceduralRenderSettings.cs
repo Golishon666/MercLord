@@ -31,15 +31,21 @@ namespace MercLord.Global.Rendering
         [Header("Mesh Detail")]
         [SerializeField, Min(1)] private int lineSegments = 8;
         [SerializeField, Min(1)] private int starCount = 720;
-        [SerializeField, Min(3)] private int biomeUnderlayLongitudeSegments = 192;
-        [SerializeField, Min(2)] private int biomeUnderlayLatitudeSegments = 96;
+        [SerializeField, Min(16)] private int previewTerrainSurfaceLongitudeSegments = 1024;
+        [SerializeField, Min(8)] private int previewTerrainSurfaceLatitudeSegments = 512;
+        [SerializeField, Min(16)] private int terrainSurfaceLongitudeSegments = 1536;
+        [SerializeField, Min(8)] private int terrainSurfaceLatitudeSegments = 768;
+        [SerializeField, Min(256)] private int previewTerrainTextureWidth = 2048;
+        [SerializeField, Min(128)] private int previewTerrainTextureHeight = 1024;
+        [SerializeField, Min(256)] private int terrainTextureWidth = 4096;
+        [SerializeField, Min(128)] private int terrainTextureHeight = 2048;
+        [SerializeField, Range(0f, 24f)] private float terrainBiomeBlendPixels = 3f;
         [SerializeField, Range(12, 32)] private int tileVoronoiSeedVertexCount = 12;
         [SerializeField, Min(1f)] private float tileVoronoiSeedRadiusMultiplier = 2.4f;
 
         [Header("Surface Offsets")]
-        [SerializeField] private float terrainSurfaceOffset = 0.006f;
-        [SerializeField] private float biomeUnderlayOffset = -0.045f;
-        [SerializeField] private float selectionSurfaceOffset = 0.032f;
+        [SerializeField] private float terrainSurfaceOffset = 0.01f;
+        [SerializeField] private float selectionSurfaceOffset = 0.014f;
         [SerializeField] private float riverSurfaceOffset = 0.014f;
         [SerializeField] private float roadSurfaceOffset = 0.018f;
         [SerializeField] private float legacySettlementSurfaceOffset = 0.034f;
@@ -56,52 +62,50 @@ namespace MercLord.Global.Rendering
         [SerializeField] private Vector2 starBrightnessRange = new(0.55f, 1f);
         [SerializeField] private Color starTint = new(0.68f, 0.78f, 1f, 1f);
 
-        [Header("Terrain Texture")]
+        [Header("Atlas UV")]
         [SerializeField, Range(0f, 0.45f)] private float biomeTileUvPadding = 0.025f;
 
         [Header("Materials")]
         [SerializeField] private Material vertexColorMaterialTemplate;
-        [SerializeField] private Material biomeMaterialTemplate;
+        [SerializeField] private Material terrainMaterialTemplate;
         [SerializeField] private Material iconMaterialTemplate;
 
         [Header("Terrain Fallback Colors")]
         [SerializeField] private Color missingBiomeColor = Color.magenta;
-        [SerializeField] private Color forestTextureTint = new(0.14f, 0.25f, 0.09f, 1f);
-        [SerializeField] private Color mountainTextureTint = new(0.70f, 0.68f, 0.62f, 1f);
-        [SerializeField] private Color visualMountainTint = new(0.72f, 0.70f, 0.66f, 1f);
-        [SerializeField] private Color oceanTextureTint = new(0.07f, 0.16f, 0.28f, 1f);
-        [SerializeField] private Color deepWaterTint = new(0.06f, 0.14f, 0.26f, 1f);
-        [SerializeField] private Color shallowWaterTint = new(0.16f, 0.31f, 0.44f, 1f);
-        [SerializeField] private Color shoreTint = new(0.48f, 0.45f, 0.30f, 1f);
+        [SerializeField] private Color forestTextureTint = new(0.23f, 0.31f, 0.15f, 1f);
+        [SerializeField] private Color visualMountainTint = new(0.62f, 0.58f, 0.52f, 1f);
+        [SerializeField] private Color deepWaterTint = new(0.10f, 0.16f, 0.24f, 1f);
+        [SerializeField] private Color shallowWaterTint = new(0.19f, 0.27f, 0.34f, 1f);
+        [SerializeField] private Color shoreTint = new(0.47f, 0.42f, 0.27f, 1f);
         [SerializeField] private BiomeColorEntry[] fallbackBiomeColors =
         {
-            new(BiomeType.Ocean, new Color(0.08f, 0.18f, 0.31f, 1f)),
-            new(BiomeType.Coast, new Color(0.43f, 0.43f, 0.24f, 1f)),
-            new(BiomeType.Plains, new Color(0.42f, 0.41f, 0.20f, 1f)),
-            new(BiomeType.Forest, new Color(0.20f, 0.31f, 0.14f, 1f)),
-            new(BiomeType.Desert, new Color(0.58f, 0.44f, 0.31f, 1f)),
-            new(BiomeType.Snow, new Color(0.78f, 0.80f, 0.76f, 1f)),
-            new(BiomeType.Swamp, new Color(0.28f, 0.34f, 0.22f, 1f)),
-            new(BiomeType.Mountains, new Color(0.46f, 0.42f, 0.36f, 1f)),
-            new(BiomeType.AshWastes, new Color(0.25f, 0.23f, 0.22f, 1f)),
-            new(BiomeType.RustDesert, new Color(0.55f, 0.35f, 0.25f, 1f)),
-            new(BiomeType.DeadForest, new Color(0.29f, 0.32f, 0.22f, 1f)),
-            new(BiomeType.IndustrialRuins, new Color(0.34f, 0.35f, 0.33f, 1f)),
-            new(BiomeType.DemonScar, new Color(0.43f, 0.12f, 0.12f, 1f)),
-            new(BiomeType.ToxicSwamp, new Color(0.31f, 0.42f, 0.16f, 1f)),
+            new(BiomeType.Ocean, new Color(0.12f, 0.19f, 0.28f, 1f)),
+            new(BiomeType.Coast, new Color(0.45f, 0.42f, 0.25f, 1f)),
+            new(BiomeType.Plains, new Color(0.43f, 0.43f, 0.24f, 1f)),
+            new(BiomeType.Forest, new Color(0.25f, 0.33f, 0.17f, 1f)),
+            new(BiomeType.Desert, new Color(0.59f, 0.47f, 0.34f, 1f)),
+            new(BiomeType.Snow, new Color(0.80f, 0.80f, 0.76f, 1f)),
+            new(BiomeType.Swamp, new Color(0.30f, 0.34f, 0.22f, 1f)),
+            new(BiomeType.Mountains, new Color(0.48f, 0.44f, 0.38f, 1f)),
+            new(BiomeType.AshWastes, new Color(0.35f, 0.32f, 0.29f, 1f)),
+            new(BiomeType.RustDesert, new Color(0.57f, 0.41f, 0.31f, 1f)),
+            new(BiomeType.DeadForest, new Color(0.31f, 0.34f, 0.24f, 1f)),
+            new(BiomeType.IndustrialRuins, new Color(0.39f, 0.39f, 0.35f, 1f)),
+            new(BiomeType.DemonScar, new Color(0.42f, 0.19f, 0.16f, 1f)),
+            new(BiomeType.ToxicSwamp, new Color(0.34f, 0.41f, 0.18f, 1f)),
         };
 
         [Header("Roads and Rivers")]
-        [SerializeField] private float riverBaseWidth = 0.0045f;
-        [SerializeField] private float riverFlowWidthMultiplier = 0.0018f;
+        [SerializeField] private float riverBaseWidth = 0.0032f;
+        [SerializeField] private float riverFlowWidthMultiplier = 0.0013f;
         [SerializeField] private float riverMaxFlowWidth = 6f;
-        [SerializeField] private Color riverColor = new(0.08f, 0.22f, 0.38f, 0.9f);
-        [SerializeField] private float largeRoadWidth = 0.011f;
-        [SerializeField] private float mediumRoadWidth = 0.0075f;
-        [SerializeField] private float smallRoadWidth = 0.0045f;
-        [SerializeField] private Color largeRoadColor = new(0.16f, 0.15f, 0.13f, 0.95f);
-        [SerializeField] private Color mediumRoadColor = new(0.23f, 0.20f, 0.16f, 0.88f);
-        [SerializeField] private Color smallRoadColor = new(0.18f, 0.17f, 0.15f, 0.74f);
+        [SerializeField] private Color riverColor = new(0.08f, 0.17f, 0.25f, 0.72f);
+        [SerializeField] private float largeRoadWidth = 0.007f;
+        [SerializeField] private float mediumRoadWidth = 0.0048f;
+        [SerializeField] private float smallRoadWidth = 0.0028f;
+        [SerializeField] private Color largeRoadColor = new(0.12f, 0.11f, 0.09f, 0.62f);
+        [SerializeField] private Color mediumRoadColor = new(0.16f, 0.14f, 0.11f, 0.52f);
+        [SerializeField] private Color smallRoadColor = new(0.13f, 0.12f, 0.10f, 0.42f);
 
         [Header("Markers")]
         [SerializeField] private float capitalMarkerIconSize = 0.085f;
@@ -145,17 +149,24 @@ namespace MercLord.Global.Rendering
 
         [Header("Selection")]
         [SerializeField] private Color selectionColor = new(0.96f, 0.98f, 0.68f, 1f);
+        [SerializeField, Range(0.65f, 1.04f)] private float selectionInsetRatio = 1.012f;
 
         public float PlanetRadius => Mathf.Max(0.1f, planetRadius);
         public float StarfieldRadius => Mathf.Max(0.1f, starfieldRadius);
         public int LineSegments => Mathf.Max(1, lineSegments);
         public int StarCount => Mathf.Max(1, starCount);
-        public int BiomeUnderlayLongitudeSegments => Mathf.Max(3, biomeUnderlayLongitudeSegments);
-        public int BiomeUnderlayLatitudeSegments => Mathf.Max(2, biomeUnderlayLatitudeSegments);
+        public int PreviewTerrainSurfaceLongitudeSegments => Mathf.Max(16, previewTerrainSurfaceLongitudeSegments);
+        public int PreviewTerrainSurfaceLatitudeSegments => Mathf.Max(8, previewTerrainSurfaceLatitudeSegments);
+        public int TerrainSurfaceLongitudeSegments => Mathf.Max(16, terrainSurfaceLongitudeSegments);
+        public int TerrainSurfaceLatitudeSegments => Mathf.Max(8, terrainSurfaceLatitudeSegments);
+        public int PreviewTerrainTextureWidth => Mathf.Max(256, previewTerrainTextureWidth);
+        public int PreviewTerrainTextureHeight => Mathf.Max(128, previewTerrainTextureHeight);
+        public int TerrainTextureWidth => Mathf.Max(256, terrainTextureWidth);
+        public int TerrainTextureHeight => Mathf.Max(128, terrainTextureHeight);
+        public float TerrainBiomeBlendPixels => Mathf.Max(0f, terrainBiomeBlendPixels);
         public int TileVoronoiSeedVertexCount => Mathf.Max(12, tileVoronoiSeedVertexCount);
         public float TileVoronoiSeedRadiusMultiplier => Mathf.Max(1f, tileVoronoiSeedRadiusMultiplier);
         public float TerrainSurfaceOffset => terrainSurfaceOffset;
-        public float BiomeUnderlayOffset => biomeUnderlayOffset;
         public float SelectionSurfaceOffset => selectionSurfaceOffset;
         public float RiverSurfaceOffset => riverSurfaceOffset;
         public float RoadSurfaceOffset => roadSurfaceOffset;
@@ -172,12 +183,11 @@ namespace MercLord.Global.Rendering
         public Color StarTint => starTint;
         public float BiomeTileUvPadding => biomeTileUvPadding;
         public Material VertexColorMaterialTemplate => vertexColorMaterialTemplate;
-        public Material BiomeMaterialTemplate => biomeMaterialTemplate;
+        public Material TerrainMaterialTemplate => terrainMaterialTemplate != null ? terrainMaterialTemplate : iconMaterialTemplate;
         public Material IconMaterialTemplate => iconMaterialTemplate;
+        public Color MissingBiomeColor => missingBiomeColor;
         public Color ForestTextureTint => forestTextureTint;
-        public Color MountainTextureTint => mountainTextureTint;
         public Color VisualMountainTint => visualMountainTint;
-        public Color OceanTextureTint => oceanTextureTint;
         public Color DeepWaterTint => deepWaterTint;
         public Color ShallowWaterTint => shallowWaterTint;
         public Color ShoreTint => shoreTint;
@@ -193,6 +203,7 @@ namespace MercLord.Global.Rendering
         public float LegacyActivityMarkerSize => legacyActivityMarkerSize;
         public float LegacyFlatIconOutlineScale => legacyFlatIconOutlineScale;
         public Color SelectionColor => selectionColor;
+        public float SelectionInsetRatio => Mathf.Clamp(selectionInsetRatio, 0.65f, 1.04f);
         public IReadOnlyList<Vector2> LegacySettlementShape => legacySettlementShape ?? Array.Empty<Vector2>();
         public IReadOnlyList<Vector2> LegacyActivityShape => legacyActivityShape ?? Array.Empty<Vector2>();
         public IReadOnlyList<Vector2> LegacyCaravanStopShape => legacyCaravanStopShape ?? Array.Empty<Vector2>();

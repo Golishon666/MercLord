@@ -16,6 +16,14 @@ namespace MercLord.Game.Configs
         [SerializeField] private int roadWidth;
         [SerializeField] private int attackerSpawnColumns;
         [SerializeField] private int defenderSpawnColumns;
+        [SerializeField] private Vector2 unitSpawnOffset;
+        [SerializeField] private float unitSpawnJitterRadius;
+        [SerializeField] private int plainsCoverPatchCount;
+        [SerializeField] private int plainsCoverPatchRadius;
+        [SerializeField] private int forestCoverPatchCount;
+        [SerializeField] private int forestCoverPatchRadius;
+        [SerializeField] private int forestObstaclePatchCount;
+        [SerializeField] private int forestObstaclePatchRadius;
 
         public int Width => width;
         public int Height => height;
@@ -28,5 +36,13 @@ namespace MercLord.Game.Configs
         public int RoadWidth => roadWidth;
         public int AttackerSpawnColumns => attackerSpawnColumns;
         public int DefenderSpawnColumns => defenderSpawnColumns;
+        public Vector2 UnitSpawnOffset => unitSpawnOffset;
+        public float UnitSpawnJitterRadius => unitSpawnJitterRadius;
+        public int PlainsCoverPatchCount => plainsCoverPatchCount;
+        public int PlainsCoverPatchRadius => plainsCoverPatchRadius;
+        public int ForestCoverPatchCount => forestCoverPatchCount;
+        public int ForestCoverPatchRadius => forestCoverPatchRadius;
+        public int ForestObstaclePatchCount => forestObstaclePatchCount;
+        public int ForestObstaclePatchRadius => forestObstaclePatchRadius;
     }
 }

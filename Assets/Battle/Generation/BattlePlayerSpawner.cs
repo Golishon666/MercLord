@@ -59,6 +59,8 @@ namespace MercLord.Battle.Generation
                 throw new InvalidOperationException("BattleSimulationConfig player spawn point index is outside generated spawn points.");
             }
 
+            var mapConfig = configDatabase.BattleMapGeneration
+                ?? throw new InvalidOperationException("BattleMapGenerationConfig is required to spawn the player.");
             var spawnPoint = spawnPoints[simulationConfig.PlayerSpawnPointIndex];
             var factionId = ResolveFactionId(unitConfig);
             if (!configDatabase.TryGetFaction(factionId, out _))
@@ -72,7 +74,7 @@ namespace MercLord.Battle.Generation
                     unitConfig,
                     factionId,
                     ToTeam(simulationConfig.PlayerSpawnSide),
-                    new float2(spawnPoint.X, spawnPoint.Y),
+                    BattleSpawnPositionResolver.ResolveCenter(spawnPoint, mapConfig),
                     playerControlled: true,
                     simulationConfig.PlayerSpawnPointIndex,
                     spawnPoints.Length));
@@ -82,7 +84,8 @@ namespace MercLord.Battle.Generation
         {
             var saveModel = saveService.Current;
             if (saveModel?.World?.Player != null &&
-                saveModel.World.Player.FactionId != WorldIds.None)
+                saveModel.World.Player.FactionId != WorldIds.None &&
+                configDatabase.TryGetFaction(saveModel.World.Player.FactionId, out _))
             {
                 return saveModel.World.Player.FactionId;
             }

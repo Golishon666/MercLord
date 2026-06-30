@@ -8,6 +8,8 @@ namespace MercLord.Battle.Generation
 {
     public sealed class ConfigDrivenBattleWorldFactory : IBattleWorldFactory
     {
+        private const int TeamSquadIdStride = 10000;
+
         private readonly ConfigDatabase configDatabase;
         private readonly IBattleEntityFactory entityFactory;
 
@@ -36,8 +38,9 @@ namespace MercLord.Battle.Generation
 
             try
             {
-                CreateArmy(world, model.Attacker, model.AttackerSpawnPoints, BattleTeamType.Attacker);
-                CreateArmy(world, model.Defender, model.DefenderSpawnPoints, BattleTeamType.Defender);
+                CreateArmy(world, model, model.Attacker, model.AttackerSpawnPoints, BattleTeamType.Attacker);
+                CreateArmy(world, model, model.Defender, model.DefenderSpawnPoints, BattleTeamType.Defender);
+                world.Commit();
                 return world;
             }
             catch
@@ -59,6 +62,7 @@ namespace MercLord.Battle.Generation
 
         private void CreateArmy(
             World world,
+            BattleModel model,
             BattleArmyData army,
             BattleSpawnPoint[] spawnPoints,
             BattleTeamType team)
@@ -68,13 +72,13 @@ namespace MercLord.Battle.Generation
                 return;
             }
 
-            ValidateArmy(army);
-
             var unitCount = CountUnits(army);
             if (unitCount == 0)
             {
                 return;
             }
+
+            ValidateArmy(army);
 
             if (spawnPoints == null || spawnPoints.Length < unitCount)
             {
@@ -82,6 +86,8 @@ namespace MercLord.Battle.Generation
                     $"{team} army requires {unitCount} spawn points, but battle map provides {spawnPoints?.Length ?? 0}.");
             }
 
+            var mapConfig = configDatabase.BattleMapGeneration
+                ?? throw new InvalidOperationException("BattleMapGenerationConfig is required to create battle unit spawn positions.");
             var spawnIndex = 0;
             for (var squadIndex = 0; squadIndex < army.Squads.Length; squadIndex++)
             {
@@ -92,6 +98,21 @@ namespace MercLord.Battle.Generation
                 }
 
                 var unitConfig = GetUnitConfig(squad.UnitConfigId);
+                var squadId = CreateSquadId(team, squadIndex);
+                var forwardDirection = ResolveForwardDirection(team);
+                entityFactory.CreateSquad(
+                    world,
+                    new BattleSquadSpawnRequest(
+                        squadId,
+                        unitConfig.Id,
+                        army.FactionId,
+                        team,
+                        squad.Count,
+                        ResolveSquadAnchor(spawnPoints, spawnIndex, squad.Count, mapConfig),
+                        forwardDirection,
+                        SquadOrderType.AttackNearest,
+                        ResolveInitialOrderTarget(model, team, mapConfig)));
+
                 for (var unitIndex = 0; unitIndex < squad.Count; unitIndex++)
                 {
                     var spawnPoint = spawnPoints[spawnIndex];
@@ -101,10 +122,14 @@ namespace MercLord.Battle.Generation
                             unitConfig,
                             army.FactionId,
                             team,
-                            new float2(spawnPoint.X, spawnPoint.Y),
+                            BattleSpawnPositionResolver.ResolveUnit(spawnPoint, mapConfig, army.FactionId, team, unitConfig.Id, spawnIndex),
                             playerControlled: false,
                             spawnIndex,
-                            unitCount));
+                            unitCount,
+                            squadId,
+                            unitIndex,
+                            squad.Count,
+                            BattleFormationSlotResolver.ResolveLineSlot(unitIndex, squad.Count, forwardDirection)));
                     spawnIndex++;
                 }
             }
@@ -118,6 +143,48 @@ namespace MercLord.Battle.Generation
             }
 
             return unitConfig;
+        }
+
+        private static int CreateSquadId(BattleTeamType team, int squadIndex)
+        {
+            return (team == BattleTeamType.Attacker ? 0 : TeamSquadIdStride) + squadIndex;
+        }
+
+        private static float2 ResolveSquadAnchor(
+            BattleSpawnPoint[] spawnPoints,
+            int startIndex,
+            int count,
+            BattleMapGenerationConfig mapConfig)
+        {
+            var sum = float2.zero;
+            for (var index = 0; index < count; index++)
+            {
+                sum += BattleSpawnPositionResolver.ResolveCenter(spawnPoints[startIndex + index], mapConfig);
+            }
+
+            return sum / count;
+        }
+
+        private static float2 ResolveForwardDirection(BattleTeamType team)
+        {
+            return team == BattleTeamType.Attacker
+                ? new float2(1f, 0f)
+                : new float2(-1f, 0f);
+        }
+
+        private static float2 ResolveInitialOrderTarget(
+            BattleModel model,
+            BattleTeamType team,
+            BattleMapGenerationConfig mapConfig)
+        {
+            if (BattleObjectiveResolver.TryResolvePrimaryControlPointTarget(model, out var objectiveTarget))
+            {
+                return objectiveTarget;
+            }
+
+            return team == BattleTeamType.Attacker
+                ? new float2(mapConfig.Width - 0.5f, mapConfig.Height * 0.5f)
+                : new float2(0.5f, mapConfig.Height * 0.5f);
         }
 
         private static void ValidateModel(BattleModel model)

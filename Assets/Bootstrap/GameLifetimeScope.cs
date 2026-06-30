@@ -73,6 +73,8 @@ namespace MercLord.Bootstrap
             builder.Register<GlobalMapPresenter>(Lifetime.Singleton).As<IGlobalMapPresenter>();
 
             builder.Register<BattleGenerationRequestFactory>(Lifetime.Singleton).As<IBattleGenerationRequestFactory>();
+            builder.Register<BattleEncounterRequestFactory>(Lifetime.Singleton).As<IBattleEncounterRequestFactory>();
+            builder.Register<GlobalBattleStarter>(Lifetime.Singleton).As<IGlobalBattleStarter>();
             builder.Register<ConfigDrivenBattleMapGenerator>(Lifetime.Singleton).As<IBattleMapGenerator>();
             builder.Register<BattleEntityFactory>(Lifetime.Singleton).As<IBattleEntityFactory>();
             builder.Register<ConfigDrivenBattleWorldFactory>(Lifetime.Singleton).As<IBattleWorldFactory>();

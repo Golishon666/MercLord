@@ -70,6 +70,8 @@ namespace MercLord.Battle.Generation
                 throw new InvalidOperationException($"Battle vehicle spawn {spawnIndex} point index is outside generated spawn points.");
             }
 
+            var mapConfig = configDatabase.BattleMapGeneration
+                ?? throw new InvalidOperationException("BattleMapGenerationConfig is required to spawn vehicles.");
             var spawnPoint = spawnPoints[spawn.SpawnPointIndex];
             entityFactory.CreateVehicle(
                 world,
@@ -77,7 +79,7 @@ namespace MercLord.Battle.Generation
                     vehicleConfig,
                     spawn.FactionId,
                     ToTeam(spawn.SpawnSide),
-                    new float2(spawnPoint.X, spawnPoint.Y),
+                    BattleSpawnPositionResolver.ResolveCenter(spawnPoint, mapConfig),
                     ToVehicleState(spawn.ControlMode)));
         }
 

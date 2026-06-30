@@ -15,7 +15,11 @@ namespace MercLord.Battle.Generation
             float2 position,
             bool playerControlled,
             int spawnIndex,
-            int unitCount)
+            int unitCount,
+            int squadId = -1,
+            int squadSlotIndex = -1,
+            int squadSize = 0,
+            float2 formationLocalOffset = default)
         {
             UnitConfig = unitConfig;
             FactionId = factionId;
@@ -24,6 +28,10 @@ namespace MercLord.Battle.Generation
             PlayerControlled = playerControlled;
             SpawnIndex = spawnIndex;
             UnitCount = unitCount;
+            SquadId = squadId;
+            SquadSlotIndex = squadSlotIndex;
+            SquadSize = squadSize;
+            FormationLocalOffset = formationLocalOffset;
         }
 
         public UnitConfig UnitConfig { get; }
@@ -33,6 +41,45 @@ namespace MercLord.Battle.Generation
         public bool PlayerControlled { get; }
         public int SpawnIndex { get; }
         public int UnitCount { get; }
+        public int SquadId { get; }
+        public int SquadSlotIndex { get; }
+        public int SquadSize { get; }
+        public float2 FormationLocalOffset { get; }
+    }
+
+    public readonly struct BattleSquadSpawnRequest
+    {
+        public BattleSquadSpawnRequest(
+            int squadId,
+            int unitConfigId,
+            int factionId,
+            BattleTeamType team,
+            int memberCount,
+            float2 anchorPosition,
+            float2 forwardDirection,
+            SquadOrderType order,
+            float2 targetPosition)
+        {
+            SquadId = squadId;
+            UnitConfigId = unitConfigId;
+            FactionId = factionId;
+            Team = team;
+            MemberCount = memberCount;
+            AnchorPosition = anchorPosition;
+            ForwardDirection = forwardDirection;
+            Order = order;
+            TargetPosition = targetPosition;
+        }
+
+        public int SquadId { get; }
+        public int UnitConfigId { get; }
+        public int FactionId { get; }
+        public BattleTeamType Team { get; }
+        public int MemberCount { get; }
+        public float2 AnchorPosition { get; }
+        public float2 ForwardDirection { get; }
+        public SquadOrderType Order { get; }
+        public float2 TargetPosition { get; }
     }
 
     public readonly struct BattleVehicleEntitySpawnRequest
@@ -60,6 +107,58 @@ namespace MercLord.Battle.Generation
 
     public sealed class BattleEntityFactory : IBattleEntityFactory
     {
+        public Entity CreateSquad(World world, BattleSquadSpawnRequest request)
+        {
+            if (world == null)
+            {
+                throw new ArgumentNullException(nameof(world));
+            }
+
+            if (world.IsDisposed)
+            {
+                throw new InvalidOperationException("Cannot create a battle squad entity in a disposed Morpeh world.");
+            }
+
+            if (request.SquadId < 0)
+            {
+                throw new InvalidOperationException("Battle squad spawn request requires a non-negative squad id.");
+            }
+
+            if (request.MemberCount <= 0)
+            {
+                throw new InvalidOperationException("Battle squad spawn request requires a positive member count.");
+            }
+
+            var entity = world.CreateEntity();
+            world.GetStash<SquadComponent>().Set(entity, new SquadComponent
+            {
+                SquadId = request.SquadId,
+                UnitConfigId = request.UnitConfigId,
+                FactionId = request.FactionId,
+                Team = request.Team,
+                MemberCount = request.MemberCount
+            });
+            world.GetStash<SquadAnchorComponent>().Set(entity, new SquadAnchorComponent
+            {
+                Position = request.AnchorPosition,
+                ForwardDirection = math.normalizesafe(request.ForwardDirection, new float2(1f, 0f))
+            });
+            world.GetStash<SquadOrderComponent>().Set(entity, new SquadOrderComponent
+            {
+                Value = request.Order,
+                TargetPosition = request.TargetPosition
+            });
+            world.GetStash<SquadMoraleComponent>().Set(entity, new SquadMoraleComponent
+            {
+                Current = 100f,
+                Max = 100f,
+                RoutThreshold = 35f,
+                IsRouted = false
+            });
+
+            return entity;
+        }
+
         public Entity CreateUnit(World world, BattleEntitySpawnRequest request)
         {
             if (world == null)
@@ -91,6 +190,27 @@ namespace MercLord.Battle.Generation
             {
                 Value = request.FactionId
             });
+
+            if (request.SquadId >= 0)
+            {
+                if (request.SquadSize <= 0 ||
+                    request.SquadSlotIndex < 0 ||
+                    request.SquadSlotIndex >= request.SquadSize)
+                {
+                    throw new InvalidOperationException("Battle entity squad membership requires a valid slot index and squad size.");
+                }
+
+                world.GetStash<SquadMemberComponent>().Set(entity, new SquadMemberComponent
+                {
+                    SquadId = request.SquadId,
+                    SlotIndex = request.SquadSlotIndex,
+                    SquadSize = request.SquadSize
+                });
+                world.GetStash<FormationSlotComponent>().Set(entity, new FormationSlotComponent
+                {
+                    LocalOffset = request.FormationLocalOffset
+                });
+            }
 
             world.GetStash<PositionComponent>().Set(entity, new PositionComponent
             {

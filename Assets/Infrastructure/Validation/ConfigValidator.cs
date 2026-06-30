@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MercLord.Battle.Tiles;
 using MercLord.Game.Configs;
 using MercLord.Global.Cells;
 using UnityEngine;
@@ -28,6 +29,7 @@ namespace MercLord.Infrastructure.Validation
     public sealed class ConfigValidator
     {
         private const int MaxByteValue = byte.MaxValue;
+        private const float MaxSpawnJitterRadius = 0.49f;
 
         public List<ValidationIssue> Validate(ConfigDatabase database)
         {
@@ -423,9 +425,9 @@ namespace MercLord.Infrastructure.Validation
 
             ValidateByteRange(config, config.DefaultMoveCost, nameof(config.DefaultMoveCost), issues);
             ValidateByteRange(config, config.RoadMoveCost, nameof(config.RoadMoveCost), issues);
-            ValidateByteRange(config, config.DefaultCover, nameof(config.DefaultCover), issues);
-            ValidateByteRange(config, config.SettlementCover, nameof(config.SettlementCover), issues);
-            ValidateByteRange(config, config.MaxTileHeight, nameof(config.MaxTileHeight), issues);
+            ValidateCoverRange(config, config.DefaultCover, nameof(config.DefaultCover), issues);
+            ValidateCoverRange(config, config.SettlementCover, nameof(config.SettlementCover), issues);
+            ValidateSignedByteRange(config, config.MaxTileHeight, nameof(config.MaxTileHeight), issues);
 
             if (config.DefaultMoveCost <= 0 || config.RoadMoveCost <= 0)
             {
@@ -450,6 +452,11 @@ namespace MercLord.Infrastructure.Validation
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, config, "Battle map spawn columns must be positive and fit inside map width."));
             }
+
+            ValidateSpawnLayoutConfig(config, issues);
+            ValidatePatchConfig(config, config.PlainsCoverPatchCount, config.PlainsCoverPatchRadius, nameof(config.PlainsCoverPatchCount), issues);
+            ValidatePatchConfig(config, config.ForestCoverPatchCount, config.ForestCoverPatchRadius, nameof(config.ForestCoverPatchCount), issues);
+            ValidatePatchConfig(config, config.ForestObstaclePatchCount, config.ForestObstaclePatchRadius, nameof(config.ForestObstaclePatchCount), issues);
         }
 
         private static void ValidateFactions(ConfigDatabase database, ICollection<ValidationIssue> issues)
@@ -524,6 +531,20 @@ namespace MercLord.Infrastructure.Validation
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, database.CombatBalance, "Damage formula minimum damage cannot be negative."));
             }
+
+            var hit = database.CombatBalance.HitChanceFormula;
+            ValidateProbability(database.CombatBalance, hit.BaseChance, "Hit chance base chance", issues);
+            ValidateProbability(database.CombatBalance, hit.MinimumChance, "Hit chance minimum chance", issues);
+            ValidateProbability(database.CombatBalance, hit.RangePenaltyAtMaxRange, "Hit chance range penalty", issues);
+            ValidateProbability(database.CombatBalance, hit.LightCoverPenalty, "Hit chance light cover penalty", issues);
+            ValidateProbability(database.CombatBalance, hit.MediumCoverPenalty, "Hit chance medium cover penalty", issues);
+            ValidateProbability(database.CombatBalance, hit.HeavyCoverPenalty, "Hit chance heavy cover penalty", issues);
+            ValidateProbability(database.CombatBalance, hit.MovingTargetPenalty, "Hit chance moving target penalty", issues);
+
+            if (hit.MinimumChance > hit.BaseChance)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.CombatBalance, "Hit chance minimum chance cannot exceed base chance."));
+            }
         }
 
         private static void ValidateBattleSimulation(ConfigDatabase database, ICollection<ValidationIssue> issues)
@@ -566,6 +587,33 @@ namespace MercLord.Infrastructure.Validation
                 database.BattleSimulation.PlayerAimDotThreshold > 1f)
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player aim dot threshold must be between -1 and 1."));
+            }
+
+            if (database.BattleSimulation.VictoryCreditsReward < 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation victory credits reward cannot be negative."));
+            }
+
+            if (database.BattleSimulation.VictoryLootRolls < 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation victory loot rolls cannot be negative."));
+            }
+
+            if (database.BattleSimulation.VictoryLootRolls > 0 &&
+                database.BattleSimulation.VictoryLootTable == null)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation victory loot table must be assigned when loot rolls are enabled."));
+            }
+
+            if (database.BattleSimulation.VictoryLootTable != null &&
+                !database.TryGetLootTable(database.BattleSimulation.VictoryLootTable.Id, out _))
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation.VictoryLootTable, "Battle simulation victory loot table must be registered in ConfigDatabase."));
+            }
+
+            if (database.BattleSimulation.VictoryInfluenceReward < 0f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation victory influence reward cannot be negative."));
             }
 
             ValidatePlayerSpawnCapacity(database, issues);
@@ -710,6 +758,94 @@ namespace MercLord.Infrastructure.Validation
             if (value < byte.MinValue || value > MaxByteValue)
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} must fit into byte range."));
+            }
+        }
+
+        private static void ValidateSignedByteRange(
+            Object context,
+            int value,
+            string configName,
+            ICollection<ValidationIssue> issues)
+        {
+            if (value < sbyte.MinValue || value > sbyte.MaxValue)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} must fit into signed byte range."));
+            }
+        }
+
+        private static void ValidateCoverRange(
+            Object context,
+            int value,
+            string configName,
+            ICollection<ValidationIssue> issues)
+        {
+            if (value < (int)CoverType.None || value > (int)CoverType.Heavy)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} must map to a supported CoverType."));
+            }
+        }
+
+        private static void ValidateProbability(
+            Object context,
+            float value,
+            string configName,
+            ICollection<ValidationIssue> issues)
+        {
+            if (float.IsNaN(value) ||
+                float.IsInfinity(value) ||
+                value < 0f ||
+                value > 1f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} must be between zero and one."));
+            }
+        }
+
+        private static void ValidatePatchConfig(
+            Object context,
+            int count,
+            int radius,
+            string configName,
+            ICollection<ValidationIssue> issues)
+        {
+            if (count < 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} cannot be negative."));
+            }
+
+            if (radius < 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} radius cannot be negative."));
+            }
+
+            if (count > 0 && radius <= 0)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, context, $"{configName} radius must be positive when patch count is positive."));
+            }
+        }
+
+        private static void ValidateSpawnLayoutConfig(
+            BattleMapGenerationConfig config,
+            ICollection<ValidationIssue> issues)
+        {
+            var offset = config.UnitSpawnOffset;
+            if (float.IsNaN(offset.x) ||
+                float.IsNaN(offset.y) ||
+                float.IsInfinity(offset.x) ||
+                float.IsInfinity(offset.y) ||
+                offset.x < 0f ||
+                offset.x > 1f ||
+                offset.y < 0f ||
+                offset.y > 1f)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, config, "Battle unit spawn offset must stay inside a tile."));
+            }
+
+            if (float.IsNaN(config.UnitSpawnJitterRadius) ||
+                float.IsInfinity(config.UnitSpawnJitterRadius) ||
+                config.UnitSpawnJitterRadius < 0f ||
+                config.UnitSpawnJitterRadius > MaxSpawnJitterRadius)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, config, "Battle unit spawn jitter radius must stay between zero and half a tile."));
             }
         }
     }

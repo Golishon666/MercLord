@@ -20,6 +20,7 @@ namespace MercLord.Battle.ECS.Systems
         private Stash<AIStatsComponent> aiStats;
         private Stash<AIThinkTimerComponent> timers;
         private Stash<TargetComponent> targets;
+        private Stash<DriverComponent> drivers;
 
         public TargetSearchSystem(SpatialHashSystem spatialHashSystem)
         {
@@ -45,6 +46,7 @@ namespace MercLord.Battle.ECS.Systems
                 .With<AIStatsComponent>()
                 .With<AIThinkTimerComponent>()
                 .Without<DeadComponent>()
+                .Without<DriverComponent>()
                 .Without<PlayerControlledComponent>()
                 .Build();
 
@@ -53,6 +55,7 @@ namespace MercLord.Battle.ECS.Systems
             aiStats = world.GetStash<AIStatsComponent>();
             timers = world.GetStash<AIThinkTimerComponent>();
             targets = world.GetStash<TargetComponent>();
+            drivers = world.GetStash<DriverComponent>();
         }
 
         public void Tick(float deltaTime)
@@ -93,6 +96,7 @@ namespace MercLord.Battle.ECS.Systems
             aiStats = null;
             timers = null;
             targets = null;
+            drivers = null;
         }
 
         private void SearchIfReady(Entity actor, float deltaTime)
@@ -121,6 +125,11 @@ namespace MercLord.Battle.ECS.Systems
             {
                 var candidate = candidateBuffer[candidateIndex];
                 if (candidate.Equals(actor) || !positions.Has(candidate))
+                {
+                    continue;
+                }
+
+                if (drivers.Has(candidate))
                 {
                     continue;
                 }

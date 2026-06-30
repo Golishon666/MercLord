@@ -44,6 +44,7 @@ namespace MercLord.Battle.Generation
 
     public interface IBattleEntityFactory
     {
+        Entity CreateSquad(World world, BattleSquadSpawnRequest request);
         Entity CreateUnit(World world, BattleEntitySpawnRequest request);
         Entity CreateVehicle(World world, BattleVehicleEntitySpawnRequest request);
         WeaponStatsComponent CreateWeaponStats(MercLord.Game.Configs.WeaponConfig weapon);
@@ -64,5 +65,10 @@ namespace MercLord.Battle.Generation
     public interface IBattleResultApplier
     {
         void Apply(SaveModel saveModel, BattleResult result);
+    }
+
+    public interface IBattleResultBuilder
+    {
+        BattleResult Build(BattleSession session, BattleOutcome outcome, int winnerFactionId);
     }
 }

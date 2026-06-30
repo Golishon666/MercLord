@@ -1,6 +1,7 @@
 using System;
 using MercLord.Battle.ECS.Components;
 using MercLord.Battle.Generation;
+using MercLord.Battle.Tiles;
 using Scellecs.Morpeh;
 using Unity.Mathematics;
 
@@ -14,6 +15,8 @@ namespace MercLord.Battle.ECS.Systems
         private Stash<VelocityComponent> velocities;
         private Stash<MovementStatsComponent> movementStats;
         private Stash<BotStateComponent> botStates;
+        private Stash<VehicleComponent> vehicles;
+        private BattleTileMap tileMap;
 
         public void Initialize(BattleSession session)
         {
@@ -28,6 +31,14 @@ namespace MercLord.Battle.ECS.Systems
                 throw new InvalidOperationException("MovementSystem cannot initialize on a disposed Morpeh world.");
             }
 
+            if (session.Model == null ||
+                session.Model.Tiles == null ||
+                session.Model.Tiles.Length != session.Model.Width * session.Model.Height)
+            {
+                throw new InvalidOperationException("MovementSystem requires a valid BattleModel tile grid.");
+            }
+
+            tileMap = new BattleTileMap(session.Model.Width, session.Model.Height, session.Model.Tiles);
             filter = world.Filter
                 .With<PositionComponent>()
                 .With<VelocityComponent>()
@@ -39,6 +50,7 @@ namespace MercLord.Battle.ECS.Systems
             velocities = world.GetStash<VelocityComponent>();
             movementStats = world.GetStash<MovementStatsComponent>();
             botStates = world.GetStash<BotStateComponent>();
+            vehicles = world.GetStash<VehicleComponent>();
         }
 
         public void Tick(float deltaTime)
@@ -63,7 +75,16 @@ namespace MercLord.Battle.ECS.Systems
                         direction = math.normalizesafe(direction);
                     }
 
-                    position.Value += direction * stats.MoveSpeed * deltaTime;
+                    var proposedPosition = position.Value + direction * stats.MoveSpeed * deltaTime;
+                    if (CanMoveTo(entity, proposedPosition))
+                    {
+                        position.Value = proposedPosition;
+                    }
+                    else
+                    {
+                        velocity.Value = float2.zero;
+                        moving = false;
+                    }
                 }
 
                 ref var botState = ref botStates.Get(entity, out var hasBotState);
@@ -88,6 +109,27 @@ namespace MercLord.Battle.ECS.Systems
             velocities = null;
             movementStats = null;
             botStates = null;
+            vehicles = null;
+            tileMap = null;
+        }
+
+        private bool CanMoveTo(Entity entity, float2 position)
+        {
+            var x = (int)math.floor(position.x);
+            var y = (int)math.floor(position.y);
+            if (!tileMap.IsInside(x, y))
+            {
+                return false;
+            }
+
+            var tile = tileMap.GetTile(x, y);
+            if (!tile.Walkable)
+            {
+                return false;
+            }
+
+            var requiredLayer = vehicles.Has(entity) ? MoveLayer.Vehicle : MoveLayer.Infantry;
+            return (tile.AllowedMoveLayers & requiredLayer) != 0;
         }
     }
 }

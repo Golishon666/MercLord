@@ -16,3 +16,11 @@ MonoBehaviour:
   displayName: Foundation Combat Balance
   damageFormula:
     MinimumDamage: 1
+  hitChanceFormula:
+    BaseChance: 0.92
+    MinimumChance: 0.05
+    RangePenaltyAtMaxRange: 0.32
+    LightCoverPenalty: 0.08
+    MediumCoverPenalty: 0.18
+    HeavyCoverPenalty: 0.35
+    MovingTargetPenalty: 0.1

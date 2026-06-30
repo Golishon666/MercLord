@@ -9,6 +9,29 @@ namespace MercLord.Game.Configs
     }
 
     [System.Serializable]
+    public struct HitChanceFormula
+    {
+        public float BaseChance;
+        public float MinimumChance;
+        public float RangePenaltyAtMaxRange;
+        public float LightCoverPenalty;
+        public float MediumCoverPenalty;
+        public float HeavyCoverPenalty;
+        public float MovingTargetPenalty;
+
+        public static HitChanceFormula Default => new HitChanceFormula
+        {
+            BaseChance = 0.92f,
+            MinimumChance = 0.05f,
+            RangePenaltyAtMaxRange = 0.32f,
+            LightCoverPenalty = 0.08f,
+            MediumCoverPenalty = 0.18f,
+            HeavyCoverPenalty = 0.35f,
+            MovingTargetPenalty = 0.1f
+        };
+    }
+
+    [System.Serializable]
     public sealed class WorldTerrainGenerationSettings
     {
         public static readonly WorldTerrainGenerationSettings Default = new WorldTerrainGenerationSettings();

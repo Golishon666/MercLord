@@ -6,7 +6,7 @@ namespace MercLord.Game.Configs
     public sealed class GlobalGenerationConfig : IdentifiedConfig
     {
         public const int DefaultSeed = 1001;
-        public const int DefaultTargetCellCount = 100000;
+        public const int DefaultTargetCellCount = 120000;
         public const int MinimumTargetCellCount = 64;
         public const int DefaultStartingDay = 1;
         public const int DefaultPlayerStartingCredits = 500;

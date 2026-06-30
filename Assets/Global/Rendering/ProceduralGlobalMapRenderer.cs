@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using MercLord.Game.Configs;
 using MercLord.Global.Cells;
 using UnityEngine;
@@ -20,16 +22,17 @@ namespace MercLord.Global.Rendering
 #endif
         private const HideFlags RuntimeGeneratedHideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
         private const float HexAreaFactor = 2.598076f;
+        private const int SurfaceBlendCandidateCount = 2;
+        private const int SurfaceBlendMaxBinSearchRadius = 3;
 
         [SerializeField] private ConfigDatabase configDatabase;
         [SerializeField] private GlobalMapArtAtlas artAtlas;
-        [SerializeField] private WorldModel currentWorld;
+        [NonSerialized] private WorldModel currentWorld;
 
         [Header("Render Layers")]
         [SerializeField] private Transform generatedRoot;
         [SerializeField] private GlobalMapProceduralRenderSettings renderSettings;
         [SerializeField] private GlobalMapMeshLayer starfieldLayer;
-        [SerializeField] private GlobalMapMeshLayer biomeUnderlayLayer;
         [SerializeField] private GlobalMapMeshLayer terrainLayer;
         [SerializeField] private GlobalMapMeshLayer riversLayer;
         [SerializeField] private GlobalMapMeshLayer roadsLayer;
@@ -39,15 +42,16 @@ namespace MercLord.Global.Rendering
         [SerializeField] private GlobalMapMeshLayer selectionLayer;
 
         private Material vertexColorMaterial;
-        private Material biomeMaterial;
+        private Material terrainMaterial;
         private Material iconMaterial;
         private Material settlementFeatureMaterial;
         private Material activityFeatureMaterial;
         private Material vertexColorMaterialTemplateSource;
-        private Material biomeMaterialTemplateSource;
+        private Material terrainMaterialTemplateSource;
         private Material iconMaterialTemplateSource;
         private Material settlementFeatureMaterialTemplateSource;
         private Material activityFeatureMaterialTemplateSource;
+        private Texture2D terrainSurfaceTexture;
         private bool markerIconsVisible = true;
         private bool featureTexturesVisible;
         private int selectedCellId = WorldIds.None;
@@ -82,18 +86,49 @@ namespace MercLord.Global.Rendering
 
         public void Render(WorldModel worldModel)
         {
+            Render(worldModel, false);
+        }
+
+        public void Render(WorldModel worldModel, bool finalQuality)
+        {
             if (worldModel == null)
             {
                 throw new ArgumentNullException(nameof(worldModel));
             }
 
+            RenderShared(worldModel);
+            RenderTerrain(worldModel, finalQuality);
+            RenderDynamicLayers(worldModel);
+        }
+
+        public async UniTask RenderAsync(
+            WorldModel worldModel,
+            bool finalQuality = false,
+            CancellationToken cancellationToken = default)
+        {
+            if (worldModel == null)
+            {
+                throw new ArgumentNullException(nameof(worldModel));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            RenderShared(worldModel);
+            await RenderTerrainAsync(worldModel, finalQuality, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            RenderDynamicLayers(worldModel);
+        }
+
+        private void RenderShared(WorldModel worldModel)
+        {
             currentWorld = worldModel;
             EnsureRenderLayers();
             ClearGenerated();
             EnsureMaterials();
             RenderStarfield(worldModel.Seed);
-            RenderBiomeUnderlay(worldModel.Seed);
-            RenderTerrain(worldModel);
+        }
+
+        private void RenderDynamicLayers(WorldModel worldModel)
+        {
             RenderRivers(worldModel);
             RenderRoads(worldModel);
             RenderMarkers(worldModel);
@@ -104,7 +139,6 @@ namespace MercLord.Global.Rendering
         {
             EnsureRenderLayers();
             ClearLayer(starfieldLayer);
-            ClearLayer(biomeUnderlayLayer);
             ClearLayer(terrainLayer);
             ClearLayer(riversLayer);
             ClearLayer(roadsLayer);
@@ -116,9 +150,11 @@ namespace MercLord.Global.Rendering
             DestroyUnityObject(vertexColorMaterial);
             vertexColorMaterial = null;
             vertexColorMaterialTemplateSource = null;
-            DestroyUnityObject(biomeMaterial);
-            biomeMaterial = null;
-            biomeMaterialTemplateSource = null;
+            DestroyUnityObject(terrainMaterial);
+            terrainMaterial = null;
+            terrainMaterialTemplateSource = null;
+            DestroyUnityObject(terrainSurfaceTexture);
+            terrainSurfaceTexture = null;
             DestroyUnityObject(iconMaterial);
             iconMaterial = null;
             iconMaterialTemplateSource = null;
@@ -230,17 +266,69 @@ namespace MercLord.Global.Rendering
             SetGeneratedMesh(starfieldLayer, mesh, vertexColorMaterial);
         }
 
-        private void RenderBiomeUnderlay(int seed)
+        private void RenderTerrain(WorldModel worldModel, bool finalQuality)
         {
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            if (cells.Length == 0)
+            {
+                return;
+            }
+
             var settings = RenderSettings;
-            var lonSegments = settings.BiomeUnderlayLongitudeSegments;
-            var latSegments = settings.BiomeUnderlayLatitudeSegments;
+            var lonSegments = GetTerrainSurfaceLongitudeSegments(settings, finalQuality);
+            var latSegments = GetTerrainSurfaceLatitudeSegments(settings, finalQuality);
             var vertices = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
             var normals = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
             var colors = new List<Color>((latSegments + 1) * (lonSegments + 1));
+            var uvs = new List<Vector2>((latSegments + 1) * (lonSegments + 1));
             var triangles = new List<int>(latSegments * lonSegments * 6);
-            var radius = settings.PlanetRadius + settings.BiomeUnderlayOffset;
+            var lookup = new DirectionCellLookup(cells, lonSegments, latSegments);
+            var texture = BuildTerrainSurfaceTexture(worldModel.Seed, lookup, settings, finalQuality);
+            BuildTerrainSurfaceMesh(settings, finalQuality, vertices, normals, colors, uvs, triangles);
+            SetGeneratedTexturedMesh(terrainLayer, "GlobalMap Continuous Terrain", vertices, normals, colors, uvs, triangles, EnsureTerrainMaterial(texture));
+        }
 
+        private async UniTask RenderTerrainAsync(
+            WorldModel worldModel,
+            bool finalQuality,
+            CancellationToken cancellationToken)
+        {
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            if (cells.Length == 0)
+            {
+                return;
+            }
+
+            var settings = RenderSettings;
+            var lonSegments = GetTerrainSurfaceLongitudeSegments(settings, finalQuality);
+            var latSegments = GetTerrainSurfaceLatitudeSegments(settings, finalQuality);
+            var vertices = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
+            var normals = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
+            var colors = new List<Color>((latSegments + 1) * (lonSegments + 1));
+            var uvs = new List<Vector2>((latSegments + 1) * (lonSegments + 1));
+            var triangles = new List<int>(latSegments * lonSegments * 6);
+            var lookup = new DirectionCellLookup(cells, lonSegments, latSegments);
+
+            await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            var texture = BuildTerrainSurfaceTexture(worldModel.Seed, lookup, settings, finalQuality);
+            cancellationToken.ThrowIfCancellationRequested();
+            BuildTerrainSurfaceMesh(settings, finalQuality, vertices, normals, colors, uvs, triangles);
+            SetGeneratedTexturedMesh(terrainLayer, "GlobalMap Continuous Terrain", vertices, normals, colors, uvs, triangles, EnsureTerrainMaterial(texture));
+        }
+
+        private void BuildTerrainSurfaceMesh(
+            GlobalMapProceduralRenderSettings settings,
+            bool finalQuality,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color> colors,
+            List<Vector2> uvs,
+            List<int> triangles)
+        {
+            var lonSegments = GetTerrainSurfaceLongitudeSegments(settings, finalQuality);
+            var latSegments = GetTerrainSurfaceLatitudeSegments(settings, finalQuality);
+            var terrainRadius = settings.PlanetRadius + settings.TerrainSurfaceOffset;
             for (var lat = 0; lat <= latSegments; lat++)
             {
                 var v = lat / (float)latSegments;
@@ -252,9 +340,10 @@ namespace MercLord.Global.Rendering
                     var u = lon / (float)lonSegments;
                     var azimuth = u * Mathf.PI * 2f;
                     var normal = new Vector3(Mathf.Cos(azimuth) * ringRadius, y, Mathf.Sin(azimuth) * ringRadius).normalized;
-                    vertices.Add(normal * radius);
+                    vertices.Add(normal * terrainRadius);
                     normals.Add(normal);
-                    colors.Add(SampleVisualSurface(normal, seed).Color);
+                    colors.Add(Color.white);
+                    uvs.Add(new Vector2(u, 1f - v));
                 }
             }
 
@@ -268,170 +357,75 @@ namespace MercLord.Global.Rendering
                     var c = b + 1;
                     var d = a + 1;
 
+                    triangles.Add(d);
+                    triangles.Add(b);
                     triangles.Add(a);
-                    triangles.Add(b);
                     triangles.Add(d);
-                    triangles.Add(d);
-                    triangles.Add(b);
                     triangles.Add(c);
+                    triangles.Add(b);
                 }
             }
-
-            var mesh = CreateMesh("GlobalMap Biome Underlay", vertices, colors, triangles);
-            mesh.SetNormals(normals);
-            mesh.RecalculateBounds();
-
-            SetGeneratedMesh(biomeUnderlayLayer, mesh, vertexColorMaterial);
         }
 
-        private void RenderTerrain(WorldModel worldModel)
+        private static int GetTerrainSurfaceLongitudeSegments(GlobalMapProceduralRenderSettings settings, bool finalQuality)
         {
-            if (RenderTexturedTerrain(worldModel))
-            {
-                return;
-            }
-
-            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
-            if (cells.Length == 0)
-            {
-                return;
-            }
-
-            const int expectedVerticesPerTile = 7;
-            var vertices = new List<Vector3>(cells.Length * expectedVerticesPerTile);
-            var normals = new List<Vector3>(cells.Length * expectedVerticesPerTile);
-            var colors = new List<Color>(cells.Length * expectedVerticesPerTile);
-            var triangles = new List<int>(cells.Length * NeighbourCount * 3);
-            var directNeighbours = new List<int>(NeighbourCount);
-            var cornerNormals = new List<Vector3>(NeighbourCount);
-            var settings = RenderSettings;
-            var terrainRadius = settings.PlanetRadius + settings.TerrainSurfaceOffset;
-            var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
-
-            for (var cellIndex = 0; cellIndex < cells.Length; cellIndex++)
-            {
-                var cell = cells[cellIndex];
-                var normal = ToVector(cell.SpherePosition).normalized;
-                BuildGeodesicTileCornerNormals(cells, neighbours, cellIndex, directNeighbours, cornerNormals);
-                if (cornerNormals.Count < 3)
-                {
-                    continue;
-                }
-
-                var centerIndex = vertices.Count;
-                var centerColor = GetTileCenterColor(cell, worldModel.Seed);
-
-                vertices.Add(normal * terrainRadius);
-                normals.Add(normal);
-                colors.Add(centerColor);
-
-                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
-                {
-                    var ringNormal = cornerNormals[vertexIndex];
-                    vertices.Add(ringNormal * terrainRadius);
-                    normals.Add(ringNormal);
-                    colors.Add(GetTileEdgeColor(cell, worldModel.Seed, vertexIndex, centerColor));
-                }
-
-                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
-                {
-                    triangles.Add(centerIndex);
-                    triangles.Add(centerIndex + 1 + vertexIndex);
-                    triangles.Add(centerIndex + 1 + ((vertexIndex + 1) % cornerNormals.Count));
-                }
-            }
-
-            var mesh = CreateMesh("GlobalMap Terrain", vertices, colors, triangles);
-            mesh.SetNormals(normals);
-            mesh.RecalculateBounds();
-
-            SetGeneratedMesh(terrainLayer, mesh, vertexColorMaterial);
+            return finalQuality ? settings.TerrainSurfaceLongitudeSegments : settings.PreviewTerrainSurfaceLongitudeSegments;
         }
 
-        private bool RenderTexturedTerrain(WorldModel worldModel)
+        private static int GetTerrainSurfaceLatitudeSegments(GlobalMapProceduralRenderSettings settings, bool finalQuality)
         {
-            if (artAtlas == null ||
-                artAtlas.BiomeAtlasTexture == null ||
-                artAtlas.BiomeSprites == null ||
-                artAtlas.BiomeSprites.Length == 0)
+            return finalQuality ? settings.TerrainSurfaceLatitudeSegments : settings.PreviewTerrainSurfaceLatitudeSegments;
+        }
+
+        private Texture2D BuildTerrainSurfaceTexture(
+            int seed,
+            DirectionCellLookup lookup,
+            GlobalMapProceduralRenderSettings settings,
+            bool finalQuality)
+        {
+            var width = finalQuality ? settings.TerrainTextureWidth : settings.PreviewTerrainTextureWidth;
+            var height = finalQuality ? settings.TerrainTextureHeight : settings.PreviewTerrainTextureHeight;
+            var pixels = new Color32[width * height];
+            var terrainSettings = TerrainSettings;
+            var noiseSettings = NoiseSettings;
+            var palette = CreateTerrainVisualPalette();
+            var boundaryBlendRadians = settings.TerrainBiomeBlendPixels * Mathf.PI * 2f / Mathf.Max(1, width);
+
+            for (var y = 0; y < height; y++)
             {
-                return false;
-            }
-
-            EnsureMaterials();
-            if (biomeMaterial == null)
-            {
-                return false;
-            }
-
-            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
-            if (cells.Length == 0)
-            {
-                return false;
-            }
-
-            const int expectedVerticesPerTile = 7;
-            var vertices = new List<Vector3>(cells.Length * expectedVerticesPerTile);
-            var normals = new List<Vector3>(cells.Length * expectedVerticesPerTile);
-            var colors = new List<Color>(cells.Length * expectedVerticesPerTile);
-            var uvs = new List<Vector2>(cells.Length * expectedVerticesPerTile);
-            var triangles = new List<int>(cells.Length * NeighbourCount * 3);
-            var directNeighbours = new List<int>(NeighbourCount);
-            var cornerNormals = new List<Vector3>(NeighbourCount);
-            var settings = RenderSettings;
-            var terrainRadius = settings.PlanetRadius + settings.TerrainSurfaceOffset;
-            var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
-
-            for (var cellIndex = 0; cellIndex < cells.Length; cellIndex++)
-            {
-                var cell = cells[cellIndex];
-                if (!TryGetBiomeTerrainSprite(cell.Biome, out var sprite))
+                var latitude01 = (y + 0.5f) / height;
+                var normalY = Mathf.Sin((latitude01 - 0.5f) * Mathf.PI);
+                var ringRadius = Mathf.Sqrt(Mathf.Max(0f, 1f - normalY * normalY));
+                for (var x = 0; x < width; x++)
                 {
-                    return false;
-                }
-
-                var normal = ToVector(cell.SpherePosition).normalized;
-                BuildGeodesicTileCornerNormals(cells, neighbours, cellIndex, directNeighbours, cornerNormals);
-                if (cornerNormals.Count < 3)
-                {
-                    continue;
-                }
-
-                var centerIndex = vertices.Count;
-                var centerTint = GetTileTextureCenterTint(cell, worldModel.Seed);
-                GetMarkerBasis(normal, out var tangentRight, out var tangentUp);
-                var maxProjection = GetMaxCornerProjection(cornerNormals, tangentRight, tangentUp);
-
-                vertices.Add(normal * terrainRadius);
-                normals.Add(normal);
-                colors.Add(centerTint);
-                uvs.Add(GetSpriteUv(sprite, new Vector2(0.5f, 0.5f)));
-
-                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
-                {
-                    var ringNormal = cornerNormals[vertexIndex];
-                    vertices.Add(ringNormal * terrainRadius);
-                    normals.Add(ringNormal);
-                    colors.Add(GetTileTextureEdgeTint(cell, worldModel.Seed, vertexIndex, centerTint));
-                    uvs.Add(GetSpriteUv(
-                        sprite,
-                        GetBiomeTileUv(
-                            ringNormal,
-                            tangentRight,
-                            tangentUp,
-                            maxProjection)));
-                }
-
-                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
-                {
-                    triangles.Add(centerIndex);
-                    triangles.Add(centerIndex + 1 + vertexIndex);
-                    triangles.Add(centerIndex + 1 + ((vertexIndex + 1) % cornerNormals.Count));
+                    var longitude01 = (x + 0.5f) / width;
+                    var azimuth = longitude01 * Mathf.PI * 2f;
+                    var normal = new Vector3(Mathf.Cos(azimuth) * ringRadius, normalY, Mathf.Sin(azimuth) * ringRadius);
+                    pixels[y * width + x] = SampleWorldSurfaceColor(
+                        normal,
+                        seed,
+                        lookup,
+                        terrainSettings,
+                        noiseSettings,
+                        palette,
+                        boundaryBlendRadians);
                 }
             }
 
-            SetGeneratedTexturedMesh(terrainLayer, "GlobalMap Textured Terrain", vertices, normals, colors, uvs, triangles, biomeMaterial);
-            return vertices.Count > 0;
+            DestroyUnityObject(terrainSurfaceTexture);
+            terrainSurfaceTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = "GlobalMap Terrain Surface",
+                hideFlags = GetGeneratedHideFlags(),
+                filterMode = FilterMode.Point,
+                wrapModeU = TextureWrapMode.Repeat,
+                wrapModeV = TextureWrapMode.Clamp,
+                anisoLevel = 1
+            };
+            terrainSurfaceTexture.SetPixels32(pixels);
+            terrainSurfaceTexture.Apply(false, false);
+            SetEditorDirty(terrainSurfaceTexture);
+            return terrainSurfaceTexture;
         }
 
         private void RenderRivers(WorldModel worldModel)
@@ -758,6 +752,7 @@ namespace MercLord.Global.Rendering
 
             var settings = RenderSettings;
             var terrainRadius = settings.PlanetRadius + settings.SelectionSurfaceOffset;
+            var insetRatio = settings.SelectionInsetRatio;
             var vertices = new List<Vector3>(cornerNormals.Count + 1);
             var normals = new List<Vector3>(cornerNormals.Count + 1);
             var colors = new List<Color>(cornerNormals.Count + 1);
@@ -769,7 +764,7 @@ namespace MercLord.Global.Rendering
 
             for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
             {
-                var ringNormal = cornerNormals[vertexIndex];
+                var ringNormal = SlerpNormalUnclamped(normal, cornerNormals[vertexIndex], insetRatio);
                 vertices.Add(ringNormal * terrainRadius);
                 normals.Add(ringNormal);
                 colors.Add(settings.SelectionColor);
@@ -1095,6 +1090,7 @@ namespace MercLord.Global.Rendering
             }
 
             var centerNormal = ToVector(cells[cellIndex].SpherePosition).normalized;
+            SortNeighboursAroundCenter(cells, centerNormal, directNeighbours);
             for (var neighbourIndex = 0; neighbourIndex < directNeighbours.Count; neighbourIndex++)
             {
                 var leftNormal = ToVector(cells[directNeighbours[neighbourIndex]].SpherePosition).normalized;
@@ -1109,6 +1105,38 @@ namespace MercLord.Global.Rendering
             {
                 cornerNormals.Reverse();
             }
+        }
+
+        private static void SortNeighboursAroundCenter(
+            WorldCell[] cells,
+            Vector3 centerNormal,
+            List<int> directNeighbours)
+        {
+            GetMarkerBasis(centerNormal, out var tangentRight, out var tangentUp);
+            for (var index = 1; index < directNeighbours.Count; index++)
+            {
+                var neighbourId = directNeighbours[index];
+                var angle = GetNeighbourAngle(cells, neighbourId, tangentRight, tangentUp);
+                var previousIndex = index - 1;
+                while (previousIndex >= 0 &&
+                       GetNeighbourAngle(cells, directNeighbours[previousIndex], tangentRight, tangentUp) > angle)
+                {
+                    directNeighbours[previousIndex + 1] = directNeighbours[previousIndex];
+                    previousIndex--;
+                }
+
+                directNeighbours[previousIndex + 1] = neighbourId;
+            }
+        }
+
+        private static float GetNeighbourAngle(
+            WorldCell[] cells,
+            int cellId,
+            Vector3 tangentRight,
+            Vector3 tangentUp)
+        {
+            var normal = ToVector(cells[cellId].SpherePosition).normalized;
+            return Mathf.Atan2(Vector3.Dot(normal, tangentUp), Vector3.Dot(normal, tangentRight));
         }
 
         private void BuildTilePolygon(
@@ -1286,46 +1314,97 @@ namespace MercLord.Global.Rendering
             }
         }
 
-        private bool TryGetBiomeTerrainSprite(BiomeType biome, out Sprite sprite)
+        private Color SampleWorldSurfaceColor(
+            Vector3 normal,
+            int seed,
+            DirectionCellLookup lookup,
+            WorldTerrainGenerationSettings terrainSettings,
+            WorldNoiseSettings noiseSettings,
+            TerrainVisualPalette palette,
+            float boundaryBlendRadians)
         {
-            sprite = null;
-            return artAtlas != null && artAtlas.TryGetBiomeSprite(biome, out sprite);
+            var candidateCount = lookup.FindNearest(normal);
+            if (candidateCount == 0)
+            {
+                return SampleVisualSurface(normal, seed, terrainSettings, noiseSettings, palette).Color;
+            }
+
+            var primaryCell = lookup.GetCandidateCell(0);
+            var color = GetVisualColor(primaryCell.Biome, primaryCell.Height, normal, seed, terrainSettings, palette);
+            var blendWeight = 0f;
+            for (var candidateIndex = 1; candidateIndex < candidateCount; candidateIndex++)
+            {
+                var cell = lookup.GetCandidateCell(candidateIndex);
+                if (cell.Biome == primaryCell.Biome)
+                {
+                    continue;
+                }
+
+                var dot = Mathf.Clamp(lookup.GetCandidateDot(candidateIndex), -1f, 1f);
+                var primaryDot = Mathf.Clamp(lookup.GetCandidateDot(0), -1f, 1f);
+                var primaryAngle = Mathf.Acos(primaryDot);
+                var candidateAngle = Mathf.Acos(dot);
+                var boundaryDistance = Mathf.Max(0f, candidateAngle - primaryAngle);
+                var edgeBlend = Mathf.SmoothStep(1f, 0f, boundaryDistance / Mathf.Max(0.000001f, boundaryBlendRadians));
+                if (edgeBlend <= 0f)
+                {
+                    continue;
+                }
+
+                var weight = edgeBlend * 0.5f;
+                color = Color.Lerp(color, GetVisualColor(cell.Biome, cell.Height, normal, seed, terrainSettings, palette), weight);
+                blendWeight += weight;
+            }
+
+            color = AddSurfaceMicroDetail(color, normal, seed, primaryCell.Height, blendWeight, primaryCell.Biome);
+            color.a = 1f;
+            return color;
         }
 
-        private Color GetTileTextureCenterTint(WorldCell cell, int seed)
+        private static Color AddSurfaceMicroDetail(
+            Color color,
+            Vector3 normal,
+            int seed,
+            float height,
+            float blendWeight,
+            BiomeType biome)
         {
-            var normal = ToVector(cell.SpherePosition).normalized;
-            var broadNoise = Noise3(normal, seed, 6f, cell.Id * 0.071f + 3.1f);
-            var fineNoise = Noise3(normal, seed, 18f, cell.Id * 0.037f + 17.3f);
-            var heightShade = cell.Biome == BiomeType.Ocean || cell.Biome == BiomeType.Coast
-                ? 1f
-                : Mathf.Lerp(0.96f, 1.04f, cell.Height);
-            var textureShade = Mathf.Lerp(0.965f, 1.035f, broadNoise * 0.8f + fineNoise * 0.2f);
-
-            if (cell.Biome == BiomeType.Forest || cell.Biome == BiomeType.DeadForest)
+            var boundaryFade = 1f - Mathf.Clamp01(blendWeight * 2f);
+            if (boundaryFade <= 0.001f)
             {
-                textureShade = Mathf.Lerp(0.955f, 1.03f, broadNoise * 0.65f + fineNoise * 0.35f);
-            }
-            else if (cell.Biome == BiomeType.Mountains)
-            {
-                textureShade = Mathf.Lerp(0.94f, 1.075f, broadNoise * 0.55f + fineNoise * 0.45f);
-            }
-            else if (cell.Biome == BiomeType.Ocean || cell.Biome == BiomeType.Coast)
-            {
-                textureShade = Mathf.Lerp(0.98f, 1.025f, broadNoise * 0.7f + fineNoise * 0.3f);
+                return color;
             }
 
-            var shade = Mathf.Clamp(heightShade * textureShade, 0.88f, 1.10f);
-            return new Color(shade, shade, shade, 1f);
+            var fine = Noise3(normal, seed, 118f, 137.9f) - 0.5f;
+            var grain = Noise3(normal, seed, 276f, 311.7f) - 0.5f;
+            var detail = fine * 0.72f + grain * 0.28f;
+            var strength = GetSurfaceMicroDetailStrength(biome) * boundaryFade;
+            var shade = 1f + detail * strength;
+            var relief = 1f + (height - 0.5f) * 0.035f * boundaryFade;
+            color.r = Mathf.Clamp01(color.r * shade * relief);
+            color.g = Mathf.Clamp01(color.g * shade * relief);
+            color.b = Mathf.Clamp01(color.b * shade * relief);
+            color.a = 1f;
+            return color;
         }
 
-        private static Color GetTileTextureEdgeTint(WorldCell cell, int seed, int side, Color centerTint)
+        private static float GetSurfaceMicroDetailStrength(BiomeType biome)
         {
-            var normal = ToVector(cell.SpherePosition).normalized;
-            var sideNoise = Noise3(normal, seed + side * 101, 14f, cell.Id * 0.053f + side * 11.7f);
-            var edgeShade = Mathf.Lerp(0.988f, 1.012f, sideNoise);
-            var shade = Mathf.Clamp01(centerTint.r * edgeShade);
-            return new Color(shade, shade, shade, 1f);
+            switch (biome)
+            {
+                case BiomeType.Ocean:
+                case BiomeType.Coast:
+                    return 0.035f;
+                case BiomeType.Mountains:
+                    return 0.085f;
+                case BiomeType.Forest:
+                case BiomeType.DeadForest:
+                    return 0.065f;
+                case BiomeType.Snow:
+                    return 0.030f;
+                default:
+                    return 0.050f;
+            }
         }
 
         private static float GetMaxCornerProjection(
@@ -1373,58 +1452,13 @@ namespace MercLord.Global.Rendering
             return new Vector2(x / texture.width, y / texture.height);
         }
 
-        private Color GetTileCenterColor(WorldCell cell, int seed)
+        private static SurfaceSample SampleVisualSurface(
+            Vector3 normal,
+            int seed,
+            WorldTerrainGenerationSettings terrainSettings,
+            WorldNoiseSettings noiseSettings,
+            TerrainVisualPalette palette)
         {
-            var normal = ToVector(cell.SpherePosition).normalized;
-            var color = GetBiomeColor(cell.Biome);
-            var broadNoise = Noise3(normal, seed, 9f, cell.Id * 0.071f + 3.1f);
-            var fineNoise = Noise3(normal, seed, 32f, cell.Id * 0.037f + 17.3f);
-            var heightShade = cell.Biome == BiomeType.Ocean ? 1f : Mathf.Lerp(0.88f, 1.12f, cell.Height);
-            var textureShade = Mathf.Lerp(0.84f, 1.12f, broadNoise * 0.65f + fineNoise * 0.35f);
-
-            if (cell.Biome == BiomeType.Forest || cell.Biome == BiomeType.DeadForest)
-            {
-                color = Color.Lerp(color, RenderSettings.ForestTextureTint, fineNoise * 0.45f);
-            }
-            else if (cell.Biome == BiomeType.Mountains)
-            {
-                color = Color.Lerp(color, RenderSettings.MountainTextureTint, Mathf.Clamp01((cell.Height - 0.62f) * 2.5f));
-            }
-            else if (cell.Biome == BiomeType.Ocean)
-            {
-                color = Color.Lerp(RenderSettings.OceanTextureTint, color, Mathf.Lerp(0.65f, 1f, fineNoise));
-                textureShade = Mathf.Lerp(0.94f, 1.06f, fineNoise);
-            }
-
-            return ShadeColor(color, heightShade * textureShade);
-        }
-
-        private static Color GetTileEdgeColor(WorldCell cell, int seed, int side, Color centerColor)
-        {
-            var normal = ToVector(cell.SpherePosition).normalized;
-            var sideNoise = Noise3(normal, seed + side * 101, 48f, cell.Id * 0.053f + side * 11.7f);
-            var edgeShade = Mathf.Lerp(0.94f, 1.04f, sideNoise);
-            if (cell.Biome == BiomeType.Ocean || cell.Biome == BiomeType.Coast)
-            {
-                edgeShade = Mathf.Lerp(0.96f, 1.04f, sideNoise);
-            }
-
-            return ShadeColor(centerColor, edgeShade);
-        }
-
-        private static Color ShadeColor(Color color, float shade)
-        {
-            color.r = Mathf.Clamp01(color.r * shade);
-            color.g = Mathf.Clamp01(color.g * shade);
-            color.b = Mathf.Clamp01(color.b * shade);
-            color.a = 1f;
-            return color;
-        }
-
-        private SurfaceSample SampleVisualSurface(Vector3 normal, int seed)
-        {
-            var terrainSettings = TerrainSettings;
-            var noiseSettings = NoiseSettings;
             var latitude = Mathf.Abs(normal.y);
             var continent = SphericalNoise(
                 normal,
@@ -1478,7 +1512,7 @@ namespace MercLord.Global.Rendering
             {
                 Biome = biome,
                 Height = height,
-                Color = GetVisualColor(biome, height, normal, seed, terrainSettings)
+                Color = GetVisualColor(biome, height, normal, seed, terrainSettings, palette)
             };
         }
 
@@ -1564,42 +1598,40 @@ namespace MercLord.Global.Rendering
             return BiomeType.Plains;
         }
 
-        private Color GetVisualColor(
+        private static Color GetVisualColor(
             BiomeType biome,
             float height,
             Vector3 normal,
             int seed,
-            WorldTerrainGenerationSettings terrainSettings)
+            WorldTerrainGenerationSettings terrainSettings,
+            TerrainVisualPalette palette)
         {
-            var color = GetBiomeColor(biome);
-            if (height < terrainSettings.CoastThreshold + 0.12f)
-            {
-                var deepWater = RenderSettings.DeepWaterTint;
-                var shallowWater = RenderSettings.ShallowWaterTint;
-                var shore = RenderSettings.ShoreTint;
-                var waterColor = Color.Lerp(deepWater, shallowWater, Mathf.SmoothStep(0.16f, terrainSettings.OceanThreshold + 0.08f, height));
-                var shoreColor = Color.Lerp(shore, color, Mathf.SmoothStep(terrainSettings.CoastThreshold - 0.02f, terrainSettings.CoastThreshold + 0.12f, height));
-                color = Color.Lerp(waterColor, shoreColor, Mathf.SmoothStep(terrainSettings.OceanThreshold - 0.05f, terrainSettings.CoastThreshold + 0.08f, height));
-            }
+            var color = GetBiomeColor(biome, palette);
+            color = ApplyBiomeTextureColor(color, biome, normal, seed, palette);
+            color = ApplyBiomeWaterTint(color, biome, height, terrainSettings, palette);
 
-            var reliefShade = Mathf.Lerp(0.9f, 1.08f, height);
-            var broadNoise = Noise3(normal, seed, 10.5f, 19.7f);
-            var fineNoise = Noise3(normal, seed, 38f, 71.1f);
-            var textureShade = Mathf.Lerp(0.86f, 1.12f, broadNoise * 0.6f + fineNoise * 0.4f);
+            var reliefShade = Mathf.Lerp(0.985f, 1.025f, height);
+            var fineNoise = Noise3(normal, seed, 74f, 71.1f);
+            var textureShade = Mathf.Lerp(0.975f, 1.025f, fineNoise);
 
             if (biome == BiomeType.Ocean)
             {
-                textureShade = Mathf.Lerp(0.92f, 1.08f, fineNoise);
+                textureShade = Mathf.Lerp(0.985f, 1.018f, fineNoise);
                 reliefShade = 1f;
             }
             else if (biome == BiomeType.Forest || biome == BiomeType.DeadForest)
             {
-                textureShade = Mathf.Lerp(0.78f, 1.06f, fineNoise);
+                color = Color.Lerp(color, palette.ForestTint, 0.10f + fineNoise * 0.08f);
+                textureShade = Mathf.Lerp(0.96f, 1.035f, fineNoise);
             }
             else if (biome == BiomeType.Mountains)
             {
-                color = Color.Lerp(color, RenderSettings.VisualMountainTint, Mathf.Clamp01((height - 0.62f) * 2.4f));
-                textureShade = Mathf.Lerp(0.72f, 1.16f, fineNoise);
+                color = Color.Lerp(color, palette.VisualMountainTint, Mathf.Clamp01((height - 0.62f) * 1.6f));
+                textureShade = Mathf.Lerp(0.94f, 1.055f, fineNoise);
+            }
+            else if (biome == BiomeType.Desert || biome == BiomeType.RustDesert)
+            {
+                textureShade = Mathf.Lerp(0.97f, 1.035f, fineNoise);
             }
 
             color.r = Mathf.Clamp01(color.r * reliefShade * textureShade);
@@ -1609,22 +1641,214 @@ namespace MercLord.Global.Rendering
             return color;
         }
 
-        private Color GetBiomeColor(BiomeType biome)
+        private static Color ApplyBiomeWaterTint(
+            Color color,
+            BiomeType biome,
+            float height,
+            WorldTerrainGenerationSettings terrainSettings,
+            TerrainVisualPalette palette)
         {
-            var biomes = configDatabase?.Biomes;
-            if (biomes != null)
+            switch (biome)
             {
-                for (var biomeIndex = 0; biomeIndex < biomes.Count; biomeIndex++)
+                case BiomeType.Ocean:
+                    var oceanDepth = Mathf.InverseLerp(terrainSettings.OceanThreshold, 0f, height);
+                    return Color.Lerp(color, palette.DeepWaterTint, Mathf.Lerp(0.38f, 0.72f, oceanDepth));
+                case BiomeType.Coast:
+                    var shallowMix = Mathf.InverseLerp(terrainSettings.OceanThreshold, terrainSettings.CoastThreshold, height);
+                    var shallow = Color.Lerp(palette.ShallowWaterTint, palette.ShoreTint, shallowMix);
+                    return Color.Lerp(color, shallow, 0.46f);
+                default:
+                    return color;
+            }
+        }
+
+        private static Color ApplyBiomeTextureColor(
+            Color baseColor,
+            BiomeType biome,
+            Vector3 normal,
+            int seed,
+            TerrainVisualPalette palette)
+        {
+            if (!palette.TryGetBiomeTexture(biome, out var sample))
+            {
+                return baseColor;
+            }
+
+            var poleFade = Mathf.SmoothStep(0.10f, 0.28f, new Vector2(normal.x, normal.z).magnitude);
+            var blend = GetBiomeTextureBlend(biome) * poleFade;
+            if (blend <= 0.001f)
+            {
+                return baseColor;
+            }
+
+            var textureColor = sample.Sample(GetSurfaceTextureUv(normal, biome, seed));
+            var luminance = textureColor.r * 0.299f + textureColor.g * 0.587f + textureColor.b * 0.114f;
+            var shade = Mathf.Lerp(0.94f, 1.08f, luminance);
+            var detailedBase = new Color(
+                Mathf.Clamp01(baseColor.r * shade),
+                Mathf.Clamp01(baseColor.g * shade),
+                Mathf.Clamp01(baseColor.b * shade),
+                1f);
+            var tintedTexture = Color.Lerp(baseColor, textureColor, GetBiomeTextureColorStrength(biome));
+            var color = Color.Lerp(detailedBase, tintedTexture, blend);
+            color.a = 1f;
+            return color;
+        }
+
+        private static Vector2 GetSurfaceTextureUv(Vector3 normal, BiomeType biome, int seed)
+        {
+            var longitude = Mathf.Atan2(normal.z, normal.x) / (Mathf.PI * 2f) + 0.5f;
+            var latitude = Mathf.Asin(Mathf.Clamp(normal.y, -1f, 1f)) / Mathf.PI + 0.5f;
+            var scale = GetBiomeTextureScale(biome);
+            var warpX = (Noise3(normal, seed, 5.7f, 503.9f) - 0.5f) * 0.08f;
+            var warpY = (Noise3(normal, seed, 7.3f, 829.1f) - 0.5f) * 0.08f;
+            return new Vector2(
+                longitude * scale.x + seed * 0.0137f + warpX,
+                latitude * scale.y + seed * 0.0211f + warpY);
+        }
+
+        private static Vector2 GetBiomeTextureScale(BiomeType biome)
+        {
+            switch (biome)
+            {
+                case BiomeType.Ocean:
+                case BiomeType.Coast:
+                    return new Vector2(28f, 14f);
+                case BiomeType.Mountains:
+                case BiomeType.Snow:
+                    return new Vector2(38f, 19f);
+                case BiomeType.Forest:
+                case BiomeType.DeadForest:
+                    return new Vector2(34f, 17f);
+                default:
+                    return new Vector2(30f, 15f);
+            }
+        }
+
+        private static float GetBiomeTextureBlend(BiomeType biome)
+        {
+            switch (biome)
+            {
+                case BiomeType.Ocean:
+                    return 0.42f;
+                case BiomeType.Coast:
+                    return 0.40f;
+                case BiomeType.Forest:
+                case BiomeType.DeadForest:
+                case BiomeType.Mountains:
+                    return 0.62f;
+                case BiomeType.Snow:
+                    return 0.36f;
+                default:
+                    return 0.52f;
+            }
+        }
+
+        private static float GetBiomeTextureColorStrength(BiomeType biome)
+        {
+            switch (biome)
+            {
+                case BiomeType.Ocean:
+                    return 0.58f;
+                case BiomeType.Coast:
+                    return 0.54f;
+                case BiomeType.Snow:
+                    return 0.46f;
+                case BiomeType.Mountains:
+                    return 0.68f;
+                case BiomeType.Forest:
+                case BiomeType.DeadForest:
+                    return 0.64f;
+                default:
+                    return 0.60f;
+            }
+        }
+
+        private TerrainVisualPalette CreateTerrainVisualPalette()
+        {
+            var biomeColorCount = 0;
+            var fallbackColors = RenderSettings.FallbackBiomeColors;
+            for (var index = 0; index < fallbackColors.Count; index++)
+            {
+                biomeColorCount = Mathf.Max(biomeColorCount, (int)fallbackColors[index].BiomeType + 1);
+            }
+
+            biomeColorCount = Mathf.Max(biomeColorCount, 1);
+            var colors = new Color[biomeColorCount];
+            for (var index = 0; index < colors.Length; index++)
+            {
+                colors[index] = RenderSettings.MissingBiomeColor;
+            }
+
+            for (var index = 0; index < fallbackColors.Count; index++)
+            {
+                var entry = fallbackColors[index];
+                var colorIndex = (int)entry.BiomeType;
+                if (colorIndex >= 0 && colorIndex < colors.Length)
                 {
-                    var config = biomes[biomeIndex];
-                    if (config != null && config.BiomeType == biome && config.MapColor.a > 0f)
-                    {
-                        return config.MapColor;
-                    }
+                    colors[colorIndex] = entry.Color;
                 }
             }
 
-            return RenderSettings.GetFallbackBiomeColor(biome);
+            return new TerrainVisualPalette(
+                colors,
+                BuildBiomeTextureSamples(biomeColorCount),
+                RenderSettings.MissingBiomeColor,
+                RenderSettings.DeepWaterTint,
+                RenderSettings.ShallowWaterTint,
+                RenderSettings.ShoreTint,
+                RenderSettings.ForestTextureTint,
+                RenderSettings.VisualMountainTint);
+        }
+
+        private BiomeTextureSample[] BuildBiomeTextureSamples(int biomeColorCount)
+        {
+            if (artAtlas == null || artAtlas.BiomeAtlasTexture == null || artAtlas.BiomeSprites == null)
+            {
+                return Array.Empty<BiomeTextureSample>();
+            }
+
+            Color32[] pixels;
+            try
+            {
+                pixels = artAtlas.BiomeAtlasTexture.GetPixels32();
+            }
+            catch (UnityException)
+            {
+                return Array.Empty<BiomeTextureSample>();
+            }
+
+            var texture = artAtlas.BiomeAtlasTexture;
+            var sampleCount = Mathf.Max(biomeColorCount, artAtlas.BiomeSprites.Length);
+            var samples = new BiomeTextureSample[sampleCount];
+            for (var index = 0; index < artAtlas.BiomeSprites.Length; index++)
+            {
+                var sprite = artAtlas.BiomeSprites[index];
+                if (sprite == null || sprite.texture != texture)
+                {
+                    continue;
+                }
+
+                var rect = sprite.textureRect;
+                samples[index] = new BiomeTextureSample(
+                    pixels,
+                    texture.width,
+                    texture.height,
+                    Mathf.RoundToInt(rect.xMin),
+                    Mathf.RoundToInt(rect.yMin),
+                    Mathf.RoundToInt(rect.width),
+                    Mathf.RoundToInt(rect.height));
+            }
+
+            return samples;
+        }
+
+        private static Color GetBiomeColor(BiomeType biome, TerrainVisualPalette palette)
+        {
+            var colorIndex = (int)biome;
+            return colorIndex >= 0 && colorIndex < palette.BiomeColors.Length
+                ? palette.BiomeColors[colorIndex]
+                : palette.MissingBiomeColor;
         }
 
         private Color GetFactionMarkerColor(int factionId)
@@ -1694,7 +1918,6 @@ namespace MercLord.Global.Rendering
             }
 
             ValidateLayer(starfieldLayer, nameof(starfieldLayer));
-            ValidateLayer(biomeUnderlayLayer, nameof(biomeUnderlayLayer));
             ValidateLayer(terrainLayer, nameof(terrainLayer));
             ValidateLayer(riversLayer, nameof(riversLayer));
             ValidateLayer(roadsLayer, nameof(roadsLayer));
@@ -1731,7 +1954,6 @@ namespace MercLord.Global.Rendering
             {
                 changed |= AssignIfMissing(ref renderSettings, generatedRoot.GetComponent<GlobalMapProceduralRenderSettings>());
                 changed |= AssignIfMissing(ref starfieldLayer, FindLayer(GeneratedRootName, "Starfield Mesh"));
-                changed |= AssignIfMissing(ref biomeUnderlayLayer, FindLayer(GeneratedRootName, "Biome Underlay Mesh"));
                 changed |= AssignIfMissing(ref terrainLayer, FindLayer(GeneratedRootName, "Terrain Mesh"));
                 changed |= AssignIfMissing(ref riversLayer, FindLayer(GeneratedRootName, "Rivers Mesh"));
                 changed |= AssignIfMissing(ref roadsLayer, FindLayer(GeneratedRootName, "Roads Mesh"));
@@ -1777,12 +1999,6 @@ namespace MercLord.Global.Rendering
                 null,
                 nameof(settings.VertexColorMaterialTemplate));
             EnsureTexturedMaterial(
-                ref biomeMaterial,
-                ref biomeMaterialTemplateSource,
-                settings.BiomeMaterialTemplate,
-                artAtlas != null ? artAtlas.BiomeAtlasTexture : null,
-                nameof(settings.BiomeMaterialTemplate));
-            EnsureTexturedMaterial(
                 ref iconMaterial,
                 ref iconMaterialTemplateSource,
                 settings.IconMaterialTemplate,
@@ -1800,6 +2016,18 @@ namespace MercLord.Global.Rendering
                 settings.IconMaterialTemplate,
                 artAtlas != null ? artAtlas.ActivityFeatureAtlasTexture : null,
                 nameof(settings.IconMaterialTemplate));
+        }
+
+        private Material EnsureTerrainMaterial(Texture texture)
+        {
+            var settings = RenderSettings;
+            EnsureMaterialInstance(
+                ref terrainMaterial,
+                ref terrainMaterialTemplateSource,
+                settings.TerrainMaterialTemplate,
+                texture,
+                nameof(settings.TerrainMaterialTemplate));
+            return terrainMaterial;
         }
 
         private static void EnsureMaterialInstance(
@@ -2000,17 +2228,22 @@ namespace MercLord.Global.Rendering
 
         private static HideFlags GetGeneratedHideFlags()
         {
-            return Application.isPlaying ? RuntimeGeneratedHideFlags : HideFlags.None;
+            return RuntimeGeneratedHideFlags;
         }
 
         private static void SetEditorDirty(UnityEngine.Object target)
         {
 #if UNITY_EDITOR
-            if (!Application.isPlaying && target != null)
+            if (!Application.isPlaying && target != null && !HasDontSaveFlag(target))
             {
                 UnityEditor.EditorUtility.SetDirty(target);
             }
 #endif
+        }
+
+        private static bool HasDontSaveFlag(UnityEngine.Object target)
+        {
+            return target != null && (target.hideFlags & RuntimeGeneratedHideFlags) != 0;
         }
 
         private static Vector3 ToVector(WorldSpherePoint point)
@@ -2020,14 +2253,25 @@ namespace MercLord.Global.Rendering
 
         private static Vector3 SlerpNormal(Vector3 from, Vector3 to, float t)
         {
+            var clampedT = Mathf.Clamp01(t);
+            return SlerpNormalUnclamped(from, to, clampedT);
+        }
+
+        private static Vector3 SlerpNormalUnclamped(Vector3 from, Vector3 to, float t)
+        {
             var dot = Mathf.Clamp(Vector3.Dot(from, to), -1f, 1f);
             if (dot > 0.9995f)
             {
-                return Vector3.Lerp(from, to, t).normalized;
+                return Vector3.LerpUnclamped(from, to, t).normalized;
             }
 
             var theta = Mathf.Acos(dot);
             var sinTheta = Mathf.Sin(theta);
+            if (sinTheta <= 0.000001f)
+            {
+                return Vector3.LerpUnclamped(from, to, t).normalized;
+            }
+
             var a = Mathf.Sin((1f - t) * theta) / sinTheta;
             var b = Mathf.Sin(t * theta) / sinTheta;
             return (from * a + to * b).normalized;
@@ -2187,12 +2431,14 @@ namespace MercLord.Global.Rendering
             if (Application.isPlaying)
             {
                 DestroyUnityObject(vertexColorMaterial);
-                DestroyUnityObject(biomeMaterial);
+                DestroyUnityObject(terrainMaterial);
+                DestroyUnityObject(terrainSurfaceTexture);
                 DestroyUnityObject(iconMaterial);
                 DestroyUnityObject(settlementFeatureMaterial);
                 DestroyUnityObject(activityFeatureMaterial);
                 vertexColorMaterialTemplateSource = null;
-                biomeMaterialTemplateSource = null;
+                terrainMaterialTemplateSource = null;
+                terrainSurfaceTexture = null;
                 iconMaterialTemplateSource = null;
                 settlementFeatureMaterialTemplateSource = null;
                 activityFeatureMaterialTemplateSource = null;
@@ -2204,6 +2450,257 @@ namespace MercLord.Global.Rendering
             public BiomeType Biome;
             public float Height;
             public Color Color;
+        }
+
+        private readonly struct TerrainVisualPalette
+        {
+            public readonly Color[] BiomeColors;
+            public readonly BiomeTextureSample[] BiomeTextures;
+            public readonly Color MissingBiomeColor;
+            public readonly Color DeepWaterTint;
+            public readonly Color ShallowWaterTint;
+            public readonly Color ShoreTint;
+            public readonly Color ForestTint;
+            public readonly Color VisualMountainTint;
+
+            public TerrainVisualPalette(
+                Color[] biomeColors,
+                BiomeTextureSample[] biomeTextures,
+                Color missingBiomeColor,
+                Color deepWaterTint,
+                Color shallowWaterTint,
+                Color shoreTint,
+                Color forestTint,
+                Color visualMountainTint)
+            {
+                BiomeColors = biomeColors ?? Array.Empty<Color>();
+                BiomeTextures = biomeTextures ?? Array.Empty<BiomeTextureSample>();
+                MissingBiomeColor = missingBiomeColor;
+                DeepWaterTint = deepWaterTint;
+                ShallowWaterTint = shallowWaterTint;
+                ShoreTint = shoreTint;
+                ForestTint = forestTint;
+                VisualMountainTint = visualMountainTint;
+            }
+
+            public bool TryGetBiomeTexture(BiomeType biome, out BiomeTextureSample sample)
+            {
+                var index = (int)biome;
+                if (index >= 0 && index < BiomeTextures.Length && BiomeTextures[index].IsValid)
+                {
+                    sample = BiomeTextures[index];
+                    return true;
+                }
+
+                sample = default;
+                return false;
+            }
+        }
+
+        private readonly struct BiomeTextureSample
+        {
+            private readonly Color32[] pixels;
+            private readonly int textureWidth;
+            private readonly int textureHeight;
+            private readonly int x;
+            private readonly int y;
+            private readonly int width;
+            private readonly int height;
+
+            public BiomeTextureSample(
+                Color32[] pixels,
+                int textureWidth,
+                int textureHeight,
+                int x,
+                int y,
+                int width,
+                int height)
+            {
+                this.pixels = pixels;
+                this.textureWidth = textureWidth;
+                this.textureHeight = textureHeight;
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+
+            public bool IsValid =>
+                pixels != null &&
+                textureWidth > 0 &&
+                textureHeight > 0 &&
+                width > 0 &&
+                height > 0;
+
+            public Color Sample(Vector2 uv)
+            {
+                if (!IsValid)
+                {
+                    return Color.white;
+                }
+
+                var localX = Mathf.FloorToInt(Mathf.Repeat(uv.x, 1f) * width);
+                var localY = Mathf.FloorToInt(Mathf.Repeat(uv.y, 1f) * height);
+                var pixelX = Mathf.Clamp(x + localX, 0, textureWidth - 1);
+                var pixelY = Mathf.Clamp(y + localY, 0, textureHeight - 1);
+                return pixels[pixelY * textureWidth + pixelX];
+            }
+        }
+
+        private sealed class DirectionCellLookup
+        {
+            private readonly WorldCell[] cells;
+            private readonly Vector3[] cellNormals;
+            private readonly List<int>[] bins;
+            private readonly int longitudeBins;
+            private readonly int latitudeBins;
+            private readonly int[] candidateCellIds = new int[SurfaceBlendCandidateCount];
+            private readonly float[] candidateDots = new float[SurfaceBlendCandidateCount];
+
+            public DirectionCellLookup(WorldCell[] cells, int longitudeSegments, int latitudeSegments)
+            {
+                this.cells = cells ?? Array.Empty<WorldCell>();
+                longitudeBins = Mathf.Max(16, longitudeSegments);
+                latitudeBins = Mathf.Max(8, latitudeSegments);
+                cellNormals = new Vector3[this.cells.Length];
+                bins = new List<int>[longitudeBins * latitudeBins];
+
+                for (var cellIndex = 0; cellIndex < this.cells.Length; cellIndex++)
+                {
+                    var normal = ToVector(this.cells[cellIndex].SpherePosition).normalized;
+                    cellNormals[cellIndex] = normal;
+                    GetBin(normal, out var binX, out var binY);
+                    var binIndex = GetBinIndex(binX, binY);
+                    bins[binIndex] ??= new List<int>(8);
+                    bins[binIndex].Add(cellIndex);
+                }
+            }
+
+            public WorldCell GetCandidateCell(int index)
+            {
+                return cells[candidateCellIds[index]];
+            }
+
+            public float GetCandidateDot(int index)
+            {
+                return candidateDots[index];
+            }
+
+            public int FindNearest(Vector3 normal)
+            {
+                var candidateCount = 0;
+                for (var index = 0; index < candidateCellIds.Length; index++)
+                {
+                    candidateCellIds[index] = WorldIds.None;
+                    candidateDots[index] = -2f;
+                }
+
+                GetBin(normal, out var centerX, out var centerY);
+                for (var radius = 0; radius <= SurfaceBlendMaxBinSearchRadius; radius++)
+                {
+                    for (var y = centerY - radius; y <= centerY + radius; y++)
+                    {
+                        if (y < 0 || y >= latitudeBins)
+                        {
+                            continue;
+                        }
+
+                        for (var x = centerX - radius; x <= centerX + radius; x++)
+                        {
+                            if (radius > 0 && Mathf.Abs(x - centerX) != radius && Mathf.Abs(y - centerY) != radius)
+                            {
+                                continue;
+                            }
+
+                            candidateCount = AddBinCandidates(WrapLongitudeBin(x), y, normal, candidateCount);
+                        }
+                    }
+
+                    if (candidateCount >= SurfaceBlendCandidateCount && radius >= 1)
+                    {
+                        break;
+                    }
+                }
+
+                if (candidateCount > 0)
+                {
+                    return candidateCount;
+                }
+
+                for (var cellIndex = 0; cellIndex < cellNormals.Length; cellIndex++)
+                {
+                    candidateCount = AddCandidate(cellIndex, Vector3.Dot(normal, cellNormals[cellIndex]), candidateCount);
+                }
+
+                return candidateCount;
+            }
+
+            private int AddBinCandidates(int binX, int binY, Vector3 normal, int candidateCount)
+            {
+                var bin = bins[GetBinIndex(binX, binY)];
+                if (bin == null)
+                {
+                    return candidateCount;
+                }
+
+                for (var index = 0; index < bin.Count; index++)
+                {
+                    var cellIndex = bin[index];
+                    candidateCount = AddCandidate(cellIndex, Vector3.Dot(normal, cellNormals[cellIndex]), candidateCount);
+                }
+
+                return candidateCount;
+            }
+
+            private int AddCandidate(int cellIndex, float dot, int candidateCount)
+            {
+                if (candidateCount >= SurfaceBlendCandidateCount && dot <= candidateDots[SurfaceBlendCandidateCount - 1])
+                {
+                    return candidateCount;
+                }
+
+                var insertIndex = candidateCount;
+                if (insertIndex >= SurfaceBlendCandidateCount)
+                {
+                    insertIndex = SurfaceBlendCandidateCount - 1;
+                }
+
+                while (insertIndex > 0 && dot > candidateDots[insertIndex - 1])
+                {
+                    if (insertIndex < SurfaceBlendCandidateCount)
+                    {
+                        candidateDots[insertIndex] = candidateDots[insertIndex - 1];
+                        candidateCellIds[insertIndex] = candidateCellIds[insertIndex - 1];
+                    }
+
+                    insertIndex--;
+                }
+
+                candidateDots[insertIndex] = dot;
+                candidateCellIds[insertIndex] = cellIndex;
+                return Mathf.Min(candidateCount + 1, SurfaceBlendCandidateCount);
+            }
+
+            private void GetBin(Vector3 normal, out int binX, out int binY)
+            {
+                var longitude = Mathf.Atan2(normal.z, normal.x);
+                var latitude = Mathf.Asin(Mathf.Clamp(normal.y, -1f, 1f));
+                var u = longitude / (Mathf.PI * 2f) + 0.5f;
+                var v = latitude / Mathf.PI + 0.5f;
+                binX = Mathf.Clamp(Mathf.FloorToInt(u * longitudeBins), 0, longitudeBins - 1);
+                binY = Mathf.Clamp(Mathf.FloorToInt(v * latitudeBins), 0, latitudeBins - 1);
+            }
+
+            private int GetBinIndex(int binX, int binY)
+            {
+                return binY * longitudeBins + binX;
+            }
+
+            private int WrapLongitudeBin(int binX)
+            {
+                var wrapped = binX % longitudeBins;
+                return wrapped < 0 ? wrapped + longitudeBins : wrapped;
+            }
         }
 
     }

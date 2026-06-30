@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MercLord.Battle.Tiles;
 using MercLord.Game.Configs;
 using MercLord.Infrastructure.Validation;
 using NUnit.Framework;
@@ -76,6 +77,7 @@ namespace MercLord.Editor.Tests
             using var configSet = CreateValidConfigSet();
             var orphanPlayer = configSet.CreateConfig<UnitConfig>(911, "Orphan Player");
             var orphanVehicle = configSet.CreateConfig<VehicleConfig>(912, "Orphan Vehicle");
+            var orphanLootTable = configSet.CreateConfig<LootTableConfig>(913, "Orphan Loot Table");
             SetValidUnitFields(orphanPlayer, configSet.Faction.Id, UnitCategory.Player, configSet.Weapon, configSet.Armor, configSet.AI, "missing-player-prefab");
             SetValidVehicleFields(orphanVehicle, configSet.Armor, configSet.Weapon, "missing-vehicle-prefab");
 
@@ -86,6 +88,10 @@ namespace MercLord.Editor.Tests
 
             SetField(configSet.BattleSimulation, "playerUnit", orphanPlayer);
             SetField(configSet.BattleSimulation, "playerSpawnPointIndex", 999);
+            SetField(configSet.BattleSimulation, "victoryCreditsReward", -1);
+            SetField(configSet.BattleSimulation, "victoryLootTable", orphanLootTable);
+            SetField(configSet.BattleSimulation, "victoryLootRolls", -1);
+            SetField(configSet.BattleSimulation, "victoryInfluenceReward", -1f);
             SetField(configSet.BattleSimulation, "vehicleSpawns", new[] { invalidSpawn });
 
             var messages = ValidateErrorMessages(configSet.Database);
@@ -95,6 +101,73 @@ namespace MercLord.Editor.Tests
             AssertContains(messages, "vehicle must be registered in ConfigDatabase");
             AssertContains(messages, "references a missing FactionConfig");
             AssertContains(messages, "point index must fit generated spawn capacity");
+            AssertContains(messages, "victory credits reward cannot be negative");
+            AssertContains(messages, "victory loot rolls cannot be negative");
+            AssertContains(messages, "victory loot table must be registered in ConfigDatabase");
+            AssertContains(messages, "victory influence reward cannot be negative");
+        }
+
+        [Test]
+        public void BattleSimulationRewardTableRequiredWhenLootRollsEnabled()
+        {
+            using var configSet = CreateValidConfigSet();
+            SetField(configSet.BattleSimulation, "victoryLootTable", null);
+            SetField(configSet.BattleSimulation, "victoryLootRolls", 1);
+
+            var messages = ValidateErrorMessages(configSet.Database);
+
+            AssertContains(messages, "victory loot table must be assigned when loot rolls are enabled");
+        }
+
+        [Test]
+        public void BattleMapGenerationTileMetadataRulesMatchValidationContract()
+        {
+            using var configSet = CreateValidConfigSet();
+            SetField(configSet.BattleMapGeneration, "defaultCover", (int)CoverType.Heavy + 1);
+            SetField(configSet.BattleMapGeneration, "settlementCover", -1);
+            SetField(configSet.BattleMapGeneration, "maxTileHeight", sbyte.MaxValue + 1);
+            SetField(configSet.BattleMapGeneration, "plainsCoverPatchCount", -1);
+            SetField(configSet.BattleMapGeneration, "forestCoverPatchCount", 1);
+            SetField(configSet.BattleMapGeneration, "forestCoverPatchRadius", 0);
+            SetField(configSet.BattleMapGeneration, "forestObstaclePatchRadius", -1);
+            SetField(configSet.BattleMapGeneration, "unitSpawnOffset", new Vector2(1.25f, 0.5f));
+            SetField(configSet.BattleMapGeneration, "unitSpawnJitterRadius", 0.75f);
+
+            var messages = ValidateErrorMessages(configSet.Database);
+
+            AssertContains(messages, "DefaultCover must map to a supported CoverType");
+            AssertContains(messages, "SettlementCover must map to a supported CoverType");
+            AssertContains(messages, "MaxTileHeight must fit into signed byte range");
+            AssertContains(messages, "PlainsCoverPatchCount cannot be negative");
+            AssertContains(messages, "ForestCoverPatchCount radius must be positive");
+            AssertContains(messages, "ForestObstaclePatchCount radius cannot be negative");
+            AssertContains(messages, "Battle unit spawn offset must stay inside a tile");
+            AssertContains(messages, "Battle unit spawn jitter radius must stay between zero and half a tile");
+        }
+
+        [Test]
+        public void CombatBalanceHitChanceRulesMatchValidationContract()
+        {
+            using var configSet = CreateValidConfigSet();
+            SetField(configSet.CombatBalance, "damageFormula", new DamageFormula { MinimumDamage = -1 });
+            SetField(configSet.CombatBalance, "hitChanceFormula", new HitChanceFormula
+            {
+                BaseChance = 0.25f,
+                MinimumChance = 0.5f,
+                RangePenaltyAtMaxRange = -0.1f,
+                LightCoverPenalty = 1.2f,
+                MediumCoverPenalty = float.NaN,
+                HeavyCoverPenalty = 0.2f,
+                MovingTargetPenalty = 0.1f
+            });
+
+            var messages = ValidateErrorMessages(configSet.Database);
+
+            AssertContains(messages, "Damage formula minimum damage cannot be negative");
+            AssertContains(messages, "Hit chance range penalty must be between zero and one");
+            AssertContains(messages, "Hit chance light cover penalty must be between zero and one");
+            AssertContains(messages, "Hit chance medium cover penalty must be between zero and one");
+            AssertContains(messages, "Hit chance minimum chance cannot exceed base chance");
         }
 
         private static ValidationIssue[] ValidateErrors(ConfigDatabase database)
@@ -189,6 +262,7 @@ namespace MercLord.Editor.Tests
             SetField(biome, "isPassableByDefault", true);
 
             SetField(combatBalance, "damageFormula", new DamageFormula { MinimumDamage = 1 });
+            SetField(combatBalance, "hitChanceFormula", HitChanceFormula.Default);
 
             SetField(globalGeneration, "targetCellCount", GlobalGenerationConfig.MinimumTargetCellCount);
             SetField(globalGeneration, "playerStartCellId", 0);
@@ -215,6 +289,10 @@ namespace MercLord.Editor.Tests
             SetField(battleSimulation, "playerSpawnSide", BattleSpawnSide.Attacker);
             SetField(battleSimulation, "playerSpawnPointIndex", 0);
             SetField(battleSimulation, "playerAimDotThreshold", 0.25f);
+            SetField(battleSimulation, "victoryCreditsReward", 25);
+            SetField(battleSimulation, "victoryLootTable", lootTable);
+            SetField(battleSimulation, "victoryLootRolls", 1);
+            SetField(battleSimulation, "victoryInfluenceReward", 12f);
             SetField(battleSimulation, "vehicleSpawns", new[] { vehicleSpawn });
 
             SetField(culture, "startingCellId", 0);
@@ -250,6 +328,8 @@ namespace MercLord.Editor.Tests
             configSet.ArmorItem = armorItem;
             configSet.TradeGoodItem = tradeGoodItem;
             configSet.BattleSimulation = battleSimulation;
+            configSet.BattleMapGeneration = battleMapGeneration;
+            configSet.CombatBalance = combatBalance;
             configSet.Culture = culture;
             return configSet;
         }
@@ -331,6 +411,8 @@ namespace MercLord.Editor.Tests
             public ItemConfig ArmorItem { get; set; }
             public ItemConfig TradeGoodItem { get; set; }
             public BattleSimulationConfig BattleSimulation { get; set; }
+            public BattleMapGenerationConfig BattleMapGeneration { get; set; }
+            public CombatBalanceConfig CombatBalance { get; set; }
             public CultureConfig Culture { get; set; }
 
             public T Create<T>()

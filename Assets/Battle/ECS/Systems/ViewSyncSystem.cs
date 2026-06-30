@@ -15,6 +15,9 @@ namespace MercLord.Battle.ECS.Systems
         private Filter filter;
         private Stash<PositionComponent> positions;
         private Stash<ViewRefComponent> viewRefs;
+        private Stash<BattleLodComponent> lods;
+        private Stash<DeadComponent> dead;
+        private Stash<DriverComponent> drivers;
 
         public ViewSyncSystem(
             BattleViewCatalog viewCatalog,
@@ -40,11 +43,13 @@ namespace MercLord.Battle.ECS.Systems
             filter = world.Filter
                 .With<PositionComponent>()
                 .With<ViewRefComponent>()
-                .Without<DeadComponent>()
                 .Build();
 
             positions = world.GetStash<PositionComponent>();
             viewRefs = world.GetStash<ViewRefComponent>();
+            lods = world.GetStash<BattleLodComponent>();
+            dead = world.GetStash<DeadComponent>();
+            drivers = world.GetStash<DriverComponent>();
         }
 
         public void Tick(float deltaTime)
@@ -63,7 +68,10 @@ namespace MercLord.Battle.ECS.Systems
                 }
 
                 var position = positions.Get(entity);
+                var isDeadVisual = ShouldUseDeadVisual(entity);
                 view.transform.position = viewCatalog.GridToWorld(position.Value);
+                view.SetActive(ShouldViewBeActive(entity, isDeadVisual));
+                ApplyVisualState(view, isDeadVisual);
             }
         }
 
@@ -78,6 +86,49 @@ namespace MercLord.Battle.ECS.Systems
             world = null;
             positions = null;
             viewRefs = null;
+            lods = null;
+            dead = null;
+            drivers = null;
+        }
+
+        private static void ApplyVisualState(UnityEngine.GameObject view, bool isDeadVisual)
+        {
+            var infantryView = view.GetComponent<InfantryView>();
+            if (infantryView != null)
+            {
+                infantryView.SetDeadVisual(isDeadVisual);
+            }
+        }
+
+        private bool ShouldUseDeadVisual(Entity entity)
+        {
+            if (dead.Has(entity))
+            {
+                return true;
+            }
+
+            return lods.Has(entity) && lods.Get(entity).Level == BattleLodLevel.Dead;
+        }
+
+        private bool ShouldViewBeActive(Entity entity, bool isDeadVisual)
+        {
+            if (drivers.Has(entity))
+            {
+                return false;
+            }
+
+            if (isDeadVisual)
+            {
+                return true;
+            }
+
+            if (!lods.Has(entity))
+            {
+                return true;
+            }
+
+            var lod = lods.Get(entity);
+            return lod.Level != BattleLodLevel.Strategic;
         }
     }
 }
