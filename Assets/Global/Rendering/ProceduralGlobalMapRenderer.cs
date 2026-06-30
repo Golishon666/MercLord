@@ -59,6 +59,7 @@ namespace MercLord.Global.Rendering
 
         private Transform generatedRoot;
         [SerializeField] private ConfigDatabase configDatabase;
+        [SerializeField] private GlobalMapArtAtlas artAtlas;
         [SerializeField] private WorldModel currentWorld;
         [SerializeField] private float planetRadius = 3f;
         [SerializeField] private float starfieldRadius = 18f;
@@ -68,10 +69,12 @@ namespace MercLord.Global.Rendering
         [SerializeField, Min(1f)] private float tileVoronoiSeedRadiusMultiplier = 2.4f;
 
         private Material vertexColorMaterial;
+        private Material iconMaterial;
         private GameObject selectionObject;
         private int selectedCellId = WorldIds.None;
 
         public WorldModel CurrentWorld => currentWorld;
+        public GlobalMapArtAtlas ArtAtlas => artAtlas;
         public int SelectedCellId => selectedCellId;
         public float PlanetRadius => planetRadius;
         private WorldTerrainGenerationSettings TerrainSettings => configDatabase?.GlobalGeneration?.Terrain ?? WorldTerrainGenerationSettings.Default;
@@ -80,6 +83,11 @@ namespace MercLord.Global.Rendering
         public void Configure(ConfigDatabase database)
         {
             configDatabase = database;
+        }
+
+        public void ConfigureArtAtlas(GlobalMapArtAtlas atlas)
+        {
+            artAtlas = atlas;
         }
 
         public void Render(WorldModel worldModel)
@@ -111,6 +119,8 @@ namespace MercLord.Global.Rendering
 
             DestroyObject(vertexColorMaterial);
             vertexColorMaterial = null;
+            DestroyObject(iconMaterial);
+            iconMaterial = null;
             selectionObject = null;
             selectedCellId = WorldIds.None;
         }
@@ -411,6 +421,11 @@ namespace MercLord.Global.Rendering
 
         private void RenderMarkers(WorldModel worldModel)
         {
+            if (RenderTexturedMarkers(worldModel))
+            {
+                return;
+            }
+
             var settlements = worldModel.Settlements ?? Array.Empty<SettlementData>();
             var activities = worldModel.Activities ?? Array.Empty<WorldActivityData>();
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
@@ -453,6 +468,73 @@ namespace MercLord.Global.Rendering
             }
 
             CreateGeneratedMeshObject("Markers Mesh", "GlobalMap Markers", vertices, normals, colors, triangles, vertexColorMaterial);
+        }
+
+        private bool RenderTexturedMarkers(WorldModel worldModel)
+        {
+            if (artAtlas == null ||
+                artAtlas.IconAtlasTexture == null ||
+                artAtlas.IconSprites == null ||
+                artAtlas.IconSprites.Length == 0)
+            {
+                return false;
+            }
+
+            EnsureMaterials();
+            if (iconMaterial == null)
+            {
+                return false;
+            }
+
+            var settlements = worldModel.Settlements ?? Array.Empty<SettlementData>();
+            var activities = worldModel.Activities ?? Array.Empty<WorldActivityData>();
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            var factions = worldModel.Factions ?? Array.Empty<FactionData>();
+            var markerCount = settlements.Length + activities.Length;
+            var vertices = new List<Vector3>(markerCount * 4);
+            var normals = new List<Vector3>(markerCount * 4);
+            var colors = new List<Color>(markerCount * 4);
+            var uvs = new List<Vector2>(markerCount * 4);
+            var triangles = new List<int>(markerCount * 6);
+
+            for (var settlementIndex = 0; settlementIndex < settlements.Length; settlementIndex++)
+            {
+                var settlement = settlements[settlementIndex];
+                if (!IsValidCell(settlement.CellId, cells.Length))
+                {
+                    continue;
+                }
+
+                var iconId = IsCapitalCell(settlement.CellId, factions)
+                    ? GlobalMapIconSpriteId.Capital
+                    : GlobalMapIconSpriteId.Town;
+                if (!artAtlas.TryGetIconSprite(iconId, out var sprite))
+                {
+                    continue;
+                }
+
+                var size = iconId == GlobalMapIconSpriteId.Capital ? 0.17f : 0.125f;
+                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[settlement.CellId], sprite, size, Color.white, 0.04f);
+            }
+
+            for (var activityIndex = 0; activityIndex < activities.Length; activityIndex++)
+            {
+                var activity = activities[activityIndex];
+                if (!IsValidCell(activity.CellId, cells.Length))
+                {
+                    continue;
+                }
+
+                if (!artAtlas.TryGetIconSprite(GetActivityIconId(activity.Type), out var sprite))
+                {
+                    continue;
+                }
+
+                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[activity.CellId], sprite, 0.13f, Color.white, 0.038f);
+            }
+
+            CreateGeneratedTexturedMeshObject("Marker Icons Mesh", "GlobalMap Marker Icons", vertices, normals, colors, uvs, triangles, iconMaterial);
+            return vertices.Count > 0;
         }
 
         private void RenderSelection()
@@ -653,6 +735,67 @@ namespace MercLord.Global.Rendering
                 triangles.Add(vertexStart + pointIndex + 1);
                 triangles.Add(vertexStart + 1 + ((pointIndex + 1) % shape.Count));
             }
+        }
+
+        private void AddSpriteMarker(
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color> colors,
+            List<Vector2> uvs,
+            List<int> triangles,
+            WorldCell cell,
+            Sprite sprite,
+            float size,
+            Color color,
+            float offset)
+        {
+            var texture = sprite.texture;
+            if (texture == null)
+            {
+                return;
+            }
+
+            var normal = ToVector(cell.SpherePosition).normalized;
+            var position = GetCellPosition(cell, offset);
+            GetMarkerBasis(normal, out var tangentRight, out var tangentUp);
+
+            var rect = sprite.textureRect;
+            var aspect = rect.width / Mathf.Max(1f, rect.height);
+            var halfHeight = size;
+            var halfWidth = size * aspect;
+            var vertexStart = vertices.Count;
+            var nudgedPosition = position + normal * 0.004f;
+
+            vertices.Add(nudgedPosition - tangentRight * halfWidth - tangentUp * halfHeight);
+            vertices.Add(nudgedPosition + tangentRight * halfWidth - tangentUp * halfHeight);
+            vertices.Add(nudgedPosition + tangentRight * halfWidth + tangentUp * halfHeight);
+            vertices.Add(nudgedPosition - tangentRight * halfWidth + tangentUp * halfHeight);
+
+            normals.Add(normal);
+            normals.Add(normal);
+            normals.Add(normal);
+            normals.Add(normal);
+
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
+
+            var uMin = rect.xMin / texture.width;
+            var uMax = rect.xMax / texture.width;
+            var vMin = rect.yMin / texture.height;
+            var vMax = rect.yMax / texture.height;
+            uvs.Add(new Vector2(uMin, vMin));
+            uvs.Add(new Vector2(uMax, vMin));
+            uvs.Add(new Vector2(uMax, vMax));
+            uvs.Add(new Vector2(uMin, vMax));
+
+            triangles.Add(vertexStart);
+            triangles.Add(vertexStart + 1);
+            triangles.Add(vertexStart + 2);
+            triangles.Add(vertexStart);
+            triangles.Add(vertexStart + 2);
+            triangles.Add(vertexStart + 3);
         }
 
         private Vector3 GetCellPosition(WorldCell cell, float offset)
@@ -1189,6 +1332,21 @@ namespace MercLord.Global.Rendering
             }
         }
 
+        private static GlobalMapIconSpriteId GetActivityIconId(WorldActivityType activityType)
+        {
+            switch (activityType)
+            {
+                case WorldActivityType.Ruins:
+                    return GlobalMapIconSpriteId.AncientRuins;
+                case WorldActivityType.Mine:
+                    return GlobalMapIconSpriteId.Mine;
+                case WorldActivityType.CaravanStop:
+                    return GlobalMapIconSpriteId.LogisticsStop;
+                default:
+                    return GlobalMapIconSpriteId.ExpeditionCamp;
+            }
+        }
+
         private static Color GetFactionMarkerColor(int factionId)
         {
             if (factionId < 0)
@@ -1256,6 +1414,21 @@ namespace MercLord.Global.Rendering
         private void EnsureMaterials()
         {
             vertexColorMaterial ??= CreateMaterial(new Color(1f, 1f, 1f, 1f), true);
+            var iconTexture = artAtlas != null ? artAtlas.IconAtlasTexture : null;
+            if (iconTexture == null)
+            {
+                DestroyObject(iconMaterial);
+                iconMaterial = null;
+                return;
+            }
+
+            if (iconMaterial != null && iconMaterial.mainTexture == iconTexture)
+            {
+                return;
+            }
+
+            DestroyObject(iconMaterial);
+            iconMaterial = CreateTexturedMaterial(iconTexture);
         }
 
         private static Material CreateMaterial(Color color, bool vertexColor)
@@ -1271,6 +1444,24 @@ namespace MercLord.Global.Rendering
             if (material.HasProperty("_BaseColor"))
             {
                 material.SetColor("_BaseColor", color);
+            }
+
+            SetEditorDirty(material);
+            return material;
+        }
+
+        private static Material CreateTexturedMaterial(Texture texture)
+        {
+            var material = CreateMaterial(Color.white, false);
+            material.mainTexture = texture;
+            if (material.HasProperty("_MainTex"))
+            {
+                material.SetTexture("_MainTex", texture);
+            }
+
+            if (material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", texture);
             }
 
             SetEditorDirty(material);
@@ -1316,6 +1507,44 @@ namespace MercLord.Global.Rendering
             if (normals.Count == vertices.Count)
             {
                 mesh.SetNormals(normals);
+            }
+
+            mesh.RecalculateBounds();
+
+            var meshObject = CreateGeneratedGameObject(objectName);
+            meshObject.transform.SetParent(generatedRoot, false);
+            var meshFilter = meshObject.AddComponent<MeshFilter>();
+            var meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter.sharedMesh = mesh;
+            meshRenderer.sharedMaterial = material;
+            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+        }
+
+        private void CreateGeneratedTexturedMeshObject(
+            string objectName,
+            string meshName,
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color> colors,
+            List<Vector2> uvs,
+            List<int> triangles,
+            Material material)
+        {
+            if (vertices.Count == 0 || triangles.Count == 0)
+            {
+                return;
+            }
+
+            var mesh = CreateMesh(meshName, vertices, colors, triangles);
+            if (normals.Count == vertices.Count)
+            {
+                mesh.SetNormals(normals);
+            }
+
+            if (uvs.Count == vertices.Count)
+            {
+                mesh.SetUVs(0, uvs);
             }
 
             mesh.RecalculateBounds();
@@ -1542,7 +1771,10 @@ namespace MercLord.Global.Rendering
                 for (var materialIndex = 0; materialIndex < sharedMaterials.Length; materialIndex++)
                 {
                     var material = sharedMaterials[materialIndex];
-                    if (material != null && material != vertexColorMaterial && !IsPersistentAsset(material))
+                    if (material != null &&
+                        material != vertexColorMaterial &&
+                        material != iconMaterial &&
+                        !IsPersistentAsset(material))
                     {
                         materials.Add(material);
                     }
@@ -1588,6 +1820,7 @@ namespace MercLord.Global.Rendering
             if (Application.isPlaying)
             {
                 DestroyObject(vertexColorMaterial);
+                DestroyObject(iconMaterial);
             }
         }
 

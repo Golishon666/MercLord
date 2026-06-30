@@ -1,0 +1,670 @@
+fileFormatVersion: 2
+guid: 082933ac38d276e459337eb0f9066755
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2080949143374512442
+    second: GlobalMap_Overlays_Hitech_0
+  - first:
+      213: 2911827605215151750
+    second: SmallRoad
+  - first:
+      213: 7545353027717590271
+    second: MediumRoad
+  - first:
+      213: -8072619211872415857
+    second: LargeRoad
+  - first:
+      213: 180937734528125023
+    second: RoadJunction
+  - first:
+      213: -5886587641091437985
+    second: ThinRiver
+  - first:
+      213: 1887459895765905375
+    second: MediumRiver
+  - first:
+      213: -8834034447606318636
+    second: WideRiver
+  - first:
+      213: -8544129128593640044
+    second: RiverMouth
+  - first:
+      213: -6504897126580915677
+    second: Coastline
+  - first:
+      213: 6136623892765746511
+    second: RockyPatch
+  - first:
+      213: 2758662135293527515
+    second: ForestCluster
+  - first:
+      213: 5490502611203884342
+    second: WetlandPuddle
+  - first:
+      213: -4855908393024884299
+    second: SnowDrift
+  - first:
+      213: -2867126458882463240
+    second: DesertContour
+  - first:
+      213: -813732867181203028
+    second: RuinsDebris
+  - first:
+      213: -5252619971120865818
+    second: AnomalyCrack
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SmallRoad
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 766
+        width: 18
+        height: 210
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 686860887c3e86820800000000000000
+      internalID: 2911827605215151750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MediumRoad
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 769
+        width: 63
+        height: 206
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffc660a0a9a76b860800000000000000
+      internalID: 7545353027717590271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LargeRoad
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 762
+        width: 161
+        height: 229
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8fc95de89b48ff80800000000000000
+      internalID: -8072619211872415857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RoadJunction
+      rect:
+        serializedVersion: 2
+        x: 1153
+        y: 763
+        width: 273
+        height: 228
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f58430139e1d28200800000000000000
+      internalID: 180937734528125023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ThinRiver
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 501
+        width: 68
+        height: 223
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5a4a899ab3ae4ea0800000000000000
+      internalID: -5886587641091437985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MediumRiver
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 497
+        width: 116
+        height: 231
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdf2ce666ca913a10800000000000000
+      internalID: 1887459895765905375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WideRiver
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 495
+        width: 216
+        height: 233
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d97cd08974376580800000000000000
+      internalID: -8834034447606318636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiverMouth
+      rect:
+        serializedVersion: 2
+        x: 1154
+        y: 493
+        width: 282
+        height: 245
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 495bb1783d72d6980800000000000000
+      internalID: -8544129128593640044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Coastline
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 259
+        width: 211
+        height: 213
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3227fad1786f9b5a0800000000000000
+      internalID: -6504897126580915677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RockyPatch
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 262
+        width: 243
+        height: 219
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f452a70daeaa92550800000000000000
+      internalID: 6136623892765746511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ForestCluster
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 263
+        width: 230
+        height: 211
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd5cd75989cb84620800000000000000
+      internalID: 2758662135293527515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WetlandPuddle
+      rect:
+        serializedVersion: 2
+        x: 1154
+        y: 269
+        width: 280
+        height: 203
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6358923f80f223c40800000000000000
+      internalID: 5490502611203884342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SnowDrift
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 23
+        width: 198
+        height: 213
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b1f9e35b095c9cb0800000000000000
+      internalID: -4855908393024884299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DesertContour
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 17
+        width: 247
+        height: 222
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f9ef242dabe538d0800000000000000
+      internalID: -2867126458882463240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RuinsDebris
+      rect:
+        serializedVersion: 2
+        x: 774
+        y: 15
+        width: 255
+        height: 232
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca1ba95c44a05b4f0800000000000000
+      internalID: -813732867181203028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AnomalyCrack
+      rect:
+        serializedVersion: 2
+        x: 1150
+        y: 16
+        width: 282
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6edd73147f1fa17b0800000000000000
+      internalID: -5252619971120865818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_Overlays_Hitech_6
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 579
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54fa9696fd077004fbf76ea0bf08652f
+      internalID: -544410538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 01b78d12bd5f2874ca247a01ad7050bc
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":1,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      AnomalyCrack: -5252619971120865818
+      Coastline: -6504897126580915677
+      DesertContour: -2867126458882463240
+      ForestCluster: 2758662135293527515
+      GlobalMap_Overlays_Hitech_0: 2080949143374512442
+      GlobalMap_Overlays_Hitech_1: 873682486
+      GlobalMap_Overlays_Hitech_10: 967655363
+      GlobalMap_Overlays_Hitech_11: -1627370728
+      GlobalMap_Overlays_Hitech_12: -1343755832
+      GlobalMap_Overlays_Hitech_13: -1693387773
+      GlobalMap_Overlays_Hitech_14: 1088009633
+      GlobalMap_Overlays_Hitech_15: -1192815957
+      GlobalMap_Overlays_Hitech_16: -242979688
+      GlobalMap_Overlays_Hitech_17: 1199667900
+      GlobalMap_Overlays_Hitech_18: -2033923059
+      GlobalMap_Overlays_Hitech_19: -606177858
+      GlobalMap_Overlays_Hitech_2: 668787227
+      GlobalMap_Overlays_Hitech_20: -2098555419
+      GlobalMap_Overlays_Hitech_21: -1538153917
+      GlobalMap_Overlays_Hitech_22: -977471229
+      GlobalMap_Overlays_Hitech_23: 127020797
+      GlobalMap_Overlays_Hitech_24: -801148925
+      GlobalMap_Overlays_Hitech_25: 20743484
+      GlobalMap_Overlays_Hitech_26: 49541484
+      GlobalMap_Overlays_Hitech_27: 870378695
+      GlobalMap_Overlays_Hitech_28: 724231530
+      GlobalMap_Overlays_Hitech_29: -198544272
+      GlobalMap_Overlays_Hitech_3: -1439863320
+      GlobalMap_Overlays_Hitech_30: -1487582805
+      GlobalMap_Overlays_Hitech_31: 157488339
+      GlobalMap_Overlays_Hitech_32: 1099697609
+      GlobalMap_Overlays_Hitech_33: -39108937
+      GlobalMap_Overlays_Hitech_34: 1300435784
+      GlobalMap_Overlays_Hitech_35: 64350434
+      GlobalMap_Overlays_Hitech_36: 2069853220
+      GlobalMap_Overlays_Hitech_37: 1752917453
+      GlobalMap_Overlays_Hitech_38: -1028950784
+      GlobalMap_Overlays_Hitech_39: 344922689
+      GlobalMap_Overlays_Hitech_4: -198787644
+      GlobalMap_Overlays_Hitech_40: -1404263875
+      GlobalMap_Overlays_Hitech_41: -49089966
+      GlobalMap_Overlays_Hitech_42: 1518403153
+      GlobalMap_Overlays_Hitech_43: 1140180829
+      GlobalMap_Overlays_Hitech_44: 96035794
+      GlobalMap_Overlays_Hitech_45: 1622910804
+      GlobalMap_Overlays_Hitech_46: 1789427287
+      GlobalMap_Overlays_Hitech_47: 1335112956
+      GlobalMap_Overlays_Hitech_48: 1386913642
+      GlobalMap_Overlays_Hitech_49: -560236226
+      GlobalMap_Overlays_Hitech_5: -1960740531
+      GlobalMap_Overlays_Hitech_50: -1570124637
+      GlobalMap_Overlays_Hitech_51: -266187503
+      GlobalMap_Overlays_Hitech_52: 848858379
+      GlobalMap_Overlays_Hitech_53: -693304276
+      GlobalMap_Overlays_Hitech_54: 574033275
+      GlobalMap_Overlays_Hitech_55: 1458576044
+      GlobalMap_Overlays_Hitech_56: -2135545288
+      GlobalMap_Overlays_Hitech_57: -1396687079
+      GlobalMap_Overlays_Hitech_58: 722629036
+      GlobalMap_Overlays_Hitech_59: 1950432204
+      GlobalMap_Overlays_Hitech_6: -544410538
+      GlobalMap_Overlays_Hitech_60: 1399280695
+      GlobalMap_Overlays_Hitech_61: -1668925354
+      GlobalMap_Overlays_Hitech_62: -328189096
+      GlobalMap_Overlays_Hitech_63: -1111721148
+      GlobalMap_Overlays_Hitech_64: -1896085457
+      GlobalMap_Overlays_Hitech_65: 663087113
+      GlobalMap_Overlays_Hitech_66: -893197496
+      GlobalMap_Overlays_Hitech_67: 1245765993
+      GlobalMap_Overlays_Hitech_68: 1165951242
+      GlobalMap_Overlays_Hitech_69: -932962193
+      GlobalMap_Overlays_Hitech_7: -441605963
+      GlobalMap_Overlays_Hitech_70: -127556823
+      GlobalMap_Overlays_Hitech_8: 1396295908
+      GlobalMap_Overlays_Hitech_9: -1766132883
+      LargeRoad: -8072619211872415857
+      MediumRiver: 1887459895765905375
+      MediumRoad: 7545353027717590271
+      RiverMouth: -8544129128593640044
+      RoadJunction: 180937734528125023
+      RockyPatch: 6136623892765746511
+      RuinsDebris: -813732867181203028
+      SmallRoad: 2911827605215151750
+      SnowDrift: -4855908393024884299
+      ThinRiver: -5886587641091437985
+      WetlandPuddle: 5490502611203884342
+      WideRiver: -8834034447606318636
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

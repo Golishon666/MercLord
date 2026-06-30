@@ -1,0 +1,1025 @@
+fileFormatVersion: 2
+guid: d9f86384e14e5814a9e8cbeaa8286a6e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7719558682109890156
+    second: GlobalMap_Icons_Hitech_0
+  - first:
+      213: -5796562541543249054
+    second: Capital
+  - first:
+      213: -5604873828215220476
+    second: City
+  - first:
+      213: -4699287403961817855
+    second: Town
+  - first:
+      213: -1853074389930443585
+    second: Village
+  - first:
+      213: -3218068242868290078
+    second: HarborCity
+  - first:
+      213: -7386020834086327952
+    second: RiverCity
+  - first:
+      213: -4664999842988247867
+    second: MountainOutpost
+  - first:
+      213: 9008757558975119919
+    second: ForestStation
+  - first:
+      213: -4244706324135952270
+    second: ExpeditionCamp
+  - first:
+      213: 5951654594730124872
+    second: HostileCamp
+  - first:
+      213: 7144604264255264078
+    second: LogisticsStop
+  - first:
+      213: -5192989386759559467
+    second: Mine
+  - first:
+      213: -5544659589244095591
+    second: AncientRuins
+  - first:
+      213: -3616090477991600793
+    second: IndustrialRuins
+  - first:
+      213: -6372328009772432826
+    second: ResearchMonolith
+  - first:
+      213: -5648278000783345883
+    second: Watchtower
+  - first:
+      213: -7797405714531309310
+    second: CaveLair
+  - first:
+      213: -7410606875662186940
+    second: AnomalyMarker
+  - first:
+      213: 4696411289200188739
+    second: ToxicZone
+  - first:
+      213: -2970310996080362689
+    second: BiomassResource
+  - first:
+      213: -3484937883305223139
+    second: OreResource
+  - first:
+      213: -7766830195670202153
+    second: FoodResource
+  - first:
+      213: 8272738561942284785
+    second: WaterResource
+  - first:
+      213: 1005662061931844052
+    second: RelicCache
+  - first:
+      213: 7851574366030154696
+    second: Mission
+  - first:
+      213: 8078502863657416234
+    second: Battle
+  - first:
+      213: 7005615848285937893
+    second: Danger
+  - first:
+      213: -7596846011663551906
+    second: Trade
+  - first:
+      213: -6453324760777488003
+    second: BlueOutpost
+  - first:
+      213: 485509131595386626
+    second: PurpleOutpost
+  - first:
+      213: -7558627693673291084
+    second: RedOutpost
+  - first:
+      213: 8524488952412391036
+    second: NeutralPoint
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Capital
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 744
+        width: 168
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26baaf874197e8fa0800000000000000
+      internalID: -5796562541543249054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: City
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 746
+        width: 169
+        height: 208
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 407195af2fc7732b0800000000000000
+      internalID: -5604873828215220476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Town
+      rect:
+        serializedVersion: 2
+        x: 427
+        y: 752
+        width: 159
+        height: 157
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10563650107c8ceb0800000000000000
+      internalID: -4699287403961817855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Village
+      rect:
+        serializedVersion: 2
+        x: 609
+        y: 752
+        width: 150
+        height: 143
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fbc72dd09ae8846e0800000000000000
+      internalID: -1853074389930443585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HarborCity
+      rect:
+        serializedVersion: 2
+        x: 795
+        y: 749
+        width: 161
+        height: 194
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2edbed0bbff1753d0800000000000000
+      internalID: -3218068242868290078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiverCity
+      rect:
+        serializedVersion: 2
+        x: 978
+        y: 747
+        width: 166
+        height: 164
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07966a82f259f7990800000000000000
+      internalID: -7386020834086327952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MountainOutpost
+      rect:
+        serializedVersion: 2
+        x: 1160
+        y: 744
+        width: 172
+        height: 201
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c4be69eb57924fb0800000000000000
+      internalID: -4664999842988247867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ForestStation
+      rect:
+        serializedVersion: 2
+        x: 1354
+        y: 753
+        width: 153
+        height: 147
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f22c35af449850d70800000000000000
+      internalID: 9008757558975119919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ExpeditionCamp
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 515
+        width: 174
+        height: 176
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 270c50e6616c715c0800000000000000
+      internalID: -4244706324135952270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HostileCamp
+      rect:
+        serializedVersion: 2
+        x: 222
+        y: 515
+        width: 164
+        height: 176
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 846e5b81256889250800000000000000
+      internalID: 5951654594730124872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LogisticsStop
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 534
+        width: 174
+        height: 146
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e451daf79bbb62360800000000000000
+      internalID: 7144604264255264078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Mine
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 515
+        width: 166
+        height: 171
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d6a2d79aabcee7b0800000000000000
+      internalID: -5192989386759559467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AncientRuins
+      rect:
+        serializedVersion: 2
+        x: 792
+        y: 518
+        width: 163
+        height: 172
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99374aefa796d03b0800000000000000
+      internalID: -5544659589244095591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: IndustrialRuins
+      rect:
+        serializedVersion: 2
+        x: 974
+        y: 516
+        width: 171
+        height: 160
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76d53af7ed011ddc0800000000000000
+      internalID: -3616090477991600793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ResearchMonolith
+      rect:
+        serializedVersion: 2
+        x: 1182
+        y: 516
+        width: 136
+        height: 186
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6420e39ef61f097a0800000000000000
+      internalID: -6372328009772432826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Watchtower
+      rect:
+        serializedVersion: 2
+        x: 1371
+        y: 518
+        width: 114
+        height: 203
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 527b7aa85194d91b0800000000000000
+      internalID: -5648278000783345883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CaveLair
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 299
+        width: 174
+        height: 155
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 209a2c7a0dc0ac390800000000000000
+      internalID: -7797405714531309310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AnomalyMarker
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 302
+        width: 160
+        height: 170
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44686164f4c382990800000000000000
+      internalID: -7410606875662186940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ToxicZone
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 297
+        width: 156
+        height: 151
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34d59e35f210d2140800000000000000
+      internalID: 4696411289200188739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BiomassResource
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 299
+        width: 164
+        height: 136
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3b713ee2e557c6d0800000000000000
+      internalID: -2970310996080362689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OreResource
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 302
+        width: 161
+        height: 150
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1c5a49857303afc0800000000000000
+      internalID: -3484937883305223139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FoodResource
+      rect:
+        serializedVersion: 2
+        x: 975
+        y: 294
+        width: 164
+        height: 175
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d8cc44661da63490800000000000000
+      internalID: -7766830195670202153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WaterResource
+      rect:
+        serializedVersion: 2
+        x: 1173
+        y: 303
+        width: 138
+        height: 161
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f9ee3824ebaec270800000000000000
+      internalID: 8272738561942284785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RelicCache
+      rect:
+        serializedVersion: 2
+        x: 1346
+        y: 298
+        width: 156
+        height: 151
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d1d88d2154d4fd00800000000000000
+      internalID: 1005662061931844052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Mission
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 68
+        width: 137
+        height: 165
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cb4ac6594566fc60800000000000000
+      internalID: 7851574366030154696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Battle
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 76
+        width: 151
+        height: 144
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a26b6418d8b9c1070800000000000000
+      internalID: 8078502863657416234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Danger
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 81
+        width: 144
+        height: 139
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e02ee52f72f83160800000000000000
+      internalID: 7005615848285937893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Trade
+      rect:
+        serializedVersion: 2
+        x: 610
+        y: 67
+        width: 163
+        height: 154
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e52737d5dc4929690800000000000000
+      internalID: -7596846011663551906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BlueOutpost
+      rect:
+        serializedVersion: 2
+        x: 823
+        y: 67
+        width: 113
+        height: 181
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7900ad325f2176a0800000000000000
+      internalID: -6453324760777488003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PurpleOutpost
+      rect:
+        serializedVersion: 2
+        x: 999
+        y: 66
+        width: 115
+        height: 181
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20f83fb9bffdcb600800000000000000
+      internalID: 485509131595386626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RedOutpost
+      rect:
+        serializedVersion: 2
+        x: 1180
+        y: 66
+        width: 116
+        height: 182
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b26c21f82c5a1790800000000000000
+      internalID: -7558627693673291084
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: NeutralPoint
+      rect:
+        serializedVersion: 2
+        x: 1367
+        y: 76
+        width: 114
+        height: 153
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c76484c99811d4670800000000000000
+      internalID: 8524488952412391036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: a11516ff36a521f45b6bf049b92e159c
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":1,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      AncientRuins: -5544659589244095591
+      AnomalyMarker: -7410606875662186940
+      Battle: 8078502863657416234
+      BiomassResource: -2970310996080362689
+      BlueOutpost: -6453324760777488003
+      Capital: -5796562541543249054
+      CaveLair: -7797405714531309310
+      City: -5604873828215220476
+      Danger: 7005615848285937893
+      ExpeditionCamp: -4244706324135952270
+      FoodResource: -7766830195670202153
+      ForestStation: 9008757558975119919
+      GlobalMap_Icons_Hitech_0: 7719558682109890156
+      GlobalMap_Icons_Hitech_1: -707325573
+      GlobalMap_Icons_Hitech_10: -1716938339
+      GlobalMap_Icons_Hitech_11: 1660239720
+      GlobalMap_Icons_Hitech_12: 577822313
+      GlobalMap_Icons_Hitech_13: 218837663
+      GlobalMap_Icons_Hitech_14: -445021674
+      GlobalMap_Icons_Hitech_15: -1787384111
+      GlobalMap_Icons_Hitech_16: 1447801652
+      GlobalMap_Icons_Hitech_17: -1055101790
+      GlobalMap_Icons_Hitech_18: -307483718
+      GlobalMap_Icons_Hitech_19: -1248744920
+      GlobalMap_Icons_Hitech_2: -696732462
+      GlobalMap_Icons_Hitech_20: 1047777281
+      GlobalMap_Icons_Hitech_21: -1735669501
+      GlobalMap_Icons_Hitech_22: -1785935418
+      GlobalMap_Icons_Hitech_23: 1549104249
+      GlobalMap_Icons_Hitech_24: -444168012
+      GlobalMap_Icons_Hitech_25: 2064839276
+      GlobalMap_Icons_Hitech_26: -83779349
+      GlobalMap_Icons_Hitech_27: 319444999
+      GlobalMap_Icons_Hitech_28: -1705887348
+      GlobalMap_Icons_Hitech_29: 1141475130
+      GlobalMap_Icons_Hitech_3: -396403085
+      GlobalMap_Icons_Hitech_30: 1626815027
+      GlobalMap_Icons_Hitech_31: -1649839331
+      GlobalMap_Icons_Hitech_4: -22239431
+      GlobalMap_Icons_Hitech_5: 2095327177
+      GlobalMap_Icons_Hitech_6: -1482465187
+      GlobalMap_Icons_Hitech_7: -686424350
+      GlobalMap_Icons_Hitech_8: -1194554991
+      GlobalMap_Icons_Hitech_9: -2090373317
+      HarborCity: -3218068242868290078
+      HostileCamp: 5951654594730124872
+      IndustrialRuins: -3616090477991600793
+      LogisticsStop: 7144604264255264078
+      Mine: -5192989386759559467
+      Mission: 7851574366030154696
+      MountainOutpost: -4664999842988247867
+      NeutralPoint: 8524488952412391036
+      OreResource: -3484937883305223139
+      PurpleOutpost: 485509131595386626
+      RedOutpost: -7558627693673291084
+      RelicCache: 1005662061931844052
+      ResearchMonolith: -6372328009772432826
+      RiverCity: -7386020834086327952
+      Town: -4699287403961817855
+      ToxicZone: 4696411289200188739
+      Trade: -7596846011663551906
+      Village: -1853074389930443585
+      Watchtower: -5648278000783345883
+      WaterResource: 8272738561942284785
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

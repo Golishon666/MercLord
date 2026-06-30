@@ -26,7 +26,7 @@ namespace MercLord.Global.Generation
             for (var cellIndex = 0; cellIndex < samples.Length; cellIndex++)
             {
                 var point = positions[cellIndex];
-                var latitude = Math.Abs(point.Y);
+                var climateLatitude = GetWarpedClimateLatitude(point, request.Seed);
                 var continent = SphericalWorldNoise.Noise(
                     point,
                     request.Seed,
@@ -60,7 +60,7 @@ namespace MercLord.Global.Generation
                     terrainSettings.MoistureOctaves,
                     terrainSettings.MoistureFrequency,
                     noiseSettings);
-                var moisture = Clamp01(moistureNoise * terrainSettings.MoistureNoiseWeight + latitude * terrainSettings.MoistureLatitudeWeight);
+                var moisture = Clamp01(moistureNoise * terrainSettings.MoistureNoiseWeight + climateLatitude * terrainSettings.MoistureLatitudeWeight);
                 var temperatureNoise = SphericalWorldNoise.Noise(
                     point,
                     request.Seed,
@@ -70,7 +70,7 @@ namespace MercLord.Global.Generation
                     noiseSettings);
                 var temperature = Clamp01(
                     terrainSettings.TemperatureBase -
-                    latitude * terrainSettings.TemperatureLatitudeWeight -
+                    climateLatitude * terrainSettings.TemperatureLatitudeWeight -
                     height * terrainSettings.TemperatureHeightWeight +
                     temperatureNoise * terrainSettings.TemperatureNoiseWeight);
 
@@ -130,6 +130,18 @@ namespace MercLord.Global.Generation
             }
 
             return cells;
+        }
+
+        private float GetWarpedClimateLatitude(WorldSpherePoint point, int seed)
+        {
+            var latitudeWarp = SphericalWorldNoise.Noise(
+                point,
+                seed,
+                terrainSettings.ClimateLatitudeWarpSalt,
+                terrainSettings.ClimateLatitudeWarpOctaves,
+                terrainSettings.ClimateLatitudeWarpFrequency,
+                noiseSettings) - 0.5f;
+            return Clamp01(Math.Abs(point.Y + latitudeWarp * terrainSettings.ClimateLatitudeWarpStrength));
         }
 
         internal static int CalculateResourceAmount(

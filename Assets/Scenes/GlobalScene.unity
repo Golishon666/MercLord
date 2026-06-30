@@ -223,6 +223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MercLord.Global.Rendering.ProceduralGlobalMapRenderer
   configDatabase: {fileID: 0}
+  artAtlas: {fileID: 11400000, guid: 3b3c251f8b023144bba70f43b435d713, type: 2}
   currentWorld:
     Seed: 0
     CurrentDay: 0
@@ -291,7 +292,7 @@ Transform:
   m_GameObject: {fileID: 200000}
   serializedVersion: 2
   m_LocalRotation: {x: 0.18197778, y: -0.295181, z: 0.057377372, w: 0.93619454}
-  m_LocalPosition: {x: 3.782149, y: 2.6641393, z: -5.401469}
+  m_LocalPosition: {x: 3.474775, y: 2.4476254, z: -4.9624934}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -750,7 +751,7 @@ MonoBehaviour:
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
   OrbitStyle: 0
-  Radius: 7.111832
+  Radius: 6.533856
   Orbits:
     Top:
       Radius: 2
@@ -845,7 +846,7 @@ Transform:
   m_GameObject: {fileID: 1271501121}
   serializedVersion: 2
   m_LocalRotation: {x: 0.18197778, y: -0.295181, z: 0.057377372, w: 0.93619454}
-  m_LocalPosition: {x: 3.782149, y: 2.6641393, z: -5.401469}
+  m_LocalPosition: {x: 3.474775, y: 2.4476254, z: -4.9624934}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

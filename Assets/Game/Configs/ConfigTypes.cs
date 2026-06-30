@@ -261,6 +261,10 @@ namespace MercLord.Game.Configs
         [SerializeField] private float moistureFrequency = 3.6f;
         [SerializeField] private float moistureNoiseWeight = 0.85f;
         [SerializeField] private float moistureLatitudeWeight = 0.08f;
+        [SerializeField] private int climateLatitudeWarpSalt = 83;
+        [SerializeField] private int climateLatitudeWarpOctaves = 2;
+        [SerializeField] private float climateLatitudeWarpFrequency = 2.25f;
+        [SerializeField] private float climateLatitudeWarpStrength = 0.24f;
         [SerializeField] private int temperatureSalt = 71;
         [SerializeField] private int temperatureOctaves = 2;
         [SerializeField] private float temperatureFrequency = 2.6f;
@@ -321,6 +325,10 @@ namespace MercLord.Game.Configs
         public float MoistureFrequency => Positive(moistureFrequency, Default.moistureFrequency);
         public float MoistureNoiseWeight => moistureNoiseWeight;
         public float MoistureLatitudeWeight => moistureLatitudeWeight;
+        public int ClimateLatitudeWarpSalt => climateLatitudeWarpSalt;
+        public int ClimateLatitudeWarpOctaves => Positive(climateLatitudeWarpOctaves, Default.climateLatitudeWarpOctaves);
+        public float ClimateLatitudeWarpFrequency => Positive(climateLatitudeWarpFrequency, Default.climateLatitudeWarpFrequency);
+        public float ClimateLatitudeWarpStrength => Clamp01(climateLatitudeWarpStrength);
         public int TemperatureSalt => temperatureSalt;
         public int TemperatureOctaves => Positive(temperatureOctaves, Default.temperatureOctaves);
         public float TemperatureFrequency => Positive(temperatureFrequency, Default.temperatureFrequency);

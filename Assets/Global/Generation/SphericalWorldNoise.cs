@@ -15,21 +15,29 @@ namespace MercLord.Global.Generation
             WorldNoiseSettings settings = null)
         {
             settings ??= WorldNoiseSettings.Default;
+            var domainPoint = RotateNoiseDomain(point, seed, salt);
             var warpFrequency = settings.DomainWarpFrequency;
             var warpStrength = settings.DomainWarpStrength;
-            var warpX = ValueNoise3D(point.X * warpFrequency + 13.1, point.Y * warpFrequency - 7.3, point.Z * warpFrequency + 5.9, seed, salt + 311);
-            var warpY = ValueNoise3D(point.X * warpFrequency - 3.7, point.Y * warpFrequency + 17.1, point.Z * warpFrequency - 11.4, seed, salt + 719);
-            var warpZ = ValueNoise3D(point.X * warpFrequency + 23.8, point.Y * warpFrequency + 2.6, point.Z * warpFrequency - 19.2, seed, salt + 1103);
-            var x = point.X + (warpX - 0.5) * warpStrength;
-            var y = point.Y + (warpY - 0.5) * warpStrength;
-            var z = point.Z + (warpZ - 0.5) * warpStrength;
+            var warpX = ValueNoise3D(domainPoint.X * warpFrequency + 13.1, domainPoint.Y * warpFrequency - 7.3, domainPoint.Z * warpFrequency + 5.9, seed, salt + 311);
+            var warpY = ValueNoise3D(domainPoint.X * warpFrequency - 3.7, domainPoint.Y * warpFrequency + 17.1, domainPoint.Z * warpFrequency - 11.4, seed, salt + 719);
+            var warpZ = ValueNoise3D(domainPoint.X * warpFrequency + 23.8, domainPoint.Y * warpFrequency + 2.6, domainPoint.Z * warpFrequency - 19.2, seed, salt + 1103);
+            var warpedPoint = SphericalWorldGeometry.Normalize(new WorldSpherePoint(
+                (float)(domainPoint.X + (warpX - 0.5) * warpStrength),
+                (float)(domainPoint.Y + (warpY - 0.5) * warpStrength),
+                (float)(domainPoint.Z + (warpZ - 0.5) * warpStrength)));
             var amplitude = 1.0;
             var totalAmplitude = 0.0;
             var value = 0.0;
             var frequency = (double)baseFrequency;
             for (var octave = 0; octave < octaves; octave++)
             {
-                value += ValueNoise3D(x * frequency, y * frequency, z * frequency, seed, salt + octave * 193) * amplitude;
+                var octavePoint = RotateNoiseDomain(warpedPoint, seed, salt + octave * 193);
+                value += ValueNoise3D(
+                    octavePoint.X * frequency,
+                    octavePoint.Y * frequency,
+                    octavePoint.Z * frequency,
+                    seed,
+                    salt + octave * 193) * amplitude;
                 totalAmplitude += amplitude;
                 amplitude *= settings.OctavePersistence;
                 frequency *= settings.OctaveLacunarity;
@@ -42,13 +50,10 @@ namespace MercLord.Global.Generation
         {
             unchecked
             {
-                var hash = seed;
-                hash = hash * 397 ^ a;
-                hash = hash * 397 ^ b;
-                hash ^= hash << 13;
-                hash ^= hash >> 17;
-                hash ^= hash << 5;
-                return (hash & 0x7fffffff) / (float)int.MaxValue;
+                var hash = Mix((uint)seed);
+                hash = Mix(hash ^ (uint)a);
+                hash = Mix(hash ^ (uint)b);
+                return ToUnitFloat(hash);
             }
         }
 
@@ -90,16 +95,46 @@ namespace MercLord.Global.Generation
         {
             unchecked
             {
-                var hash = seed;
-                hash = hash * 397 ^ salt;
-                hash = hash * 397 ^ x;
-                hash = hash * 397 ^ y;
-                hash = hash * 397 ^ z;
-                hash ^= hash << 13;
-                hash ^= hash >> 17;
-                hash ^= hash << 5;
-                return (hash & 0x7fffffff) / (float)int.MaxValue;
+                var hash = Mix((uint)seed);
+                hash = Mix(hash ^ (uint)salt);
+                hash = Mix(hash ^ (uint)x);
+                hash = Mix(hash ^ (uint)y);
+                hash = Mix(hash ^ (uint)z);
+                return ToUnitFloat(hash);
             }
+        }
+
+        private static WorldSpherePoint RotateNoiseDomain(WorldSpherePoint point, int seed, int salt)
+        {
+            var axis = SphericalWorldGeometry.Normalize(new WorldSpherePoint(
+                HashSigned(seed, salt, 17),
+                HashSigned(seed, salt, 31),
+                HashSigned(seed, salt, 47)));
+            var angle = Hash01(seed, salt, 61) * Math.PI * 2.0;
+            return SphericalWorldGeometry.RotateAroundAxis(point, axis, angle);
+        }
+
+        private static float HashSigned(int seed, int salt, int channel)
+        {
+            return Hash01(seed, salt, channel) * 2f - 1f;
+        }
+
+        private static uint Mix(uint value)
+        {
+            unchecked
+            {
+                value ^= value >> 16;
+                value *= 0x7feb352dU;
+                value ^= value >> 15;
+                value *= 0x846ca68bU;
+                value ^= value >> 16;
+                return value;
+            }
+        }
+
+        private static float ToUnitFloat(uint value)
+        {
+            return (value >> 8) / 16777215f;
         }
 
         private static float Clamp01(float value)
