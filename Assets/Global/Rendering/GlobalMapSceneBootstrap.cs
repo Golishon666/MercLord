@@ -1,4 +1,5 @@
 using MercLord.Game.Configs;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -79,7 +80,7 @@ namespace MercLord.Global.Rendering
                 cameraController = gameObject.AddComponent<GlobalMapCameraController>();
             }
 
-            cameraController.Configure(orbitalFollow, debugController);
+            cameraController.Configure(orbitalFollow, debugController, renderer);
             EnsureMainLight();
             EnsureEventSystem();
         }
@@ -121,13 +122,13 @@ namespace MercLord.Global.Rendering
                 tooltipRoot,
                 TooltipTitleName,
                 16,
-                FontStyle.Bold,
+                FontStyles.Bold,
                 new Color(0.93f, 0.95f, 0.98f, 1f));
             var body = EnsureTooltipText(
                 tooltipRoot,
                 TooltipBodyName,
                 13,
-                FontStyle.Normal,
+                FontStyles.Normal,
                 new Color(0.82f, 0.86f, 0.90f, 1f));
             var tooltipView = tooltipRoot.GetComponent<GlobalMapCellTooltipView>();
             if (tooltipView == null)
@@ -168,7 +169,7 @@ namespace MercLord.Global.Rendering
             return canvas;
         }
 
-        private static Text EnsureDateLabel(Transform canvasTransform)
+        private static TextMeshProUGUI EnsureDateLabel(Transform canvasTransform)
         {
             var rect = EnsureUiRect(DateLabelName, canvasTransform);
             rect.anchorMin = new Vector2(0f, 1f);
@@ -177,8 +178,8 @@ namespace MercLord.Global.Rendering
             rect.anchoredPosition = new Vector2(16f, -16f);
             rect.sizeDelta = new Vector2(190f, 34f);
 
-            var text = GetOrAddComponent<Text>(rect.gameObject);
-            ApplyTextStyle(text, 14, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft);
+            var text = GetOrAddTextMeshPro(rect.gameObject);
+            ApplyTextStyle(text, 14, FontStyles.Bold, Color.white, TextAlignmentOptions.MidlineLeft);
             text.text = "\u0414\u0430\u0442\u0430: \u0434\u0435\u043d\u044c 0";
             return text;
         }
@@ -208,11 +209,11 @@ namespace MercLord.Global.Rendering
             return rect;
         }
 
-        private static Text EnsureTooltipText(
+        private static TextMeshProUGUI EnsureTooltipText(
             RectTransform tooltipRoot,
             string objectName,
             int fontSize,
-            FontStyle fontStyle,
+            FontStyles fontStyle,
             Color color)
         {
             var rect = EnsureUiRect(objectName, tooltipRoot);
@@ -223,10 +224,10 @@ namespace MercLord.Global.Rendering
                 ? new Vector2(0f, 24f)
                 : new Vector2(0f, 78f);
 
-            var text = GetOrAddComponent<Text>(rect.gameObject);
-            ApplyTextStyle(text, fontSize, fontStyle, color, TextAnchor.UpperLeft);
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
+            var text = GetOrAddTextMeshPro(rect.gameObject);
+            ApplyTextStyle(text, fontSize, fontStyle, color, TextAlignmentOptions.TopLeft);
+            text.textWrappingMode = TextWrappingModes.Normal;
+            text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
             return text;
         }
@@ -257,26 +258,17 @@ namespace MercLord.Global.Rendering
         }
 
         private static void ApplyTextStyle(
-            Text text,
+            TextMeshProUGUI text,
             int fontSize,
-            FontStyle fontStyle,
+            FontStyles fontStyle,
             Color color,
-            TextAnchor alignment)
+            TextAlignmentOptions alignment)
         {
-            text.font = GetDefaultFont();
             text.fontSize = fontSize;
             text.fontStyle = fontStyle;
             text.alignment = alignment;
             text.color = color;
             text.raycastTarget = false;
-        }
-
-        private static Font GetDefaultFont()
-        {
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            return font != null
-                ? font
-                : Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
 
         private static CinemachineOrbitalFollow EnsureCameraRig(Transform cameraTarget)
@@ -412,6 +404,32 @@ namespace MercLord.Global.Rendering
             component = target.AddComponent<T>();
             SetEditorDirty(target);
             return component;
+        }
+
+        private static TextMeshProUGUI GetOrAddTextMeshPro(GameObject target)
+        {
+            RemoveLegacyText(target);
+            return GetOrAddComponent<TextMeshProUGUI>(target);
+        }
+
+        private static void RemoveLegacyText(GameObject target)
+        {
+            var legacyText = target.GetComponent("UnityEngine.UI." + "Text");
+            if (legacyText == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(legacyText);
+            }
+            else
+            {
+                DestroyImmediate(legacyText);
+            }
+
+            SetEditorDirty(target);
         }
 
         private static void SetEditorDirty(Object target)

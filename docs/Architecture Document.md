@@ -477,6 +477,16 @@ public sealed class BattleSimulationConfig
     public BattleSpawnSide PlayerSpawnSide;
     public int PlayerSpawnPointIndex;
     public float PlayerAimDotThreshold;
+    public BattleVehicleSpawnConfig[] VehicleSpawns;
+}
+
+public struct BattleVehicleSpawnConfig
+{
+    public VehicleConfig Vehicle;
+    public BattleSpawnSide SpawnSide;
+    public int SpawnPointIndex;
+    public int FactionId;
+    public VehicleSpawnControlMode ControlMode;
 }
 ~~~
 
@@ -491,6 +501,8 @@ public sealed class VehicleConfig
     public int MaxHealth;
     public float MoveSpeed;
     public float RotationSpeed;
+    public float EnterRadius;
+    public float ExitDistance;
 
     public ArmorConfig Armor;
     public WeaponConfig Weapon;
@@ -1081,6 +1093,7 @@ public struct VehicleComponent
 {
     public int VehicleConfigId;
     public Morpeh.Entity Driver;
+    public VehicleStateType State;
 }
 
 public struct DriverComponent
@@ -1150,11 +1163,20 @@ ViewAnimationSystem
   entities. Its cell size comes from BattleSimulationConfig.
 - BattlePlayerSpawner creates the player entity from
   BattleSimulationConfig.PlayerUnit before views and runtime systems start.
+- BattleVehicleSpawner creates configured vehicle entities from
+  BattleSimulationConfig.VehicleSpawns before views and runtime systems start.
 - PlayerInputSystem reads IBattleInputSource, writes PlayerInputComponent,
   VelocityComponent and AttackRequestComponent, and never applies damage
   directly.
 - PlayerInputSystem resolves the selected equipped weapon through
   SaveModel.PlayerEquipment -> ItemConfig -> WeaponConfig.
+- PlayerInputSystem ignores VehicleComponent entities. VehicleInputSystem
+  controls PlayerControlled vehicles and uses the vehicle's WeaponStatsComponent.
+- VehicleEnterSystem uses PlayerInputComponent.InteractPressed and
+  VehicleConfig.EnterRadius to attach DriverComponent and transfer
+  PlayerControlledComponent to the vehicle.
+- VehicleExitSystem uses PlayerInputComponent.InteractPressed and
+  VehicleConfig.ExitDistance to return PlayerControlledComponent to the driver.
 - TargetSearchSystem uses SpatialHashSystem and AIConfig.ThinkInterval to
   stagger target scans. It must not scan every opponent for every bot.
 - DecisionSystem updates intent: VelocityComponent for movement and
@@ -1176,7 +1198,8 @@ ViewAnimationSystem
   BattleViewCatalog and ViewRefComponent.
 - DamageSystem processes DamageRequestComponent entities, applies
   CombatBalanceConfig damage formula, updates HealthComponent and sets
-  DeadComponent/BotStateType.Dead when health reaches zero.
+  DeadComponent/BotStateType.Dead or VehicleStateType.Destroyed when health
+  reaches zero.
 - Combat systems do not access SpriteRenderer or DOTween.
 
 # 16. Shared Combat Architecture
@@ -1599,6 +1622,19 @@ public sealed class PlayerWallet
 - SpendCredits
 - CanAfford
 
+## 27.2.1 TradingService
+
+Отвечает за:
+
+- SellTradeGood
+- TrySellTradeGood
+- BuyItem
+- TryBuyItem
+
+TradeGood sale price comes from TradeGoodConfig.BasePrice. Item purchase price
+comes from ItemConfig.Price. MVP prices are the same everywhere and must not be
+hardcoded in UI or battle systems.
+
 ## 27.3 Trade Goods
 
 ~~~csharp
@@ -1649,12 +1685,16 @@ public sealed class ItemConfig
 
     public WeaponConfig Weapon;
     public ArmorConfig Armor;
+    public TradeGoodConfig TradeGood;
 }
 ~~~
 
 Weapon equipment slots resolve to WeaponConfig through ItemConfig. Armor and
 helmet slots resolve to ArmorConfig through ItemConfig. Runtime systems must
 not hardcode weapon or armor ids.
+
+TradeGood inventory items resolve to TradeGoodConfig through ItemConfig.
+Trading systems use that config for sell price.
 
 ## 28.2 PlayerInventory
 
@@ -1834,6 +1874,34 @@ ArmorConfig invalid if:
 
 - any protection < 0
 
+TradeGoodConfig invalid if:
+
+- BasePrice <= 0
+
+ItemConfig invalid if:
+
+- Price < 0
+- Weapon category has no registered WeaponConfig
+- Armor or Helmet category has no registered ArmorConfig
+- TradeGood category has no registered TradeGoodConfig
+
+LootTableConfig invalid if:
+
+- loot entry has no registered ItemConfig
+- min/max count range is invalid
+- entry weight <= 0
+
+VehicleConfig invalid if:
+
+- MaxHealth <= 0
+- MoveSpeed <= 0
+- RotationSpeed <= 0
+- EnterRadius <= 0
+- ExitDistance <= 0
+- no armor
+- no weapon
+- no ViewPrefabAddress
+
 BattleSimulationConfig invalid if:
 
 - SpatialHashCellSize <= 0
@@ -1842,6 +1910,9 @@ BattleSimulationConfig invalid if:
 - PlayerSpawnPointIndex < 0
 - PlayerSpawnPointIndex is outside generated spawn capacity
 - PlayerAimDotThreshold is outside -1..1
+- VehicleSpawns entry has no registered VehicleConfig
+- VehicleSpawns entry references a missing FactionConfig
+- VehicleSpawns entry spawn index is outside generated spawn capacity
 
 BattleMapGenerationConfig invalid if:
 
@@ -1964,16 +2035,19 @@ Gameplay map generation is complete before visual Tilemap generation when
 
 ## 34.5 VehicleControl Done When
 
+- vehicle entities spawn from BattleSimulationConfig.VehicleSpawns
 - player can enter tank
 - input controls tank while inside
 - player can exit tank
 - tank uses shared WeaponSystem and DamageSystem
+- vehicle view is created through prefab pool and ViewRefComponent
 
 ## 34.6 LootSystem Done When
 
 - BattleResult contains loot
 - loot is added to inventory
 - TradeGood can be sold for Credits
+- basic items can be bought for Credits through ItemConfig.Price
 
 ## 34.7 PrefabRule Done When
 

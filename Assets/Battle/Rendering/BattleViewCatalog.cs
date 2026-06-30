@@ -28,6 +28,16 @@ namespace MercLord.Battle.Rendering
 
         public bool TryGetUnitViewPrefab(string address, out GameObject prefab)
         {
+            return TryGetViewPrefab(address, out prefab);
+        }
+
+        public bool TryGetVehicleViewPrefab(string address, out GameObject prefab)
+        {
+            return TryGetViewPrefab(address, out prefab);
+        }
+
+        private bool TryGetViewPrefab(string address, out GameObject prefab)
+        {
             if (string.IsNullOrWhiteSpace(address))
             {
                 prefab = null;

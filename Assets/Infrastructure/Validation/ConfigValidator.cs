@@ -43,7 +43,10 @@ namespace MercLord.Infrastructure.Validation
             ValidateWeapons(database, issues);
             ValidateAIConfigs(database, issues);
             ValidateArmors(database, issues);
+            ValidateVehicles(database, issues);
+            ValidateTradeGoods(database, issues);
             ValidateItems(database, issues);
+            ValidateLootTables(database, issues);
             ValidateGeneration(database, issues);
             ValidateCombatBalance(database, issues);
             ValidateBattleSimulation(database, issues);
@@ -210,6 +213,61 @@ namespace MercLord.Infrastructure.Validation
             }
         }
 
+        private static void ValidateVehicles(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            foreach (var vehicle in database.Vehicles)
+            {
+                if (vehicle == null)
+                {
+                    continue;
+                }
+
+                if (vehicle.MaxHealth <= 0 || vehicle.MoveSpeed <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} has invalid health or move speed."));
+                }
+
+                if (vehicle.RotationSpeed <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} has invalid rotation speed."));
+                }
+
+                if (vehicle.EnterRadius <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} enter radius must be positive."));
+                }
+
+                if (vehicle.ExitDistance <= 0f)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} exit distance must be positive."));
+                }
+
+                if (vehicle.Armor == null)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} has no armor."));
+                }
+                else if (!database.TryGetArmor(vehicle.Armor.Id, out _))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} references a missing ArmorConfig."));
+                }
+
+                if (vehicle.Weapon == null)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} has no weapon."));
+                }
+                else if (!database.TryGetWeapon(vehicle.Weapon.Id, out _))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} references a missing WeaponConfig."));
+                }
+
+                if (string.IsNullOrWhiteSpace(vehicle.ViewPrefabAddress))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, vehicle, $"{vehicle.DisplayName} has no view prefab address."));
+                }
+            }
+        }
+
+
         private static void ValidateItems(ConfigDatabase database, ICollection<ValidationIssue> issues)
         {
             foreach (var item in database.Items)
@@ -247,6 +305,71 @@ namespace MercLord.Infrastructure.Validation
                     else if (!database.TryGetArmor(item.Armor.Id, out _))
                     {
                         issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} references a missing ArmorConfig."));
+                    }
+
+                    continue;
+                }
+
+                if (item.Category == ItemCategory.TradeGood)
+                {
+                    if (item.TradeGood == null)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} trade good item has no TradeGoodConfig."));
+                    }
+                    else if (!database.TryGetTradeGood(item.TradeGood.Id, out _))
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, item, $"{item.DisplayName} references a missing TradeGoodConfig."));
+                    }
+                }
+            }
+        }
+
+        private static void ValidateTradeGoods(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            foreach (var tradeGood in database.TradeGoods)
+            {
+                if (tradeGood == null)
+                {
+                    continue;
+                }
+
+                if (tradeGood.BasePrice <= 0)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, tradeGood, $"{tradeGood.DisplayName} base price must be positive."));
+                }
+            }
+        }
+
+        private static void ValidateLootTables(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            foreach (var lootTable in database.LootTables)
+            {
+                if (lootTable == null)
+                {
+                    continue;
+                }
+
+                var entries = lootTable.Entries ?? System.Array.Empty<LootEntry>();
+                for (var entryIndex = 0; entryIndex < entries.Length; entryIndex++)
+                {
+                    var entry = entries[entryIndex];
+                    if (entry.Item == null)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, lootTable, $"{lootTable.DisplayName} loot entry {entryIndex} has no ItemConfig."));
+                    }
+                    else if (!database.TryGetItem(entry.Item.Id, out _))
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, entry.Item, $"{lootTable.DisplayName} loot entry {entryIndex} references a missing ItemConfig."));
+                    }
+
+                    if (entry.MinCount <= 0 || entry.MaxCount <= 0 || entry.MaxCount < entry.MinCount)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, lootTable, $"{lootTable.DisplayName} loot entry {entryIndex} has invalid count range."));
+                    }
+
+                    if (entry.Weight <= 0f)
+                    {
+                        issues.Add(new ValidationIssue(ValidationSeverity.Error, lootTable, $"{lootTable.DisplayName} loot entry {entryIndex} weight must be positive."));
                     }
                 }
             }
@@ -446,6 +569,7 @@ namespace MercLord.Infrastructure.Validation
             }
 
             ValidatePlayerSpawnCapacity(database, issues);
+            ValidateVehicleSpawns(database, issues);
         }
 
         private static void ValidatePlayerSpawnCapacity(ConfigDatabase database, ICollection<ValidationIssue> issues)
@@ -473,6 +597,75 @@ namespace MercLord.Infrastructure.Validation
             if (database.BattleSimulation.PlayerSpawnPointIndex >= capacity)
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, "Battle simulation player spawn point index must fit generated spawn capacity."));
+            }
+        }
+
+        private static void ValidateVehicleSpawns(ConfigDatabase database, ICollection<ValidationIssue> issues)
+        {
+            if (database.BattleSimulation == null)
+            {
+                return;
+            }
+
+            var spawns = database.BattleSimulation.VehicleSpawns;
+            for (var spawnIndex = 0; spawnIndex < spawns.Length; spawnIndex++)
+            {
+                var spawn = spawns[spawnIndex];
+                if (spawn.Vehicle == null)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, $"Battle vehicle spawn {spawnIndex} has no VehicleConfig."));
+                    continue;
+                }
+
+                if (!database.TryGetVehicle(spawn.Vehicle.Id, out _))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, spawn.Vehicle, $"Battle vehicle spawn {spawnIndex} vehicle must be registered in ConfigDatabase."));
+                }
+
+                if (!database.TryGetFaction(spawn.FactionId, out _))
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, $"Battle vehicle spawn {spawnIndex} references a missing FactionConfig."));
+                }
+
+                if (spawn.SpawnPointIndex < 0)
+                {
+                    issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, $"Battle vehicle spawn {spawnIndex} point index cannot be negative."));
+                    continue;
+                }
+
+                ValidateVehicleSpawnCapacity(database, spawn, spawnIndex, issues);
+            }
+        }
+
+        private static void ValidateVehicleSpawnCapacity(
+            ConfigDatabase database,
+            BattleVehicleSpawnConfig spawn,
+            int spawnIndex,
+            ICollection<ValidationIssue> issues)
+        {
+            if (database.BattleMapGeneration == null)
+            {
+                return;
+            }
+
+            var map = database.BattleMapGeneration;
+            if (map.Height <= 0)
+            {
+                return;
+            }
+
+            var spawnColumns = spawn.SpawnSide == BattleSpawnSide.Attacker
+                ? map.AttackerSpawnColumns
+                : map.DefenderSpawnColumns;
+            if (spawnColumns <= 0)
+            {
+                return;
+            }
+
+            var capacity = map.Height * spawnColumns;
+            if (spawn.SpawnPointIndex >= capacity)
+            {
+                issues.Add(new ValidationIssue(ValidationSeverity.Error, database.BattleSimulation, $"Battle vehicle spawn {spawnIndex} point index must fit generated spawn capacity."));
             }
         }
 

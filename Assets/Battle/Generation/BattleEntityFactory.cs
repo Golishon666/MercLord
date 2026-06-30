@@ -35,6 +35,29 @@ namespace MercLord.Battle.Generation
         public int UnitCount { get; }
     }
 
+    public readonly struct BattleVehicleEntitySpawnRequest
+    {
+        public BattleVehicleEntitySpawnRequest(
+            VehicleConfig vehicleConfig,
+            int factionId,
+            BattleTeamType team,
+            float2 position,
+            VehicleStateType state)
+        {
+            VehicleConfig = vehicleConfig;
+            FactionId = factionId;
+            Team = team;
+            Position = position;
+            State = state;
+        }
+
+        public VehicleConfig VehicleConfig { get; }
+        public int FactionId { get; }
+        public BattleTeamType Team { get; }
+        public float2 Position { get; }
+        public VehicleStateType State { get; }
+    }
+
     public sealed class BattleEntityFactory : IBattleEntityFactory
     {
         public Entity CreateUnit(World world, BattleEntitySpawnRequest request)
@@ -120,6 +143,72 @@ namespace MercLord.Battle.Generation
                     SelectedWeaponSlot = 0
                 });
             }
+
+            return entity;
+        }
+
+        public Entity CreateVehicle(World world, BattleVehicleEntitySpawnRequest request)
+        {
+            if (world == null)
+            {
+                throw new ArgumentNullException(nameof(world));
+            }
+
+            if (world.IsDisposed)
+            {
+                throw new InvalidOperationException("Cannot create a vehicle entity in a disposed Morpeh world.");
+            }
+
+            var vehicleConfig = request.VehicleConfig
+                ?? throw new InvalidOperationException("Vehicle spawn request requires VehicleConfig.");
+
+            var entity = world.CreateEntity();
+
+            world.GetStash<VehicleComponent>().Set(entity, new VehicleComponent
+            {
+                VehicleConfigId = vehicleConfig.Id,
+                Driver = default,
+                State = request.State
+            });
+
+            world.GetStash<TeamComponent>().Set(entity, new TeamComponent
+            {
+                Value = request.Team
+            });
+
+            world.GetStash<FactionComponent>().Set(entity, new FactionComponent
+            {
+                Value = request.FactionId
+            });
+
+            world.GetStash<PositionComponent>().Set(entity, new PositionComponent
+            {
+                Value = request.Position
+            });
+
+            world.GetStash<VelocityComponent>().Set(entity, new VelocityComponent
+            {
+                Value = float2.zero
+            });
+
+            world.GetStash<HealthComponent>().Set(entity, new HealthComponent
+            {
+                Current = vehicleConfig.MaxHealth,
+                Max = vehicleConfig.MaxHealth
+            });
+
+            world.GetStash<MovementStatsComponent>().Set(entity, new MovementStatsComponent
+            {
+                MoveSpeed = vehicleConfig.MoveSpeed,
+                RotationSpeed = vehicleConfig.RotationSpeed
+            });
+
+            world.GetStash<WeaponStatsComponent>().Set(entity, CreateWeaponStats(vehicleConfig.Weapon));
+            world.GetStash<ArmorStatsComponent>().Set(entity, CreateArmorStats(vehicleConfig.Armor));
+            world.GetStash<AttackCooldownComponent>().Set(entity, new AttackCooldownComponent
+            {
+                Value = 0f
+            });
 
             return entity;
         }

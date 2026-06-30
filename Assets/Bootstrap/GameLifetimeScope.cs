@@ -2,6 +2,7 @@ using System;
 using MercLord.Battle.Combat;
 using MercLord.Battle.Generation;
 using MercLord.Economy.Credits;
+using MercLord.Economy.Trading;
 using MercLord.Game.Configs;
 using MercLord.Game.Save;
 using MercLord.Game.Services;
@@ -35,6 +36,7 @@ namespace MercLord.Bootstrap
             builder.Register<UnitySceneLoader>(Lifetime.Singleton).As<ISceneLoader>();
             builder.Register<SaveService>(Lifetime.Singleton).As<ISaveService>();
             builder.Register<CreditsService>(Lifetime.Singleton);
+            builder.Register<TradingService>(Lifetime.Singleton).As<ITradingService>();
             builder.Register<PlayerInventoryService>(Lifetime.Singleton).As<IInventoryService>();
             builder.Register<GlobalTimeService>(Lifetime.Singleton);
             builder.Register<InfluenceService>(Lifetime.Singleton).As<IInfluenceService>();
@@ -47,6 +49,7 @@ namespace MercLord.Bootstrap
             builder.Register<BattleEntityFactory>(Lifetime.Singleton).As<IBattleEntityFactory>();
             builder.Register<ConfigDrivenBattleWorldFactory>(Lifetime.Singleton).As<IBattleWorldFactory>();
             builder.Register<BattlePlayerSpawner>(Lifetime.Singleton).As<IBattlePlayerSpawner>();
+            builder.Register<BattleVehicleSpawner>(Lifetime.Singleton).As<IBattleVehicleSpawner>();
             builder.Register<BattleSessionService>(Lifetime.Singleton).As<IBattleSessionService>();
             builder.Register<BattlePipeline>(Lifetime.Singleton).As<IBattlePipeline>();
             builder.Register<BattleResultApplier>(Lifetime.Singleton).As<IBattleResultApplier>();

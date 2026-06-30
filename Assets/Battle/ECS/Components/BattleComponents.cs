@@ -19,6 +19,14 @@ namespace MercLord.Battle.ECS.Components
         Dead
     }
 
+    public enum VehicleStateType
+    {
+        Empty,
+        AIControlled,
+        PlayerControlled,
+        Destroyed
+    }
+
     public struct BotComponent : IComponent
     {
         public int UnitConfigId;
@@ -131,6 +139,7 @@ namespace MercLord.Battle.ECS.Components
     {
         public int VehicleConfigId;
         public Entity Driver;
+        public VehicleStateType State;
     }
 
     public struct DriverComponent : IComponent

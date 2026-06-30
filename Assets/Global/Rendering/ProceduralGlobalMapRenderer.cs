@@ -14,9 +14,17 @@ namespace MercLord.Global.Rendering
         private const int StarCount = 720;
         private const string GeneratedRootName = "Generated Map";
         private const string SelectionObjectName = "Selected Cell Highlight";
+        private const string MarkerIconsObjectName = "Marker Icons Mesh";
+        private const string LegacyMarkersObjectName = "Markers Mesh";
         private const HideFlags RuntimeGeneratedHideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
         private const float HexAreaFactor = 2.598076f;
         private const float SelectionSurfaceOffset = 0.032f;
+        private const float CapitalMarkerIconSize = 0.085f;
+        private const float SettlementMarkerIconSize = 0.0625f;
+        private const float ActivityMarkerIconSize = 0.065f;
+        private const float LegacyCapitalMarkerSize = 0.085f;
+        private const float LegacySettlementMarkerSize = 0.0575f;
+        private const float LegacyActivityMarkerSize = 0.06f;
         private static readonly Color RiverColor = new(0.08f, 0.22f, 0.38f, 0.9f);
         private static readonly Color LargeRoadColor = new(0.16f, 0.15f, 0.13f, 0.95f);
         private static readonly Color MediumRoadColor = new(0.23f, 0.20f, 0.16f, 0.88f);
@@ -70,6 +78,8 @@ namespace MercLord.Global.Rendering
 
         private Material vertexColorMaterial;
         private Material iconMaterial;
+        private GameObject markerIconsObject;
+        private bool markerIconsVisible = true;
         private GameObject selectionObject;
         private int selectedCellId = WorldIds.None;
 
@@ -88,6 +98,12 @@ namespace MercLord.Global.Rendering
         public void ConfigureArtAtlas(GlobalMapArtAtlas atlas)
         {
             artAtlas = atlas;
+        }
+
+        public void SetMarkerIconsVisible(bool visible)
+        {
+            markerIconsVisible = visible;
+            ApplyMarkerIconsVisibility();
         }
 
         public void Render(WorldModel worldModel)
@@ -117,10 +133,11 @@ namespace MercLord.Global.Rendering
                 DestroyGeneratedObject(generatedRoot.GetChild(childIndex).gameObject);
             }
 
-            DestroyObject(vertexColorMaterial);
+            DestroyUnityObject(vertexColorMaterial);
             vertexColorMaterial = null;
-            DestroyObject(iconMaterial);
+            DestroyUnityObject(iconMaterial);
             iconMaterial = null;
+            markerIconsObject = null;
             selectionObject = null;
             selectedCellId = WorldIds.None;
         }
@@ -447,7 +464,7 @@ namespace MercLord.Global.Rendering
 
                 var color = GetFactionMarkerColor(settlement.FactionId);
                 var isCapital = IsCapitalCell(settlement.CellId, factions);
-                var size = isCapital ? 0.17f : 0.115f;
+                var size = isCapital ? LegacyCapitalMarkerSize : LegacySettlementMarkerSize;
                 AddFlatIcon(vertices, normals, colors, triangles, cells[settlement.CellId], HouseShape, size, color, 0.034f);
             }
 
@@ -464,10 +481,11 @@ namespace MercLord.Global.Rendering
                     ? activity.FactionId
                     : cells[activity.CellId].OwnerFactionId;
                 var color = GetFactionMarkerColor(factionId);
-                AddFlatIcon(vertices, normals, colors, triangles, cells[activity.CellId], shape, 0.12f, color, 0.032f);
+                AddFlatIcon(vertices, normals, colors, triangles, cells[activity.CellId], shape, LegacyActivityMarkerSize, color, 0.032f);
             }
 
-            CreateGeneratedMeshObject("Markers Mesh", "GlobalMap Markers", vertices, normals, colors, triangles, vertexColorMaterial);
+            markerIconsObject = CreateGeneratedMeshObject(LegacyMarkersObjectName, "GlobalMap Markers", vertices, normals, colors, triangles, vertexColorMaterial);
+            ApplyMarkerIconsVisibility();
         }
 
         private bool RenderTexturedMarkers(WorldModel worldModel)
@@ -513,7 +531,7 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                var size = iconId == GlobalMapIconSpriteId.Capital ? 0.17f : 0.125f;
+                var size = iconId == GlobalMapIconSpriteId.Capital ? CapitalMarkerIconSize : SettlementMarkerIconSize;
                 AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[settlement.CellId], sprite, size, Color.white, 0.04f);
             }
 
@@ -530,11 +548,12 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[activity.CellId], sprite, 0.13f, Color.white, 0.038f);
+                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[activity.CellId], sprite, ActivityMarkerIconSize, Color.white, 0.038f);
             }
 
-            CreateGeneratedTexturedMeshObject("Marker Icons Mesh", "GlobalMap Marker Icons", vertices, normals, colors, uvs, triangles, iconMaterial);
-            return vertices.Count > 0;
+            markerIconsObject = CreateGeneratedTexturedMeshObject(MarkerIconsObjectName, "GlobalMap Marker Icons", vertices, normals, colors, uvs, triangles, iconMaterial);
+            ApplyMarkerIconsVisibility();
+            return markerIconsObject != null;
         }
 
         private void RenderSelection()
@@ -1417,7 +1436,7 @@ namespace MercLord.Global.Rendering
             var iconTexture = artAtlas != null ? artAtlas.IconAtlasTexture : null;
             if (iconTexture == null)
             {
-                DestroyObject(iconMaterial);
+                DestroyUnityObject(iconMaterial);
                 iconMaterial = null;
                 return;
             }
@@ -1427,7 +1446,7 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            DestroyObject(iconMaterial);
+            DestroyUnityObject(iconMaterial);
             iconMaterial = CreateTexturedMaterial(iconTexture);
         }
 
@@ -1489,7 +1508,7 @@ namespace MercLord.Global.Rendering
             return mesh;
         }
 
-        private void CreateGeneratedMeshObject(
+        private GameObject CreateGeneratedMeshObject(
             string objectName,
             string meshName,
             List<Vector3> vertices,
@@ -1500,7 +1519,7 @@ namespace MercLord.Global.Rendering
         {
             if (vertices.Count == 0 || triangles.Count == 0)
             {
-                return;
+                return null;
             }
 
             var mesh = CreateMesh(meshName, vertices, colors, triangles);
@@ -1519,9 +1538,10 @@ namespace MercLord.Global.Rendering
             meshRenderer.sharedMaterial = material;
             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             meshRenderer.receiveShadows = false;
+            return meshObject;
         }
 
-        private void CreateGeneratedTexturedMeshObject(
+        private GameObject CreateGeneratedTexturedMeshObject(
             string objectName,
             string meshName,
             List<Vector3> vertices,
@@ -1533,7 +1553,7 @@ namespace MercLord.Global.Rendering
         {
             if (vertices.Count == 0 || triangles.Count == 0)
             {
-                return;
+                return null;
             }
 
             var mesh = CreateMesh(meshName, vertices, colors, triangles);
@@ -1557,6 +1577,45 @@ namespace MercLord.Global.Rendering
             meshRenderer.sharedMaterial = material;
             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             meshRenderer.receiveShadows = false;
+            return meshObject;
+        }
+
+        private void ApplyMarkerIconsVisibility()
+        {
+            if (markerIconsObject == null)
+            {
+                markerIconsObject = FindGeneratedMarkerIconsObject();
+            }
+
+            if (markerIconsObject != null && markerIconsObject.activeSelf != markerIconsVisible)
+            {
+                markerIconsObject.SetActive(markerIconsVisible);
+                SetEditorDirty(markerIconsObject);
+            }
+        }
+
+        private GameObject FindGeneratedMarkerIconsObject()
+        {
+            if (generatedRoot == null)
+            {
+                var existingRoot = transform.Find(GeneratedRootName);
+                if (existingRoot == null)
+                {
+                    return null;
+                }
+
+                generatedRoot = existingRoot;
+                generatedRoot.gameObject.hideFlags = GetGeneratedHideFlags();
+            }
+
+            var markerIcons = generatedRoot.Find(MarkerIconsObjectName);
+            if (markerIcons != null)
+            {
+                return markerIcons.gameObject;
+            }
+
+            var legacyMarkers = generatedRoot.Find(LegacyMarkersObjectName);
+            return legacyMarkers != null ? legacyMarkers.gameObject : null;
         }
 
         private static GameObject CreateGeneratedGameObject(string objectName)
@@ -1760,7 +1819,7 @@ namespace MercLord.Global.Rendering
             var meshFilters = target.GetComponentsInChildren<MeshFilter>();
             for (var meshIndex = 0; meshIndex < meshFilters.Length; meshIndex++)
             {
-                DestroyObject(meshFilters[meshIndex].sharedMesh);
+                DestroyUnityObject(meshFilters[meshIndex].sharedMesh);
             }
 
             var meshRenderers = target.GetComponentsInChildren<MeshRenderer>();
@@ -1783,10 +1842,10 @@ namespace MercLord.Global.Rendering
 
             foreach (var material in materials)
             {
-                DestroyObject(material);
+                DestroyUnityObject(material);
             }
 
-            DestroyObject(target);
+            DestroyUnityObject(target);
         }
 
         private static bool IsPersistentAsset(UnityEngine.Object target)
@@ -1798,7 +1857,7 @@ namespace MercLord.Global.Rendering
 #endif
         }
 
-        private static void DestroyObject(UnityEngine.Object target)
+        private static void DestroyUnityObject(UnityEngine.Object target)
         {
             if (target == null)
             {
@@ -1819,8 +1878,8 @@ namespace MercLord.Global.Rendering
         {
             if (Application.isPlaying)
             {
-                DestroyObject(vertexColorMaterial);
-                DestroyObject(iconMaterial);
+                DestroyUnityObject(vertexColorMaterial);
+                DestroyUnityObject(iconMaterial);
             }
         }
 

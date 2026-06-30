@@ -9,6 +9,7 @@ namespace MercLord.Battle.Rendering
     public interface IBattleViewFactory
     {
         int SpawnUnitView(UnitConfig unitConfig, Transform parent);
+        int SpawnVehicleView(VehicleConfig vehicleConfig, Transform parent);
         bool TryGetView(int viewId, out GameObject view);
         void ReleaseView(int viewId);
         void ReleaseAll();
@@ -46,6 +47,24 @@ namespace MercLord.Battle.Rendering
             }
 
             var pool = GetUnitViewPool(unitConfig.ViewPrefabAddress, prefab, parent);
+            var view = pool.Rent(parent);
+            return viewRegistry.Register(view, pool);
+        }
+
+        public int SpawnVehicleView(VehicleConfig vehicleConfig, Transform parent)
+        {
+            if (vehicleConfig == null)
+            {
+                throw new ArgumentNullException(nameof(vehicleConfig));
+            }
+
+            if (!viewCatalog.TryGetVehicleViewPrefab(vehicleConfig.ViewPrefabAddress, out var prefab))
+            {
+                throw new InvalidOperationException(
+                    $"{vehicleConfig.DisplayName} references missing vehicle view prefab address '{vehicleConfig.ViewPrefabAddress}'.");
+            }
+
+            var pool = GetUnitViewPool(vehicleConfig.ViewPrefabAddress, prefab, parent);
             var view = pool.Rent(parent);
             return viewRegistry.Register(view, pool);
         }

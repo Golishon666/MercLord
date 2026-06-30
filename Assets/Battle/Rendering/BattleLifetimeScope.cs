@@ -41,6 +41,9 @@ namespace MercLord.Battle.Rendering
             builder.Register<BattleViewSpawner>(Lifetime.Scoped).As<IBattleViewSpawner>();
             builder.Register<SpatialHashSystem>(Lifetime.Scoped);
             builder.Register<PlayerInputSystem>(Lifetime.Scoped);
+            builder.Register<VehicleInputSystem>(Lifetime.Scoped);
+            builder.Register<VehicleExitSystem>(Lifetime.Scoped);
+            builder.Register<VehicleEnterSystem>(Lifetime.Scoped);
             builder.Register<TargetSearchSystem>(Lifetime.Scoped);
             builder.Register<DecisionSystem>(Lifetime.Scoped);
             builder.Register<WeaponSystem>(Lifetime.Scoped);

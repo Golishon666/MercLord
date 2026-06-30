@@ -68,4 +68,19 @@ namespace MercLord.Game.Configs
         Attacker,
         Defender
     }
+
+    public enum VehicleSpawnControlMode
+    {
+        Empty,
+        AIControlled
+    }
+
+    public enum LootRarity
+    {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
+    }
 }

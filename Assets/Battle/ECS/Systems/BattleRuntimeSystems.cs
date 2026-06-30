@@ -24,6 +24,9 @@ namespace MercLord.Battle.ECS.Systems
         public BattleSystemRunner(
             SpatialHashSystem spatialHashSystem,
             PlayerInputSystem playerInputSystem,
+            VehicleInputSystem vehicleInputSystem,
+            VehicleExitSystem vehicleExitSystem,
+            VehicleEnterSystem vehicleEnterSystem,
             TargetSearchSystem targetSearchSystem,
             DecisionSystem decisionSystem,
             WeaponSystem weaponSystem,
@@ -37,6 +40,9 @@ namespace MercLord.Battle.ECS.Systems
             {
                 spatialHashSystem,
                 playerInputSystem,
+                vehicleInputSystem,
+                vehicleExitSystem,
+                vehicleEnterSystem,
                 targetSearchSystem,
                 decisionSystem,
                 weaponSystem,

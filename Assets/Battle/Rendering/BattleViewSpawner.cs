@@ -10,7 +10,7 @@ namespace MercLord.Battle.Rendering
 {
     public interface IBattleViewSpawner
     {
-        void SpawnMissingUnitViews(BattleSession session, Transform parent);
+        void SpawnMissingViews(BattleSession session, Transform parent);
         void ReleaseAll();
     }
 
@@ -28,7 +28,7 @@ namespace MercLord.Battle.Rendering
             this.viewFactory = viewFactory ?? throw new ArgumentNullException(nameof(viewFactory));
         }
 
-        public void SpawnMissingUnitViews(BattleSession session, Transform parent)
+        public void SpawnMissingViews(BattleSession session, Transform parent)
         {
             if (session == null)
             {
@@ -46,6 +46,12 @@ namespace MercLord.Battle.Rendering
                 throw new InvalidOperationException("Cannot spawn battle views without an active Morpeh world.");
             }
 
+            SpawnMissingUnitViews(world, parent);
+            SpawnMissingVehicleViews(world, parent);
+        }
+
+        private void SpawnMissingUnitViews(World world, Transform parent)
+        {
             spawnBuffer.Clear();
             var filter = world.Filter
                 .With<BotComponent>()
@@ -75,6 +81,41 @@ namespace MercLord.Battle.Rendering
             }
 
             spawnBuffer.Clear();
+            filter.Dispose();
+        }
+
+        private void SpawnMissingVehicleViews(World world, Transform parent)
+        {
+            spawnBuffer.Clear();
+            var filter = world.Filter
+                .With<VehicleComponent>()
+                .With<PositionComponent>()
+                .Without<ViewRefComponent>()
+                .Build();
+
+            foreach (var entity in filter)
+            {
+                spawnBuffer.Add(entity);
+            }
+
+            var vehicleStash = world.GetStash<VehicleComponent>();
+            var viewRefStash = world.GetStash<ViewRefComponent>();
+
+            for (var entityIndex = 0; entityIndex < spawnBuffer.Count; entityIndex++)
+            {
+                var entity = spawnBuffer[entityIndex];
+                var vehicle = vehicleStash.Get(entity);
+                if (!configDatabase.TryGetVehicle(vehicle.VehicleConfigId, out var vehicleConfig))
+                {
+                    throw new InvalidOperationException($"VehicleConfig id {vehicle.VehicleConfigId} is not registered.");
+                }
+
+                var viewId = viewFactory.SpawnVehicleView(vehicleConfig, parent);
+                viewRefStash.Set(entity, new ViewRefComponent { ViewId = viewId });
+            }
+
+            spawnBuffer.Clear();
+            filter.Dispose();
         }
 
         public void ReleaseAll()

@@ -21,6 +21,7 @@ namespace MercLord.Battle.ECS.Systems
         private Stash<ArmorStatsComponent> armors;
         private Stash<DeadComponent> deadComponents;
         private Stash<BotStateComponent> botStates;
+        private Stash<VehicleComponent> vehicles;
 
         public DamageSystem(
             ConfigDatabase configDatabase,
@@ -57,6 +58,7 @@ namespace MercLord.Battle.ECS.Systems
             armors = world.GetStash<ArmorStatsComponent>();
             deadComponents = world.GetStash<DeadComponent>();
             botStates = world.GetStash<BotStateComponent>();
+            vehicles = world.GetStash<VehicleComponent>();
         }
 
         public void Tick(float deltaTime)
@@ -98,6 +100,7 @@ namespace MercLord.Battle.ECS.Systems
             armors = null;
             deadComponents = null;
             botStates = null;
+            vehicles = null;
         }
 
         private void ApplyRequest(DamageRequestComponent request)
@@ -166,6 +169,13 @@ namespace MercLord.Battle.ECS.Systems
             if (hasBotState)
             {
                 botState.Value = BotStateType.Dead;
+            }
+
+            ref var vehicle = ref vehicles.Get(target, out var hasVehicle);
+            if (hasVehicle)
+            {
+                vehicle.State = VehicleStateType.Destroyed;
+                vehicle.Driver = default;
             }
         }
     }

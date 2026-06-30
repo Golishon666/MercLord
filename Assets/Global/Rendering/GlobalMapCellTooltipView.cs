@@ -1,5 +1,6 @@
 using System.Text;
 using MercLord.Global.Cells;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,13 +25,13 @@ namespace MercLord.Global.Rendering
 
         [SerializeField] private Canvas canvas;
         [SerializeField] private RectTransform tooltipRoot;
-        [SerializeField] private Text tooltipTitle;
-        [SerializeField] private Text tooltipBody;
-        [SerializeField] private Text dateLabel;
+        [SerializeField] private TMP_Text tooltipTitle;
+        [SerializeField] private TMP_Text tooltipBody;
+        [SerializeField] private TMP_Text dateLabel;
 
         private readonly StringBuilder bodyBuilder = new();
 
-        public void Configure(Canvas parentCanvas, RectTransform root, Text title, Text body, Text date)
+        public void Configure(Canvas parentCanvas, RectTransform root, TMP_Text title, TMP_Text body, TMP_Text date)
         {
             canvas = parentCanvas;
             tooltipRoot = root;

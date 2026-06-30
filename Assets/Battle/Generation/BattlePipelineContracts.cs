@@ -45,6 +45,7 @@ namespace MercLord.Battle.Generation
     public interface IBattleEntityFactory
     {
         Entity CreateUnit(World world, BattleEntitySpawnRequest request);
+        Entity CreateVehicle(World world, BattleVehicleEntitySpawnRequest request);
         WeaponStatsComponent CreateWeaponStats(MercLord.Game.Configs.WeaponConfig weapon);
         ArmorStatsComponent CreateArmorStats(MercLord.Game.Configs.ArmorConfig armor);
         AIStatsComponent CreateAIStats(MercLord.Game.Configs.AIConfig ai);
@@ -53,6 +54,11 @@ namespace MercLord.Battle.Generation
     public interface IBattlePlayerSpawner
     {
         Entity SpawnPlayer(BattleSession session);
+    }
+
+    public interface IBattleVehicleSpawner
+    {
+        void SpawnVehicles(BattleSession session);
     }
 
     public interface IBattleResultApplier

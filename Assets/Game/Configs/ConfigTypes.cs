@@ -128,6 +128,8 @@ namespace MercLord.Game.Configs
         [SerializeField] private int maxHealth;
         [SerializeField] private float moveSpeed;
         [SerializeField] private float rotationSpeed;
+        [SerializeField] private float enterRadius;
+        [SerializeField] private float exitDistance;
         [SerializeField] private ArmorConfig armor;
         [SerializeField] private WeaponConfig weapon;
         [SerializeField] private string viewPrefabAddress;
@@ -135,6 +137,8 @@ namespace MercLord.Game.Configs
         public int MaxHealth => maxHealth;
         public float MoveSpeed => moveSpeed;
         public float RotationSpeed => rotationSpeed;
+        public float EnterRadius => enterRadius;
+        public float ExitDistance => exitDistance;
         public ArmorConfig Armor => armor;
         public WeaponConfig Weapon => weapon;
         public string ViewPrefabAddress => viewPrefabAddress;
@@ -147,19 +151,27 @@ namespace MercLord.Game.Configs
         [SerializeField] private int price;
         [SerializeField] private WeaponConfig weapon;
         [SerializeField] private ArmorConfig armor;
+        [SerializeField] private TradeGoodConfig tradeGood;
 
         public ItemCategory Category => category;
         public int Price => price;
         public WeaponConfig Weapon => weapon;
         public ArmorConfig Armor => armor;
+        public TradeGoodConfig TradeGood => tradeGood;
     }
 
     [CreateAssetMenu(menuName = "MercLord/Configs/Trade Good", fileName = "TradeGoodConfig")]
     public sealed class TradeGoodConfig : IdentifiedConfig
     {
         [SerializeField] private int basePrice;
+        [SerializeField] private LootRarity rarity;
+        [SerializeField] private string iconAddress;
+        [SerializeField] private string description;
 
         public int BasePrice => basePrice;
+        public LootRarity Rarity => rarity;
+        public string IconAddress => iconAddress;
+        public string Description => description;
     }
 
     [CreateAssetMenu(menuName = "MercLord/Configs/Loot Table", fileName = "LootTableConfig")]
@@ -703,12 +715,30 @@ namespace MercLord.Game.Configs
         [SerializeField] private BattleSpawnSide playerSpawnSide;
         [SerializeField] private int playerSpawnPointIndex;
         [SerializeField] private float playerAimDotThreshold;
+        [SerializeField] private BattleVehicleSpawnConfig[] vehicleSpawns = new BattleVehicleSpawnConfig[0];
 
         public float SpatialHashCellSize => spatialHashCellSize;
         public UnitConfig PlayerUnit => playerUnit;
         public BattleSpawnSide PlayerSpawnSide => playerSpawnSide;
         public int PlayerSpawnPointIndex => playerSpawnPointIndex;
         public float PlayerAimDotThreshold => playerAimDotThreshold;
+        public BattleVehicleSpawnConfig[] VehicleSpawns => vehicleSpawns ?? System.Array.Empty<BattleVehicleSpawnConfig>();
+    }
+
+    [System.Serializable]
+    public struct BattleVehicleSpawnConfig
+    {
+        [SerializeField] private VehicleConfig vehicle;
+        [SerializeField] private BattleSpawnSide spawnSide;
+        [SerializeField] private int spawnPointIndex;
+        [SerializeField] private int factionId;
+        [SerializeField] private VehicleSpawnControlMode controlMode;
+
+        public VehicleConfig Vehicle => vehicle;
+        public BattleSpawnSide SpawnSide => spawnSide;
+        public int SpawnPointIndex => spawnPointIndex;
+        public int FactionId => factionId;
+        public VehicleSpawnControlMode ControlMode => controlMode;
     }
 
     [System.Serializable]

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e323e47b8c824954b3d47e03b2d867df, type: 3}
+  m_Name: BattleViewCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Battle.Rendering.BattleViewCatalog
+  cellSize: {x: 1, y: 1}
+  origin: {x: 0, y: 0, z: 0}
+  unitViews:
+  - address: default_infantry
+    prefab: {fileID: 5074835197008304629, guid: 5c3a8ccd0cc5c1b4bacbba81ba5b2a25, type: 3}
+  - address: default_vehicle
+    prefab: {fileID: 6327464931433396561, guid: 093cc450c8db8ff45adeaa7da58b6fae, type: 3}

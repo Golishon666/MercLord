@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MercLord.Economy.Credits;
+using MercLord.Game.Configs;
 using MercLord.Game.Save;
 using MercLord.Global.Cells;
 using MercLord.Player.Inventory;
@@ -10,15 +11,18 @@ namespace MercLord.Battle.Generation
     public sealed class BattleResultApplier : IBattleResultApplier
     {
         private readonly IInfluenceService influenceService;
+        private readonly ConfigDatabase configDatabase;
         private readonly CreditsService creditsService;
         private readonly IInventoryService inventoryService;
 
         public BattleResultApplier(
             IInfluenceService influenceService,
+            ConfigDatabase configDatabase,
             CreditsService creditsService,
             IInventoryService inventoryService)
         {
             this.influenceService = influenceService ?? throw new ArgumentNullException(nameof(influenceService));
+            this.configDatabase = configDatabase ?? throw new ArgumentNullException(nameof(configDatabase));
             this.creditsService = creditsService ?? throw new ArgumentNullException(nameof(creditsService));
             this.inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
         }
@@ -58,11 +62,30 @@ namespace MercLord.Battle.Generation
             for (var lootIndex = 0; lootIndex < lootEntries.Length; lootIndex++)
             {
                 var loot = lootEntries[lootIndex];
+                ValidateLootEntry(loot, lootIndex);
                 inventoryService.AddItem(
                     saveModel.Inventory,
                     loot.ItemConfigId,
                     loot.Amount,
                     loot.Durability);
+            }
+        }
+
+        private void ValidateLootEntry(BattleLootEntry loot, int lootIndex)
+        {
+            if (loot.Amount <= 0)
+            {
+                throw new InvalidOperationException($"Battle result loot entry {lootIndex} amount must be positive.");
+            }
+
+            if (loot.Durability < 0)
+            {
+                throw new InvalidOperationException($"Battle result loot entry {lootIndex} durability cannot be negative.");
+            }
+
+            if (!configDatabase.TryGetItem(loot.ItemConfigId, out _))
+            {
+                throw new InvalidOperationException($"Battle result loot entry {lootIndex} references missing ItemConfig id {loot.ItemConfigId}.");
             }
         }
 

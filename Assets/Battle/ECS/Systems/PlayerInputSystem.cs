@@ -69,6 +69,7 @@ namespace MercLord.Battle.ECS.Systems
                 .With<WeaponStatsComponent>()
                 .With<AttackCooldownComponent>()
                 .Without<DeadComponent>()
+                .Without<VehicleComponent>()
                 .Build();
 
             playerInputs = world.GetStash<PlayerInputComponent>();
@@ -150,7 +151,18 @@ namespace MercLord.Battle.ECS.Systems
             if (!snapshot.FirePressed ||
                 !hasEquippedWeapon ||
                 cooldowns.Get(player).Value > 0f ||
-                !TryFindAimedTarget(player, snapshot.AimDirection, weaponConfig.Range, out var target))
+                !BattleAimTargeting.TryFindAimedTarget(
+                    world,
+                    spatialHashSystem,
+                    configDatabase,
+                    positions,
+                    teams,
+                    healths,
+                    player,
+                    snapshot.AimDirection,
+                    weaponConfig.Range,
+                    candidateBuffer,
+                    out var target))
             {
                 return;
             }
@@ -182,74 +194,6 @@ namespace MercLord.Battle.ECS.Systems
 
             weaponConfig = itemConfig.Weapon;
             return true;
-        }
-
-        private bool TryFindAimedTarget(
-            Entity player,
-            float2 aimDirection,
-            float range,
-            out Entity target)
-        {
-            target = default;
-
-            if (range <= 0f || math.lengthsq(aimDirection) <= float.Epsilon)
-            {
-                return false;
-            }
-
-            var playerPosition = positions.Get(player);
-            var team = teams.Get(player);
-            var normalizedAim = math.normalizesafe(aimDirection);
-            spatialHashSystem.GetOpponentsInRange(
-                playerPosition.Value,
-                range,
-                team.Value,
-                candidateBuffer);
-
-            var threshold = configDatabase.BattleSimulation != null
-                ? configDatabase.BattleSimulation.PlayerAimDotThreshold
-                : 0f;
-            var bestDot = threshold;
-            var bestDistanceSquared = float.MaxValue;
-            for (var candidateIndex = 0; candidateIndex < candidateBuffer.Count; candidateIndex++)
-            {
-                var candidate = candidateBuffer[candidateIndex];
-                if (!IsValidTarget(candidate))
-                {
-                    continue;
-                }
-
-                var candidatePosition = positions.Get(candidate);
-                var toCandidate = candidatePosition.Value - playerPosition.Value;
-                var distanceSquared = math.lengthsq(toCandidate);
-                if (distanceSquared <= float.Epsilon)
-                {
-                    continue;
-                }
-
-                var candidateDirection = math.normalizesafe(toCandidate);
-                var dot = math.dot(normalizedAim, candidateDirection);
-                if (dot < threshold)
-                {
-                    continue;
-                }
-
-                if (dot > bestDot || (math.abs(dot - bestDot) <= 0.0001f && distanceSquared < bestDistanceSquared))
-                {
-                    bestDot = dot;
-                    bestDistanceSquared = distanceSquared;
-                    target = candidate;
-                }
-            }
-
-            return world.Has(target);
-        }
-
-        private bool IsValidTarget(Entity target)
-        {
-            return world.Has(target) &&
-                   positions.Has(target) &&
-                   healths.Has(target);
         }
 
         private static bool IsEquipped(ItemInstance item)
