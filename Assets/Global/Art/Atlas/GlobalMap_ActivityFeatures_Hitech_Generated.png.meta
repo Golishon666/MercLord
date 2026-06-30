@@ -1,0 +1,988 @@
+fileFormatVersion: 2
+guid: 648357fb4d6bead45ac9dc75f98ac8bb
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3606940613550931076
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_0
+  - first:
+      213: -7963744245413392091
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_1
+  - first:
+      213: 4152755076768462975
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_2
+  - first:
+      213: -1620239345972997415
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_3
+  - first:
+      213: -2876536003038902136
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_4
+  - first:
+      213: -3281596331750211657
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_5
+  - first:
+      213: -5097684900321374581
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_6
+  - first:
+      213: 7394783564218291159
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_7
+  - first:
+      213: 3602446703187576565
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_8
+  - first:
+      213: -6185529905515358065
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_9
+  - first:
+      213: -3928540338255986786
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_10
+  - first:
+      213: -5859544460209144685
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_11
+  - first:
+      213: 6112475901704250079
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_12
+  - first:
+      213: 4548827513155814286
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_13
+  - first:
+      213: -2228956562767232061
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_14
+  - first:
+      213: -743122106447937340
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_15
+  - first:
+      213: -4078362351471944777
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_16
+  - first:
+      213: 4463189710375499338
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_17
+  - first:
+      213: 3665169956064738161
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_18
+  - first:
+      213: -8449366346713787946
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_19
+  - first:
+      213: 416273793871407896
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_20
+  - first:
+      213: -4161526733526259199
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_21
+  - first:
+      213: -6601336648260631944
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_22
+  - first:
+      213: 487866497547640899
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_23
+  - first:
+      213: 8533006725942014929
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_24
+  - first:
+      213: -7765171999502901993
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_25
+  - first:
+      213: 234598339134419258
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_26
+  - first:
+      213: -2911611191651670770
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_27
+  - first:
+      213: -8284477265165140211
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_28
+  - first:
+      213: 1611811495066478031
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_29
+  - first:
+      213: -3179682764381071750
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_30
+  - first:
+      213: 8204818242821948786
+    second: GlobalMap_ActivityFeatures_Hitech_Generated_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 728
+        width: 215
+        height: 195
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48cf1aca06d6e0230800000000000000
+      internalID: 3606940613550931076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_1
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 731
+        width: 212
+        height: 164
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 521d2127dc81b7190800000000000000
+      internalID: -7963744245413392091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_2
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 734
+        width: 190
+        height: 149
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f78fbf57dbc81a930800000000000000
+      internalID: 4152755076768462975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_3
+      rect:
+        serializedVersion: 2
+        x: 694
+        y: 739
+        width: 163
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d21b2436e0c389e0800000000000000
+      internalID: -1620239345972997415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_4
+      rect:
+        serializedVersion: 2
+        x: 884
+        y: 721
+        width: 220
+        height: 180
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8888e3beebd7418d0800000000000000
+      internalID: -2876536003038902136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_5
+      rect:
+        serializedVersion: 2
+        x: 1116
+        y: 729
+        width: 198
+        height: 165
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bfbdcdd58d6572d0800000000000000
+      internalID: -3281596331750211657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_6
+      rect:
+        serializedVersion: 2
+        x: 1326
+        y: 728
+        width: 161
+        height: 178
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8ec87387926149b0800000000000000
+      internalID: -5097684900321374581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_7
+      rect:
+        serializedVersion: 2
+        x: 1503
+        y: 727
+        width: 151
+        height: 179
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d3d020f87c8f9660800000000000000
+      internalID: 7394783564218291159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_8
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 522
+        width: 190
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f6c5c1a0367ef130800000000000000
+      internalID: 3602446703187576565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_9
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 516
+        width: 208
+        height: 169
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f889332c255982aa0800000000000000
+      internalID: -6185529905515358065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_10
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 520
+        width: 188
+        height: 136
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9f757c60650b79c0800000000000000
+      internalID: -3928540338255986786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_11
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 516
+        width: 188
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39c30afcb57beaea0800000000000000
+      internalID: -5859544460209144685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_12
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 509
+        width: 199
+        height: 154
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd2a7338270e3d450800000000000000
+      internalID: 6112475901704250079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_13
+      rect:
+        serializedVersion: 2
+        x: 1098
+        y: 514
+        width: 199
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e830d22c58ea02f30800000000000000
+      internalID: 4548827513155814286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_14
+      rect:
+        serializedVersion: 2
+        x: 1316
+        y: 512
+        width: 153
+        height: 166
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c3cb70d0d72111e0800000000000000
+      internalID: -2228956562767232061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_15
+      rect:
+        serializedVersion: 2
+        x: 1508
+        y: 512
+        width: 135
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c04e64a166efa5f0800000000000000
+      internalID: -743122106447937340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_16
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 320
+        width: 193
+        height: 145
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bb1037ac0fb667c0800000000000000
+      internalID: -4078362351471944777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_17
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 324
+        width: 192
+        height: 133
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a463c14056f60fd30800000000000000
+      internalID: 4463189710375499338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_18
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 325
+        width: 183
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17b3ca8f7ac4dd230800000000000000
+      internalID: 3665169956064738161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_19
+      rect:
+        serializedVersion: 2
+        x: 676
+        y: 322
+        width: 173
+        height: 130
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d11cf60312ddba80800000000000000
+      internalID: -8449366346713787946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_20
+      rect:
+        serializedVersion: 2
+        x: 882
+        y: 310
+        width: 175
+        height: 158
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81b620d5fc6e6c500800000000000000
+      internalID: 416273793871407896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_21
+      rect:
+        serializedVersion: 2
+        x: 1086
+        y: 312
+        width: 194
+        height: 142
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10a20ec0c794f36c0800000000000000
+      internalID: -4161526733526259199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_22
+      rect:
+        serializedVersion: 2
+        x: 1299
+        y: 321
+        width: 173
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87248a53b475364a0800000000000000
+      internalID: -6601336648260631944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_23
+      rect:
+        serializedVersion: 2
+        x: 1493
+        y: 323
+        width: 157
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3402424aeff35c600800000000000000
+      internalID: 487866497547640899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_24
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 107
+        width: 182
+        height: 158
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d3facd48645b6670800000000000000
+      internalID: 8533006725942014929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_25
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 101
+        width: 198
+        height: 164
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71dd1d545319c3490800000000000000
+      internalID: -7765171999502901993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_26
+      rect:
+        serializedVersion: 2
+        x: 454
+        y: 102
+        width: 188
+        height: 143
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a31f00d42f5714300800000000000000
+      internalID: 234598339134419258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_27
+      rect:
+        serializedVersion: 2
+        x: 662
+        y: 98
+        width: 208
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e05ec8d2c01e797d0800000000000000
+      internalID: -2911611191651670770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_28
+      rect:
+        serializedVersion: 2
+        x: 894
+        y: 84
+        width: 176
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0f380402df970d80800000000000000
+      internalID: -8284477265165140211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_29
+      rect:
+        serializedVersion: 2
+        x: 1093
+        y: 84
+        width: 176
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc52458d30e4e5610800000000000000
+      internalID: 1611811495066478031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_30
+      rect:
+        serializedVersion: 2
+        x: 1292
+        y: 84
+        width: 176
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7652aa5f5f7fd3d0800000000000000
+      internalID: -3179682764381071750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_ActivityFeatures_Hitech_Generated_31
+      rect:
+        serializedVersion: 2
+        x: 1488
+        y: 98
+        width: 154
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2750c0a88be5dd170800000000000000
+      internalID: 8204818242821948786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      GlobalMap_ActivityFeatures_Hitech_Generated_0: 3606940613550931076
+      GlobalMap_ActivityFeatures_Hitech_Generated_1: -7963744245413392091
+      GlobalMap_ActivityFeatures_Hitech_Generated_10: -3928540338255986786
+      GlobalMap_ActivityFeatures_Hitech_Generated_11: -5859544460209144685
+      GlobalMap_ActivityFeatures_Hitech_Generated_12: 6112475901704250079
+      GlobalMap_ActivityFeatures_Hitech_Generated_13: 4548827513155814286
+      GlobalMap_ActivityFeatures_Hitech_Generated_14: -2228956562767232061
+      GlobalMap_ActivityFeatures_Hitech_Generated_15: -743122106447937340
+      GlobalMap_ActivityFeatures_Hitech_Generated_16: -4078362351471944777
+      GlobalMap_ActivityFeatures_Hitech_Generated_17: 4463189710375499338
+      GlobalMap_ActivityFeatures_Hitech_Generated_18: 3665169956064738161
+      GlobalMap_ActivityFeatures_Hitech_Generated_19: -8449366346713787946
+      GlobalMap_ActivityFeatures_Hitech_Generated_2: 4152755076768462975
+      GlobalMap_ActivityFeatures_Hitech_Generated_20: 416273793871407896
+      GlobalMap_ActivityFeatures_Hitech_Generated_21: -4161526733526259199
+      GlobalMap_ActivityFeatures_Hitech_Generated_22: -6601336648260631944
+      GlobalMap_ActivityFeatures_Hitech_Generated_23: 487866497547640899
+      GlobalMap_ActivityFeatures_Hitech_Generated_24: 8533006725942014929
+      GlobalMap_ActivityFeatures_Hitech_Generated_25: -7765171999502901993
+      GlobalMap_ActivityFeatures_Hitech_Generated_26: 234598339134419258
+      GlobalMap_ActivityFeatures_Hitech_Generated_27: -2911611191651670770
+      GlobalMap_ActivityFeatures_Hitech_Generated_28: -8284477265165140211
+      GlobalMap_ActivityFeatures_Hitech_Generated_29: 1611811495066478031
+      GlobalMap_ActivityFeatures_Hitech_Generated_3: -1620239345972997415
+      GlobalMap_ActivityFeatures_Hitech_Generated_30: -3179682764381071750
+      GlobalMap_ActivityFeatures_Hitech_Generated_31: 8204818242821948786
+      GlobalMap_ActivityFeatures_Hitech_Generated_4: -2876536003038902136
+      GlobalMap_ActivityFeatures_Hitech_Generated_5: -3281596331750211657
+      GlobalMap_ActivityFeatures_Hitech_Generated_6: -5097684900321374581
+      GlobalMap_ActivityFeatures_Hitech_Generated_7: 7394783564218291159
+      GlobalMap_ActivityFeatures_Hitech_Generated_8: 3602446703187576565
+      GlobalMap_ActivityFeatures_Hitech_Generated_9: -6185529905515358065
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

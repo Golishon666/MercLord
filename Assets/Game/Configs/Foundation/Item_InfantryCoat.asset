@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00e8e67104ac87f43a8871fd19bb81c1, type: 3}
+  m_Name: Item_InfantryCoat
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.ItemConfig
+  id: 1603
+  displayName: Infantry Coat Item
+  category: 1
+  price: 120
+  weapon: {fileID: 0}
+  armor: {fileID: 11400000, guid: cb141b00a1ed6cc47bfa21dde00ae3d6, type: 2}
+  tradeGood: {fileID: 0}

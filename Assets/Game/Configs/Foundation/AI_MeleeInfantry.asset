@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa6d233b86579a64abcac538a9c53195, type: 3}
+  m_Name: AI_MeleeInfantry
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.AIConfig
+  id: 1202
+  displayName: Melee Infantry AI
+  type: 2
+  thinkInterval: 0.18
+  targetSearchRadius: 10
+  preferredAttackDistance: 1.2
+  retreatHealthPercent: 0.2

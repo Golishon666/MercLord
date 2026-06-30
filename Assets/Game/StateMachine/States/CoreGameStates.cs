@@ -14,7 +14,22 @@ namespace MercLord.Game.StateMachine.States
 {
     public sealed class BootstrapState : GameStateBase
     {
+        private readonly ISceneLoader sceneLoader;
+        private readonly IGameStateMachine stateMachine;
+
+        public BootstrapState(ISceneLoader sceneLoader, IGameStateMachine stateMachine)
+        {
+            this.sceneLoader = sceneLoader ?? throw new ArgumentNullException(nameof(sceneLoader));
+            this.stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
+        }
+
         public override GameStateId Id => GameStateId.Bootstrap;
+
+        public override async UniTask EnterAsync(GameStateContext context, CancellationToken cancellationToken)
+        {
+            await sceneLoader.LoadSceneAsync(SceneNames.MainMenu, LoadSceneMode.Single, cancellationToken);
+            await stateMachine.ChangeStateAsync(GameStateId.MainMenu, cancellationToken: cancellationToken);
+        }
     }
 
     public sealed class MainMenuState : GameStateBase

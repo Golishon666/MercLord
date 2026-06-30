@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7be3a295f2c1af438b5e994a1d43af0, type: 3}
+  m_Name: Weapon_SwordAndShield
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.WeaponConfig
+  id: 1002
+  displayName: Sword And Shield
+  type: 1
+  damageType: 0
+  damage: 14
+  range: 1.4
+  cooldown: 0.65
+  projectileSpeed: 1
+  isProjectile: 0
+  usesParabolicTrajectory: 0
+  parabolicArcHeight: 0
+  explosionRadius: 0

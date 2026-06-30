@@ -59,24 +59,45 @@ namespace MercLord.Global.Rendering
         NeutralPoint
     }
 
+    public enum GlobalMapSettlementFeatureSpriteId
+    {
+        Level1,
+        Level2,
+        Level3,
+        Level4,
+        Level5
+    }
+
     [CreateAssetMenu(menuName = "MercLord/Global Map/Art Atlas", fileName = "GlobalMapArtAtlas")]
     public sealed class GlobalMapArtAtlas : ScriptableObject
     {
         [SerializeField] private Texture2D biomeAtlasTexture;
         [SerializeField] private Texture2D overlayAtlasTexture;
         [SerializeField] private Texture2D iconAtlasTexture;
+        [SerializeField] private Texture2D settlementFeatureAtlasTexture;
+        [SerializeField] private Texture2D districtFeatureAtlasTexture;
+        [SerializeField] private Texture2D activityFeatureAtlasTexture;
         [SerializeField] private Sprite[] biomeSprites = new Sprite[0];
         [SerializeField] private Sprite[] extraBiomeSprites = new Sprite[0];
         [SerializeField] private Sprite[] overlaySprites = new Sprite[0];
         [SerializeField] private Sprite[] iconSprites = new Sprite[0];
+        [SerializeField] private Sprite[] settlementFeatureSprites = new Sprite[0];
+        [SerializeField] private Sprite[] districtFeatureSprites = new Sprite[0];
+        [SerializeField] private Sprite[] activityFeatureSprites = new Sprite[0];
 
         public Texture2D BiomeAtlasTexture => biomeAtlasTexture;
         public Texture2D OverlayAtlasTexture => overlayAtlasTexture;
         public Texture2D IconAtlasTexture => iconAtlasTexture;
+        public Texture2D SettlementFeatureAtlasTexture => settlementFeatureAtlasTexture;
+        public Texture2D DistrictFeatureAtlasTexture => districtFeatureAtlasTexture;
+        public Texture2D ActivityFeatureAtlasTexture => activityFeatureAtlasTexture;
         public Sprite[] BiomeSprites => biomeSprites;
         public Sprite[] ExtraBiomeSprites => extraBiomeSprites;
         public Sprite[] OverlaySprites => overlaySprites;
         public Sprite[] IconSprites => iconSprites;
+        public Sprite[] SettlementFeatureSprites => settlementFeatureSprites;
+        public Sprite[] DistrictFeatureSprites => districtFeatureSprites;
+        public Sprite[] ActivityFeatureSprites => activityFeatureSprites;
 
         public bool TryGetBiomeSprite(BiomeType biome, out Sprite sprite)
         {
@@ -110,6 +131,44 @@ namespace MercLord.Global.Rendering
             if (iconSprites != null && index >= 0 && index < iconSprites.Length)
             {
                 sprite = iconSprites[index];
+                return sprite != null;
+            }
+
+            sprite = null;
+            return false;
+        }
+
+        public bool TryGetSettlementFeatureSprite(GlobalMapSettlementFeatureSpriteId id, out Sprite sprite)
+        {
+            var index = (int)id;
+            if (settlementFeatureSprites != null && index >= 0 && index < settlementFeatureSprites.Length)
+            {
+                sprite = settlementFeatureSprites[index];
+                return sprite != null;
+            }
+
+            sprite = null;
+            return false;
+        }
+
+        public bool TryGetDistrictFeatureSprite(int index, out Sprite sprite)
+        {
+            if (districtFeatureSprites != null && index >= 0 && index < districtFeatureSprites.Length)
+            {
+                sprite = districtFeatureSprites[index];
+                return sprite != null;
+            }
+
+            sprite = null;
+            return false;
+        }
+
+        public bool TryGetActivityFeatureSprite(GlobalMapIconSpriteId id, out Sprite sprite)
+        {
+            var index = (int)id;
+            if (activityFeatureSprites != null && index >= 0 && index < activityFeatureSprites.Length)
+            {
+                sprite = activityFeatureSprites[index];
                 return sprite != null;
             }
 

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55ddc8a608dc39740b58c7cd78e5e3df, type: 3}
+  m_Name: Unit_ArtilleryCrew
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.UnitConfig
+  id: 1304
+  displayName: Artillery Crew
+  factionId: 2
+  category: 2
+  maxHealth: 70
+  moveSpeed: 2.2
+  rotationSpeed: 360
+  weapon: {fileID: 11400000, guid: 1895f33dcb624e34e90404fa9812dc85, type: 2}
+  armor: {fileID: 11400000, guid: cb141b00a1ed6cc47bfa21dde00ae3d6, type: 2}
+  ai: {fileID: 11400000, guid: 35914cc9cc859b8458669bd7b528af1f, type: 2}
+  viewPrefabAddress: default_infantry

@@ -22,7 +22,34 @@ namespace MercLord.Bootstrap
 {
     public sealed class GameLifetimeScope : LifetimeScope
     {
+        private static GameLifetimeScope activeScope;
+
         [SerializeField] private ConfigDatabase configDatabase;
+
+        public ConfigDatabase ConfigDatabase => configDatabase;
+
+        protected override void Awake()
+        {
+            if (activeScope != null && activeScope != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            activeScope = this;
+            DontDestroyOnLoad(gameObject);
+            base.Awake();
+        }
+
+        protected override void OnDestroy()
+        {
+            if (activeScope == this)
+            {
+                activeScope = null;
+            }
+
+            base.OnDestroy();
+        }
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -31,6 +58,7 @@ namespace MercLord.Bootstrap
                 throw new InvalidOperationException("ConfigDatabase must be assigned on GameLifetimeScope.");
             }
 
+            builder.RegisterInstance(this).As<GameLifetimeScope>().As<LifetimeScope>();
             builder.RegisterInstance(configDatabase);
             builder.Register<GameStateMachine>(Lifetime.Singleton).AsSelf().As<IGameStateMachine>();
             builder.Register<UnitySceneLoader>(Lifetime.Singleton).As<ISceneLoader>();

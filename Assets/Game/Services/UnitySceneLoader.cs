@@ -2,20 +2,34 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer.Unity;
 
 namespace MercLord.Game.Services
 {
     public sealed class UnitySceneLoader : ISceneLoader
     {
-        public UniTask LoadSceneAsync(
+        private readonly LifetimeScope parentScope;
+
+        public UnitySceneLoader(LifetimeScope parentScope)
+        {
+            this.parentScope = parentScope;
+        }
+
+        public async UniTask LoadSceneAsync(
             string sceneName,
             LoadSceneMode mode = LoadSceneMode.Single,
             CancellationToken cancellationToken = default)
         {
-            var operation = SceneManager.LoadSceneAsync(sceneName, mode);
-            return operation == null
-                ? UniTask.CompletedTask
-                : operation.ToUniTask(cancellationToken: cancellationToken);
+            if (parentScope == null)
+            {
+                await LoadSceneOperationAsync(sceneName, mode, cancellationToken);
+                return;
+            }
+
+            using (LifetimeScope.EnqueueParent(parentScope))
+            {
+                await LoadSceneOperationAsync(sceneName, mode, cancellationToken);
+            }
         }
 
         public UniTask UnloadSceneAsync(string sceneName, CancellationToken cancellationToken = default)
@@ -28,6 +42,17 @@ namespace MercLord.Game.Services
             }
 
             var operation = SceneManager.UnloadSceneAsync(scene);
+            return operation == null
+                ? UniTask.CompletedTask
+                : operation.ToUniTask(cancellationToken: cancellationToken);
+        }
+
+        private static UniTask LoadSceneOperationAsync(
+            string sceneName,
+            LoadSceneMode mode,
+            CancellationToken cancellationToken)
+        {
+            var operation = SceneManager.LoadSceneAsync(sceneName, mode);
             return operation == null
                 ? UniTask.CompletedTask
                 : operation.ToUniTask(cancellationToken: cancellationToken);

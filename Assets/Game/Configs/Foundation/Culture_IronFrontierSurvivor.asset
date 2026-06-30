@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cee0fbc427daa2d4baf3098bfb625776, type: 3}
+  m_Name: Culture_IronFrontierSurvivor
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.CultureConfig
+  id: 6001
+  displayName: Iron Frontier Survivor
+  startingCellId: 4
+  startingCredits: 500
+  startingWeapon: {fileID: 11400000, guid: 2fa282ae371cd4c49bff22a4a4a48f1c, type: 2}
+  startingArmor: {fileID: 11400000, guid: cb141b00a1ed6cc47bfa21dde00ae3d6, type: 2}

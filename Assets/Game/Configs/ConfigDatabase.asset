@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5d64f661854ea04ebc3295daf91eb4e, type: 3}
+  m_Name: ConfigDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.ConfigDatabase
+  factions:
+  - {fileID: 11400000, guid: 3ae567167ae8dc442a8d2e78f47fde23, type: 2}
+  - {fileID: 11400000, guid: ed8af0cc31149de4fabed2d3b5b4378f, type: 2}
+  - {fileID: 11400000, guid: 66a0806f18c45cd4d92d9d50eddde113, type: 2}
+  - {fileID: 11400000, guid: 680c99f42381667479438af62d21cb11, type: 2}
+  cultures:
+  - {fileID: 11400000, guid: b3dabf0b3a9daa1499b59b496f7be584, type: 2}
+  units:
+  - {fileID: 11400000, guid: a2c8b2cca5940504782d8baf50583cc0, type: 2}
+  - {fileID: 11400000, guid: 4cc7f8f6782e1b44bbc6e4b683ce5181, type: 2}
+  - {fileID: 11400000, guid: df436b0df83897845bac087338d7feb8, type: 2}
+  - {fileID: 11400000, guid: 5a3accb3d69df4944842e670f51d387c, type: 2}
+  weapons:
+  - {fileID: 11400000, guid: 2fa282ae371cd4c49bff22a4a4a48f1c, type: 2}
+  - {fileID: 11400000, guid: 5360ca497d0a95b4bab265183d6f2696, type: 2}
+  - {fileID: 11400000, guid: 1895f33dcb624e34e90404fa9812dc85, type: 2}
+  - {fileID: 11400000, guid: 1fc5b336e8ea2524896446dfc246816e, type: 2}
+  armors:
+  - {fileID: 11400000, guid: cb141b00a1ed6cc47bfa21dde00ae3d6, type: 2}
+  - {fileID: 11400000, guid: 3ac29fccf27af8442af3bffe9f9710d1, type: 2}
+  - {fileID: 11400000, guid: 5a82f45c4532e184c87cfcd341174df4, type: 2}
+  aiConfigs:
+  - {fileID: 11400000, guid: 8d50bbcdb29d3744e96291156a23a4b7, type: 2}
+  - {fileID: 11400000, guid: e9c36a38bfc38a84bb31f40f3fc0e433, type: 2}
+  - {fileID: 11400000, guid: 35914cc9cc859b8458669bd7b528af1f, type: 2}
+  - {fileID: 11400000, guid: 0ee1f133930b05944a2bb971258c5cac, type: 2}
+  - {fileID: 11400000, guid: 62e5bf03ef515c04ca794bb0e2eacee6, type: 2}
+  vehicles:
+  - {fileID: 11400000, guid: 29012d66e64bfcf42af93fd4185f16e7, type: 2}
+  items:
+  - {fileID: 11400000, guid: 1358097edfe5ac4479e8b9b238edaa79, type: 2}
+  - {fileID: 11400000, guid: 9579be72a5f5383428435be12c6b030e, type: 2}
+  - {fileID: 11400000, guid: d233aa3a8f8987b40ab5b896789a6739, type: 2}
+  - {fileID: 11400000, guid: 0437cb306214ce44190f730b03822511, type: 2}
+  - {fileID: 11400000, guid: 7582ad5787f63b544b0e17e9ac641ddb, type: 2}
+  tradeGoods:
+  - {fileID: 11400000, guid: 85a79ba655cc5fd44a1a0e67fffc2e0e, type: 2}
+  - {fileID: 11400000, guid: 4e7cc0d5cbe65264781c2b85b3cc6e62, type: 2}
+  lootTables:
+  - {fileID: 11400000, guid: b6fb45c4b117dbc40897a3a09d03235b, type: 2}
+  biomes:
+  - {fileID: 11400000, guid: 2510cea03eff8dc4d9b9e969094982af, type: 2}
+  - {fileID: 11400000, guid: 24d0058598f792d409867db05a57df23, type: 2}
+  - {fileID: 11400000, guid: d9bf7cf9952a831409163a6ff7a7fbdf, type: 2}
+  - {fileID: 11400000, guid: 562c793fa6cd30643a5a019bd1ebb8b0, type: 2}
+  - {fileID: 11400000, guid: b019f8c11a1f86b4d8b7dc94299bd3d3, type: 2}
+  - {fileID: 11400000, guid: 8fc3035d599b9e74a96adbc335297c08, type: 2}
+  - {fileID: 11400000, guid: e404893f7d30a674eac68ecd3bb5a26f, type: 2}
+  - {fileID: 11400000, guid: aafd2c01df35e2040ae3197b65606b99, type: 2}
+  - {fileID: 11400000, guid: cbef2a50239c44d4eb574a6f36da23d4, type: 2}
+  - {fileID: 11400000, guid: ce2e275d01cdb444987706262300c48a, type: 2}
+  - {fileID: 11400000, guid: 43fc42d5c8a5e4d41b9abaecee939a0f, type: 2}
+  - {fileID: 11400000, guid: 7e35923073b8d5145a71e0154d13317a, type: 2}
+  - {fileID: 11400000, guid: bbadfa6155a12154ba0c00c12a059e4c, type: 2}
+  - {fileID: 11400000, guid: 7092568924255cf4a83d1b6d915b3008, type: 2}
+  tileSets:
+  - {fileID: 11400000, guid: 9bfdb42431cd5ba46acf20d1f78cbbb1, type: 2}
+  - {fileID: 11400000, guid: 3e6310b19ed1d7746a31fbd091045e15, type: 2}
+  - {fileID: 11400000, guid: e4dc7d86871c48e458e3440ab9ec65ac, type: 2}
+  - {fileID: 11400000, guid: c6bb288551edd724c9cc2c10747018dc, type: 2}
+  - {fileID: 11400000, guid: 9712ac3e8b134e346b8b97e092c8d365, type: 2}
+  - {fileID: 11400000, guid: 5cf8e70ecc8d0c148a0989dee9ac05cf, type: 2}
+  - {fileID: 11400000, guid: 140a4d3d196465c418a9175ca2781564, type: 2}
+  - {fileID: 11400000, guid: dc8e72e021683f94b9c5c33214ded077, type: 2}
+  - {fileID: 11400000, guid: c3472f3791eba794194844e57076a261, type: 2}
+  - {fileID: 11400000, guid: 33942a086ae7a7d409f3087cf009c928, type: 2}
+  - {fileID: 11400000, guid: 9037096cc72402044a2a850efb2a557c, type: 2}
+  - {fileID: 11400000, guid: 9b3ac14b474ab36449ccf29dca903b86, type: 2}
+  - {fileID: 11400000, guid: 641d848f11b760a4691fd31e5d5ed917, type: 2}
+  - {fileID: 11400000, guid: 7150de873d70e1042b4c88bc820347ec, type: 2}
+  combatBalance: {fileID: 11400000, guid: b7300255c63505547b61e2910cd0981b, type: 2}
+  globalGeneration: {fileID: 11400000, guid: e4db7faf8532cb147ba6df16b350c33d, type: 2}
+  battleMapGeneration: {fileID: 11400000, guid: ebddd4224f80c8747b531a55664d1caa, type: 2}
+  battleSimulation: {fileID: 11400000, guid: bc2b8d93a2de4fa449855fd38fee5364, type: 2}

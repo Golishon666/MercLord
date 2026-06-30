@@ -1,0 +1,988 @@
+fileFormatVersion: 2
+guid: f6704896c5c436e42821bec232f27925
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6835040531627850297
+    second: GlobalMap_FarIcons_Hitech_Generated_0
+  - first:
+      213: -5667744277322392905
+    second: GlobalMap_FarIcons_Hitech_Generated_1
+  - first:
+      213: 4739945234842925289
+    second: GlobalMap_FarIcons_Hitech_Generated_2
+  - first:
+      213: 3478516392022042327
+    second: GlobalMap_FarIcons_Hitech_Generated_3
+  - first:
+      213: 627638294127476215
+    second: GlobalMap_FarIcons_Hitech_Generated_4
+  - first:
+      213: -7685538257414256421
+    second: GlobalMap_FarIcons_Hitech_Generated_5
+  - first:
+      213: -5632637891757710365
+    second: GlobalMap_FarIcons_Hitech_Generated_6
+  - first:
+      213: -9034613393366240809
+    second: GlobalMap_FarIcons_Hitech_Generated_7
+  - first:
+      213: -7210209485743246619
+    second: GlobalMap_FarIcons_Hitech_Generated_8
+  - first:
+      213: -1399840573569972737
+    second: GlobalMap_FarIcons_Hitech_Generated_9
+  - first:
+      213: 2102549392687551066
+    second: GlobalMap_FarIcons_Hitech_Generated_10
+  - first:
+      213: 3744368533573726024
+    second: GlobalMap_FarIcons_Hitech_Generated_11
+  - first:
+      213: -4016404324891929425
+    second: GlobalMap_FarIcons_Hitech_Generated_12
+  - first:
+      213: 4008296485140172215
+    second: GlobalMap_FarIcons_Hitech_Generated_13
+  - first:
+      213: 7662079485093780712
+    second: GlobalMap_FarIcons_Hitech_Generated_14
+  - first:
+      213: -773960556238324947
+    second: GlobalMap_FarIcons_Hitech_Generated_15
+  - first:
+      213: -1681172515075137633
+    second: GlobalMap_FarIcons_Hitech_Generated_16
+  - first:
+      213: -8554282117639145483
+    second: GlobalMap_FarIcons_Hitech_Generated_17
+  - first:
+      213: 2042773257084441383
+    second: GlobalMap_FarIcons_Hitech_Generated_18
+  - first:
+      213: -3619113366589600991
+    second: GlobalMap_FarIcons_Hitech_Generated_19
+  - first:
+      213: 2330374286823210883
+    second: GlobalMap_FarIcons_Hitech_Generated_20
+  - first:
+      213: -5223763502030808967
+    second: GlobalMap_FarIcons_Hitech_Generated_21
+  - first:
+      213: -8862964560595133774
+    second: GlobalMap_FarIcons_Hitech_Generated_22
+  - first:
+      213: 5093755473023223943
+    second: GlobalMap_FarIcons_Hitech_Generated_23
+  - first:
+      213: -2249146827440821114
+    second: GlobalMap_FarIcons_Hitech_Generated_24
+  - first:
+      213: 6023953456467332475
+    second: GlobalMap_FarIcons_Hitech_Generated_25
+  - first:
+      213: -2021018508125075095
+    second: GlobalMap_FarIcons_Hitech_Generated_26
+  - first:
+      213: -574413659863574012
+    second: GlobalMap_FarIcons_Hitech_Generated_27
+  - first:
+      213: -4857045846900776411
+    second: GlobalMap_FarIcons_Hitech_Generated_28
+  - first:
+      213: 1346889967866350376
+    second: GlobalMap_FarIcons_Hitech_Generated_29
+  - first:
+      213: -4961824704798646748
+    second: GlobalMap_FarIcons_Hitech_Generated_30
+  - first:
+      213: 5187477717348401613
+    second: GlobalMap_FarIcons_Hitech_Generated_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_0
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 683
+        width: 177
+        height: 193
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93a33116621fade50800000000000000
+      internalID: 6835040531627850297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_1
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 686
+        width: 171
+        height: 180
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ba1278db902851b0800000000000000
+      internalID: -5667744277322392905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_2
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 681
+        width: 179
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e83e99e31ba7c140800000000000000
+      internalID: 4739945234842925289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_3
+      rect:
+        serializedVersion: 2
+        x: 654
+        y: 683
+        width: 163
+        height: 136
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d6e8d38a3c264030800000000000000
+      internalID: 3478516392022042327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_4
+      rect:
+        serializedVersion: 2
+        x: 850
+        y: 677
+        width: 169
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fd76e004b1d5b800800000000000000
+      internalID: 627638294127476215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_5
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 680
+        width: 181
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd80623bcab775590800000000000000
+      internalID: -7685538257414256421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_6
+      rect:
+        serializedVersion: 2
+        x: 1253
+        y: 686
+        width: 180
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e360613ea9d4d1b0800000000000000
+      internalID: -5632637891757710365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_7
+      rect:
+        serializedVersion: 2
+        x: 1458
+        y: 681
+        width: 165
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d13b657cfa9e9280800000000000000
+      internalID: -9034613393366240809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_8
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 484
+        width: 183
+        height: 166
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e23f1e8ca030fb90800000000000000
+      internalID: -7210209485743246619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_9
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 487
+        width: 175
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff5ce2e3a64c29ce0800000000000000
+      internalID: -1399840573569972737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_10
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 497
+        width: 168
+        height: 139
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a52dad96881cd2d10800000000000000
+      internalID: 2102549392687551066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_11
+      rect:
+        serializedVersion: 2
+        x: 645
+        y: 490
+        width: 177
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84fefcfb75ba6f330800000000000000
+      internalID: 3744368533573726024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_12
+      rect:
+        serializedVersion: 2
+        x: 848
+        y: 483
+        width: 171
+        height: 171
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa4597cdb8dd248c0800000000000000
+      internalID: -4016404324891929425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_13
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 487
+        width: 183
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bd0a379a6450a730800000000000000
+      internalID: 4008296485140172215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_14
+      rect:
+        serializedVersion: 2
+        x: 1265
+        y: 484
+        width: 151
+        height: 165
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ec92dd32bc255a60800000000000000
+      internalID: 7662079485093780712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_15
+      rect:
+        serializedVersion: 2
+        x: 1476
+        y: 481
+        width: 114
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2b304789f65245f0800000000000000
+      internalID: -773960556238324947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_16
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 294
+        width: 184
+        height: 147
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9fdbc831864ba8e0800000000000000
+      internalID: -1681172515075137633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_17
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 290
+        width: 170
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f774ad8cb5194980800000000000000
+      internalID: -8554282117639145483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_18
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 291
+        width: 176
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7239f294473695c10800000000000000
+      internalID: 2042773257084441383
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_19
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 292
+        width: 144
+        height: 138
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12b0f86619356cdc0800000000000000
+      internalID: -3619113366589600991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_20
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 292
+        width: 165
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38f3dc72117275020800000000000000
+      internalID: 2330374286823210883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_21
+      rect:
+        serializedVersion: 2
+        x: 1052
+        y: 292
+        width: 168
+        height: 141
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9789dc685c67187b0800000000000000
+      internalID: -5223763502030808967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_22
+      rect:
+        serializedVersion: 2
+        x: 1266
+        y: 292
+        width: 150
+        height: 149
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bad9dca0bc600580800000000000000
+      internalID: -8862964560595133774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_23
+      rect:
+        serializedVersion: 2
+        x: 1462
+        y: 293
+        width: 143
+        height: 136
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78840466d97a0b640800000000000000
+      internalID: 5093755473023223943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_24
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 88
+        width: 131
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68c61be70ec69c0e0800000000000000
+      internalID: -2249146827440821114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_25
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 92
+        width: 151
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7dc83c90c1699350800000000000000
+      internalID: 6023953456467332475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_26
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 95
+        width: 142
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96907baef56e3f3e0800000000000000
+      internalID: -2021018508125075095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_27
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 87
+        width: 167
+        height: 144
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40a13b9d1d54708f0800000000000000
+      internalID: -574413659863574012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_28
+      rect:
+        serializedVersion: 2
+        x: 868
+        y: 76
+        width: 142
+        height: 169
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52261b5398e489cb0800000000000000
+      internalID: -4857045846900776411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_29
+      rect:
+        serializedVersion: 2
+        x: 1068
+        y: 76
+        width: 142
+        height: 169
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82b06362a4d11b210800000000000000
+      internalID: 1346889967866350376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_30
+      rect:
+        serializedVersion: 2
+        x: 1263
+        y: 75
+        width: 142
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42e18b848be042bb0800000000000000
+      internalID: -4961824704798646748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GlobalMap_FarIcons_Hitech_Generated_31
+      rect:
+        serializedVersion: 2
+        x: 1458
+        y: 75
+        width: 142
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc14ecedf7f9df740800000000000000
+      internalID: 5187477717348401613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      GlobalMap_FarIcons_Hitech_Generated_0: 6835040531627850297
+      GlobalMap_FarIcons_Hitech_Generated_1: -5667744277322392905
+      GlobalMap_FarIcons_Hitech_Generated_10: 2102549392687551066
+      GlobalMap_FarIcons_Hitech_Generated_11: 3744368533573726024
+      GlobalMap_FarIcons_Hitech_Generated_12: -4016404324891929425
+      GlobalMap_FarIcons_Hitech_Generated_13: 4008296485140172215
+      GlobalMap_FarIcons_Hitech_Generated_14: 7662079485093780712
+      GlobalMap_FarIcons_Hitech_Generated_15: -773960556238324947
+      GlobalMap_FarIcons_Hitech_Generated_16: -1681172515075137633
+      GlobalMap_FarIcons_Hitech_Generated_17: -8554282117639145483
+      GlobalMap_FarIcons_Hitech_Generated_18: 2042773257084441383
+      GlobalMap_FarIcons_Hitech_Generated_19: -3619113366589600991
+      GlobalMap_FarIcons_Hitech_Generated_2: 4739945234842925289
+      GlobalMap_FarIcons_Hitech_Generated_20: 2330374286823210883
+      GlobalMap_FarIcons_Hitech_Generated_21: -5223763502030808967
+      GlobalMap_FarIcons_Hitech_Generated_22: -8862964560595133774
+      GlobalMap_FarIcons_Hitech_Generated_23: 5093755473023223943
+      GlobalMap_FarIcons_Hitech_Generated_24: -2249146827440821114
+      GlobalMap_FarIcons_Hitech_Generated_25: 6023953456467332475
+      GlobalMap_FarIcons_Hitech_Generated_26: -2021018508125075095
+      GlobalMap_FarIcons_Hitech_Generated_27: -574413659863574012
+      GlobalMap_FarIcons_Hitech_Generated_28: -4857045846900776411
+      GlobalMap_FarIcons_Hitech_Generated_29: 1346889967866350376
+      GlobalMap_FarIcons_Hitech_Generated_3: 3478516392022042327
+      GlobalMap_FarIcons_Hitech_Generated_30: -4961824704798646748
+      GlobalMap_FarIcons_Hitech_Generated_31: 5187477717348401613
+      GlobalMap_FarIcons_Hitech_Generated_4: 627638294127476215
+      GlobalMap_FarIcons_Hitech_Generated_5: -7685538257414256421
+      GlobalMap_FarIcons_Hitech_Generated_6: -5632637891757710365
+      GlobalMap_FarIcons_Hitech_Generated_7: -9034613393366240809
+      GlobalMap_FarIcons_Hitech_Generated_8: -7210209485743246619
+      GlobalMap_FarIcons_Hitech_Generated_9: -1399840573569972737
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

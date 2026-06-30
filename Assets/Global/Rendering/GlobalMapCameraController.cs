@@ -18,14 +18,18 @@ namespace MercLord.Global.Rendering
         [SerializeField] private float maxRadius = 10.5f;
         [SerializeField, Range(0f, 1f)] private float markerIconVisibilityZoomThreshold = 0.5f;
 
+        public CinemachineOrbitalFollow OrbitalFollow => orbitalFollow;
+        public GlobalMapDebugController DebugController => debugController;
+        public ProceduralGlobalMapRenderer MapRenderer => mapRenderer;
+
         public void Configure(
             CinemachineOrbitalFollow follow,
             GlobalMapDebugController debug,
-            ProceduralGlobalMapRenderer renderer = null)
+            ProceduralGlobalMapRenderer renderer)
         {
             orbitalFollow = follow;
             debugController = debug;
-            mapRenderer = renderer != null ? renderer : mapRenderer;
+            mapRenderer = renderer;
             ApplyOrbitLimits();
             UpdateMarkerIconVisibility();
         }
@@ -94,17 +98,7 @@ namespace MercLord.Global.Rendering
 
         private void UpdateMarkerIconVisibility()
         {
-            if (orbitalFollow == null)
-            {
-                return;
-            }
-
-            if (mapRenderer == null)
-            {
-                mapRenderer = FindFirstObjectByType<ProceduralGlobalMapRenderer>();
-            }
-
-            if (mapRenderer == null)
+            if (orbitalFollow == null || mapRenderer == null)
             {
                 return;
             }

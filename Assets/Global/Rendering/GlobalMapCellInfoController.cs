@@ -12,19 +12,27 @@ namespace MercLord.Global.Rendering
         [SerializeField] private GlobalMapDebugController debugController;
         [SerializeField] private ConfigDatabase configDatabase;
         [SerializeField] private GlobalMapCellTooltipView tooltipView;
+        [SerializeField] private Camera inputCamera;
 
         private int selectedCellId = WorldIds.None;
+
+        public ProceduralGlobalMapRenderer MapRenderer => mapRenderer;
+        public GlobalMapDebugController DebugController => debugController;
+        public GlobalMapCellTooltipView TooltipView => tooltipView;
+        public Camera InputCamera => inputCamera;
 
         public void Configure(
             ProceduralGlobalMapRenderer renderer,
             GlobalMapDebugController debug,
             ConfigDatabase database,
-            GlobalMapCellTooltipView view)
+            GlobalMapCellTooltipView view,
+            Camera camera)
         {
             mapRenderer = renderer;
             debugController = debug;
             configDatabase = database;
             tooltipView = view;
+            inputCamera = camera;
             RefreshDate();
         }
 
@@ -47,18 +55,12 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            var camera = Camera.main;
-            if (camera == null)
-            {
-                camera = FindFirstObjectByType<Camera>();
-            }
-
-            if (camera == null)
+            if (inputCamera == null)
             {
                 return;
             }
 
-            var ray = camera.ScreenPointToRay(Input.mousePosition);
+            var ray = inputCamera.ScreenPointToRay(Input.mousePosition);
             if (!mapRenderer.TryPickCell(ray, out var cellId) ||
                 !mapRenderer.TryGetCell(cellId, out var cell))
             {

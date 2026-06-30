@@ -9,86 +9,59 @@ namespace MercLord.Global.Rendering
 {
     public sealed class ProceduralGlobalMapRenderer : MonoBehaviour
     {
-        private const int LineSegments = 8;
         private const int NeighbourCount = 6;
-        private const int StarCount = 720;
+#if UNITY_EDITOR
         private const string GeneratedRootName = "Generated Map";
         private const string SelectionObjectName = "Selected Cell Highlight";
         private const string MarkerIconsObjectName = "Marker Icons Mesh";
+        private const string SettlementFeaturesObjectName = "Settlement Feature Textures Mesh";
+        private const string ActivityFeaturesObjectName = "Activity Feature Textures Mesh";
         private const string LegacyMarkersObjectName = "Markers Mesh";
+#endif
         private const HideFlags RuntimeGeneratedHideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
         private const float HexAreaFactor = 2.598076f;
-        private const float SelectionSurfaceOffset = 0.032f;
-        private const float CapitalMarkerIconSize = 0.085f;
-        private const float SettlementMarkerIconSize = 0.0625f;
-        private const float ActivityMarkerIconSize = 0.065f;
-        private const float LegacyCapitalMarkerSize = 0.085f;
-        private const float LegacySettlementMarkerSize = 0.0575f;
-        private const float LegacyActivityMarkerSize = 0.06f;
-        private static readonly Color RiverColor = new(0.08f, 0.22f, 0.38f, 0.9f);
-        private static readonly Color LargeRoadColor = new(0.16f, 0.15f, 0.13f, 0.95f);
-        private static readonly Color MediumRoadColor = new(0.23f, 0.20f, 0.16f, 0.88f);
-        private static readonly Color SmallRoadColor = new(0.18f, 0.17f, 0.15f, 0.74f);
-        private static readonly Color SelectionColor = new(0.96f, 0.98f, 0.68f, 1f);
 
-        private static readonly Vector2[] HouseShape =
-        {
-            new(-0.44f, -0.48f),
-            new(0.44f, -0.48f),
-            new(0.44f, 0.08f),
-            new(0.00f, 0.56f),
-            new(-0.44f, 0.08f)
-        };
-
-        private static readonly Vector2[] TriangleShape =
-        {
-            new(-0.48f, -0.42f),
-            new(0.48f, -0.42f),
-            new(0.00f, 0.54f)
-        };
-
-        private static readonly Vector2[] DiamondShape =
-        {
-            new(0.00f, -0.52f),
-            new(0.48f, 0.00f),
-            new(0.00f, 0.52f),
-            new(-0.48f, 0.00f)
-        };
-
-        private static readonly Color[] FactionMarkerColors =
-        {
-            new(0.12f, 0.50f, 0.95f, 1f),
-            new(0.45f, 0.34f, 0.86f, 1f),
-            new(0.66f, 0.84f, 1.00f, 1f),
-            new(0.30f, 0.78f, 0.44f, 1f),
-            new(0.95f, 0.38f, 0.35f, 1f),
-            new(0.95f, 0.70f, 0.78f, 1f)
-        };
-
-        private Transform generatedRoot;
         [SerializeField] private ConfigDatabase configDatabase;
         [SerializeField] private GlobalMapArtAtlas artAtlas;
         [SerializeField] private WorldModel currentWorld;
-        [SerializeField] private float planetRadius = 3f;
-        [SerializeField] private float starfieldRadius = 18f;
-        [SerializeField] private float terrainSurfaceOffset = 0.006f;
-        [SerializeField] private float biomeUnderlayOffset = -0.045f;
-        [SerializeField, Range(12, 32)] private int tileVoronoiSeedVertexCount = 12;
-        [SerializeField, Min(1f)] private float tileVoronoiSeedRadiusMultiplier = 2.4f;
+
+        [Header("Render Layers")]
+        [SerializeField] private Transform generatedRoot;
+        [SerializeField] private GlobalMapProceduralRenderSettings renderSettings;
+        [SerializeField] private GlobalMapMeshLayer starfieldLayer;
+        [SerializeField] private GlobalMapMeshLayer biomeUnderlayLayer;
+        [SerializeField] private GlobalMapMeshLayer terrainLayer;
+        [SerializeField] private GlobalMapMeshLayer riversLayer;
+        [SerializeField] private GlobalMapMeshLayer roadsLayer;
+        [SerializeField] private GlobalMapMeshLayer markerIconsLayer;
+        [SerializeField] private GlobalMapMeshLayer settlementFeaturesLayer;
+        [SerializeField] private GlobalMapMeshLayer activityFeaturesLayer;
+        [SerializeField] private GlobalMapMeshLayer selectionLayer;
 
         private Material vertexColorMaterial;
+        private Material biomeMaterial;
         private Material iconMaterial;
-        private GameObject markerIconsObject;
+        private Material settlementFeatureMaterial;
+        private Material activityFeatureMaterial;
+        private Material vertexColorMaterialTemplateSource;
+        private Material biomeMaterialTemplateSource;
+        private Material iconMaterialTemplateSource;
+        private Material settlementFeatureMaterialTemplateSource;
+        private Material activityFeatureMaterialTemplateSource;
         private bool markerIconsVisible = true;
-        private GameObject selectionObject;
+        private bool featureTexturesVisible;
         private int selectedCellId = WorldIds.None;
 
         public WorldModel CurrentWorld => currentWorld;
         public GlobalMapArtAtlas ArtAtlas => artAtlas;
         public int SelectedCellId => selectedCellId;
-        public float PlanetRadius => planetRadius;
+        public float PlanetRadius => RenderSettings.PlanetRadius;
         private WorldTerrainGenerationSettings TerrainSettings => configDatabase?.GlobalGeneration?.Terrain ?? WorldTerrainGenerationSettings.Default;
         private WorldNoiseSettings NoiseSettings => configDatabase?.GlobalGeneration?.Noise ?? WorldNoiseSettings.Default;
+        private GlobalMapProceduralRenderSettings RenderSettings =>
+            renderSettings != null
+                ? renderSettings
+                : throw new InvalidOperationException("ProceduralGlobalMapRenderer requires GlobalMapProceduralRenderSettings.");
 
         public void Configure(ConfigDatabase database)
         {
@@ -103,7 +76,8 @@ namespace MercLord.Global.Rendering
         public void SetMarkerIconsVisible(bool visible)
         {
             markerIconsVisible = visible;
-            ApplyMarkerIconsVisibility();
+            featureTexturesVisible = !visible;
+            ApplyMapPointLayerVisibility();
         }
 
         public void Render(WorldModel worldModel)
@@ -114,7 +88,7 @@ namespace MercLord.Global.Rendering
             }
 
             currentWorld = worldModel;
-            EnsureRoot();
+            EnsureRenderLayers();
             ClearGenerated();
             EnsureMaterials();
             RenderStarfield(worldModel.Seed);
@@ -123,22 +97,37 @@ namespace MercLord.Global.Rendering
             RenderRivers(worldModel);
             RenderRoads(worldModel);
             RenderMarkers(worldModel);
+            RenderFeatureTextures(worldModel);
         }
 
         public void ClearGenerated()
         {
-            EnsureRoot();
-            for (var childIndex = generatedRoot.childCount - 1; childIndex >= 0; childIndex--)
-            {
-                DestroyGeneratedObject(generatedRoot.GetChild(childIndex).gameObject);
-            }
+            EnsureRenderLayers();
+            ClearLayer(starfieldLayer);
+            ClearLayer(biomeUnderlayLayer);
+            ClearLayer(terrainLayer);
+            ClearLayer(riversLayer);
+            ClearLayer(roadsLayer);
+            ClearLayer(markerIconsLayer);
+            ClearLayer(settlementFeaturesLayer);
+            ClearLayer(activityFeaturesLayer);
+            ClearLayer(selectionLayer);
 
             DestroyUnityObject(vertexColorMaterial);
             vertexColorMaterial = null;
+            vertexColorMaterialTemplateSource = null;
+            DestroyUnityObject(biomeMaterial);
+            biomeMaterial = null;
+            biomeMaterialTemplateSource = null;
             DestroyUnityObject(iconMaterial);
             iconMaterial = null;
-            markerIconsObject = null;
-            selectionObject = null;
+            iconMaterialTemplateSource = null;
+            DestroyUnityObject(settlementFeatureMaterial);
+            settlementFeatureMaterial = null;
+            settlementFeatureMaterialTemplateSource = null;
+            DestroyUnityObject(activityFeatureMaterial);
+            activityFeatureMaterial = null;
+            activityFeatureMaterialTemplateSource = null;
             selectedCellId = WorldIds.None;
         }
 
@@ -194,25 +183,27 @@ namespace MercLord.Global.Rendering
         public void ClearSelection()
         {
             selectedCellId = WorldIds.None;
-            DestroySelectionObject();
+            ClearLayer(selectionLayer);
         }
 
         private void RenderStarfield(int seed)
         {
+            var settings = RenderSettings;
             var random = new System.Random(seed ^ 0x45C1A3D);
-            var vertices = new List<Vector3>(StarCount * 4);
-            var colors = new List<Color>(StarCount * 4);
-            var triangles = new List<int>(StarCount * 6);
+            var starCount = settings.StarCount;
+            var vertices = new List<Vector3>(starCount * 4);
+            var colors = new List<Color>(starCount * 4);
+            var triangles = new List<int>(starCount * 6);
 
-            for (var starIndex = 0; starIndex < StarCount; starIndex++)
+            for (var starIndex = 0; starIndex < starCount; starIndex++)
             {
                 var normal = RandomUnitVector(random);
                 var tangent = Vector3.Cross(Mathf.Abs(normal.y) > 0.9f ? Vector3.right : Vector3.up, normal).normalized;
                 var bitangent = Vector3.Cross(normal, tangent).normalized;
-                var center = normal * starfieldRadius;
-                var size = Mathf.Lerp(0.011f, 0.035f, (float)random.NextDouble());
-                var brightness = Mathf.Lerp(0.55f, 1f, (float)random.NextDouble());
-                var tint = Color.Lerp(new Color(0.68f, 0.78f, 1f, 1f), Color.white, (float)random.NextDouble());
+                var center = normal * settings.StarfieldRadius;
+                var size = Mathf.Lerp(settings.StarSizeRange.x, settings.StarSizeRange.y, (float)random.NextDouble());
+                var brightness = Mathf.Lerp(settings.StarBrightnessRange.x, settings.StarBrightnessRange.y, (float)random.NextDouble());
+                var tint = Color.Lerp(settings.StarTint, Color.white, (float)random.NextDouble());
                 var color = tint * brightness;
                 color.a = 1f;
                 var vertexStart = vertices.Count;
@@ -236,25 +227,19 @@ namespace MercLord.Global.Rendering
             }
 
             var mesh = CreateMesh("GlobalMap Starfield", vertices, colors, triangles);
-            var starObject = CreateGeneratedGameObject("Starfield Mesh");
-            starObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = starObject.AddComponent<MeshFilter>();
-            var meshRenderer = starObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = vertexColorMaterial;
-            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
+            SetGeneratedMesh(starfieldLayer, mesh, vertexColorMaterial);
         }
 
         private void RenderBiomeUnderlay(int seed)
         {
-            const int lonSegments = 192;
-            const int latSegments = 96;
+            var settings = RenderSettings;
+            var lonSegments = settings.BiomeUnderlayLongitudeSegments;
+            var latSegments = settings.BiomeUnderlayLatitudeSegments;
             var vertices = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
             var normals = new List<Vector3>((latSegments + 1) * (lonSegments + 1));
             var colors = new List<Color>((latSegments + 1) * (lonSegments + 1));
             var triangles = new List<int>(latSegments * lonSegments * 6);
-            var radius = planetRadius + biomeUnderlayOffset;
+            var radius = settings.PlanetRadius + settings.BiomeUnderlayOffset;
 
             for (var lat = 0; lat <= latSegments; lat++)
             {
@@ -296,18 +281,16 @@ namespace MercLord.Global.Rendering
             mesh.SetNormals(normals);
             mesh.RecalculateBounds();
 
-            var underlayObject = CreateGeneratedGameObject("Biome Underlay Mesh");
-            underlayObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = underlayObject.AddComponent<MeshFilter>();
-            var meshRenderer = underlayObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = vertexColorMaterial;
-            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
+            SetGeneratedMesh(biomeUnderlayLayer, mesh, vertexColorMaterial);
         }
 
         private void RenderTerrain(WorldModel worldModel)
         {
+            if (RenderTexturedTerrain(worldModel))
+            {
+                return;
+            }
+
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
             if (cells.Length == 0)
             {
@@ -321,7 +304,8 @@ namespace MercLord.Global.Rendering
             var triangles = new List<int>(cells.Length * NeighbourCount * 3);
             var directNeighbours = new List<int>(NeighbourCount);
             var cornerNormals = new List<Vector3>(NeighbourCount);
-            var terrainRadius = planetRadius + terrainSurfaceOffset;
+            var settings = RenderSettings;
+            var terrainRadius = settings.PlanetRadius + settings.TerrainSurfaceOffset;
             var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
 
             for (var cellIndex = 0; cellIndex < cells.Length; cellIndex++)
@@ -361,22 +345,105 @@ namespace MercLord.Global.Rendering
             mesh.SetNormals(normals);
             mesh.RecalculateBounds();
 
-            var terrainObject = CreateGeneratedGameObject("Terrain Mesh");
-            terrainObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = terrainObject.AddComponent<MeshFilter>();
-            var meshRenderer = terrainObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = vertexColorMaterial;
+            SetGeneratedMesh(terrainLayer, mesh, vertexColorMaterial);
+        }
+
+        private bool RenderTexturedTerrain(WorldModel worldModel)
+        {
+            if (artAtlas == null ||
+                artAtlas.BiomeAtlasTexture == null ||
+                artAtlas.BiomeSprites == null ||
+                artAtlas.BiomeSprites.Length == 0)
+            {
+                return false;
+            }
+
+            EnsureMaterials();
+            if (biomeMaterial == null)
+            {
+                return false;
+            }
+
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            if (cells.Length == 0)
+            {
+                return false;
+            }
+
+            const int expectedVerticesPerTile = 7;
+            var vertices = new List<Vector3>(cells.Length * expectedVerticesPerTile);
+            var normals = new List<Vector3>(cells.Length * expectedVerticesPerTile);
+            var colors = new List<Color>(cells.Length * expectedVerticesPerTile);
+            var uvs = new List<Vector2>(cells.Length * expectedVerticesPerTile);
+            var triangles = new List<int>(cells.Length * NeighbourCount * 3);
+            var directNeighbours = new List<int>(NeighbourCount);
+            var cornerNormals = new List<Vector3>(NeighbourCount);
+            var settings = RenderSettings;
+            var terrainRadius = settings.PlanetRadius + settings.TerrainSurfaceOffset;
+            var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
+
+            for (var cellIndex = 0; cellIndex < cells.Length; cellIndex++)
+            {
+                var cell = cells[cellIndex];
+                if (!TryGetBiomeTerrainSprite(cell.Biome, out var sprite))
+                {
+                    return false;
+                }
+
+                var normal = ToVector(cell.SpherePosition).normalized;
+                BuildGeodesicTileCornerNormals(cells, neighbours, cellIndex, directNeighbours, cornerNormals);
+                if (cornerNormals.Count < 3)
+                {
+                    continue;
+                }
+
+                var centerIndex = vertices.Count;
+                var centerTint = GetTileTextureCenterTint(cell, worldModel.Seed);
+                GetMarkerBasis(normal, out var tangentRight, out var tangentUp);
+                var maxProjection = GetMaxCornerProjection(cornerNormals, tangentRight, tangentUp);
+
+                vertices.Add(normal * terrainRadius);
+                normals.Add(normal);
+                colors.Add(centerTint);
+                uvs.Add(GetSpriteUv(sprite, new Vector2(0.5f, 0.5f)));
+
+                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
+                {
+                    var ringNormal = cornerNormals[vertexIndex];
+                    vertices.Add(ringNormal * terrainRadius);
+                    normals.Add(ringNormal);
+                    colors.Add(GetTileTextureEdgeTint(cell, worldModel.Seed, vertexIndex, centerTint));
+                    uvs.Add(GetSpriteUv(
+                        sprite,
+                        GetBiomeTileUv(
+                            ringNormal,
+                            tangentRight,
+                            tangentUp,
+                            maxProjection)));
+                }
+
+                for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
+                {
+                    triangles.Add(centerIndex);
+                    triangles.Add(centerIndex + 1 + vertexIndex);
+                    triangles.Add(centerIndex + 1 + ((vertexIndex + 1) % cornerNormals.Count));
+                }
+            }
+
+            SetGeneratedTexturedMesh(terrainLayer, "GlobalMap Textured Terrain", vertices, normals, colors, uvs, triangles, biomeMaterial);
+            return vertices.Count > 0;
         }
 
         private void RenderRivers(WorldModel worldModel)
         {
+            var settings = RenderSettings;
             var riverEdges = worldModel.RiverEdges ?? Array.Empty<WorldRiverEdge>();
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
-            var vertices = new List<Vector3>(riverEdges.Length * LineSegments * 4);
-            var normals = new List<Vector3>(riverEdges.Length * LineSegments * 4);
-            var colors = new List<Color>(riverEdges.Length * LineSegments * 4);
-            var triangles = new List<int>(riverEdges.Length * LineSegments * 6);
+            var lineSegments = settings.LineSegments;
+            var vertices = new List<Vector3>(riverEdges.Length * lineSegments * 4);
+            var normals = new List<Vector3>(riverEdges.Length * lineSegments * 4);
+            var colors = new List<Color>(riverEdges.Length * lineSegments * 4);
+            var triangles = new List<int>(riverEdges.Length * lineSegments * 6);
 
             for (var edgeIndex = 0; edgeIndex < riverEdges.Length; edgeIndex++)
             {
@@ -387,7 +454,9 @@ namespace MercLord.Global.Rendering
                 }
 
                 var flowWidth = Mathf.Sqrt(Mathf.Max(0f, edge.Flow));
-                var width = 0.0045f + Mathf.Clamp(flowWidth, 0f, 6f) * 0.0018f;
+                var width = settings.RiverBaseWidth +
+                            Mathf.Clamp(flowWidth, 0f, settings.RiverMaxFlowWidth) *
+                            settings.RiverFlowWidthMultiplier;
                 AddSphericalRibbon(
                     vertices,
                     normals,
@@ -396,21 +465,23 @@ namespace MercLord.Global.Rendering
                     cells[edge.FromCellId],
                     cells[edge.ToCellId],
                     width,
-                    0.014f,
-                    RiverColor);
+                    settings.RiverSurfaceOffset,
+                    settings.RiverColor);
             }
 
-            CreateGeneratedMeshObject("Rivers Mesh", "GlobalMap Rivers", vertices, normals, colors, triangles, vertexColorMaterial);
+            SetGeneratedMesh(riversLayer, "GlobalMap Rivers", vertices, normals, colors, triangles, vertexColorMaterial);
         }
 
         private void RenderRoads(WorldModel worldModel)
         {
+            var settings = RenderSettings;
             var roadEdges = worldModel.RoadEdges ?? Array.Empty<WorldRoadEdge>();
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
-            var vertices = new List<Vector3>(roadEdges.Length * LineSegments * 4);
-            var normals = new List<Vector3>(roadEdges.Length * LineSegments * 4);
-            var colors = new List<Color>(roadEdges.Length * LineSegments * 4);
-            var triangles = new List<int>(roadEdges.Length * LineSegments * 6);
+            var lineSegments = settings.LineSegments;
+            var vertices = new List<Vector3>(roadEdges.Length * lineSegments * 4);
+            var normals = new List<Vector3>(roadEdges.Length * lineSegments * 4);
+            var colors = new List<Color>(roadEdges.Length * lineSegments * 4);
+            var triangles = new List<int>(roadEdges.Length * lineSegments * 6);
 
             for (var edgeIndex = 0; edgeIndex < roadEdges.Length; edgeIndex++)
             {
@@ -420,7 +491,7 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                var width = GetRoadWidth(edge.RoadType);
+                var width = settings.GetRoadWidth(edge.RoadType);
                 AddSphericalRibbon(
                     vertices,
                     normals,
@@ -429,11 +500,11 @@ namespace MercLord.Global.Rendering
                     cells[edge.FromCellId],
                     cells[edge.ToCellId],
                     width,
-                    0.018f,
-                    GetRoadColor(edge.RoadType));
+                    settings.RoadSurfaceOffset,
+                    settings.GetRoadColor(edge.RoadType));
             }
 
-            CreateGeneratedMeshObject("Roads Mesh", "GlobalMap Roads", vertices, normals, colors, triangles, vertexColorMaterial);
+            SetGeneratedMesh(roadsLayer, "GlobalMap Roads", vertices, normals, colors, triangles, vertexColorMaterial);
         }
 
         private void RenderMarkers(WorldModel worldModel)
@@ -443,12 +514,16 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
+            var settings = RenderSettings;
             var settlements = worldModel.Settlements ?? Array.Empty<SettlementData>();
             var activities = worldModel.Activities ?? Array.Empty<WorldActivityData>();
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
             var factions = worldModel.Factions ?? Array.Empty<FactionData>();
-            var markerVertexCapacity = settlements.Length * (HouseShape.Length + 1) * 2 +
-                                       activities.Length * (TriangleShape.Length + 1) * 2;
+            var settlementShape = settings.LegacySettlementShape;
+            var activityShape = settings.LegacyActivityShape;
+            var caravanStopShape = settings.LegacyCaravanStopShape;
+            var markerVertexCapacity = settlements.Length * (settlementShape.Count + 1) * 2 +
+                                       activities.Length * (activityShape.Count + 1) * 2;
             var vertices = new List<Vector3>(markerVertexCapacity);
             var normals = new List<Vector3>(markerVertexCapacity);
             var colors = new List<Color>(markerVertexCapacity);
@@ -464,8 +539,8 @@ namespace MercLord.Global.Rendering
 
                 var color = GetFactionMarkerColor(settlement.FactionId);
                 var isCapital = IsCapitalCell(settlement.CellId, factions);
-                var size = isCapital ? LegacyCapitalMarkerSize : LegacySettlementMarkerSize;
-                AddFlatIcon(vertices, normals, colors, triangles, cells[settlement.CellId], HouseShape, size, color, 0.034f);
+                var size = isCapital ? settings.LegacyCapitalMarkerSize : settings.LegacySettlementMarkerSize;
+                AddFlatIcon(vertices, normals, colors, triangles, cells[settlement.CellId], settlementShape, size, color, settings.LegacySettlementSurfaceOffset);
             }
 
             for (var activityIndex = 0; activityIndex < activities.Length; activityIndex++)
@@ -476,16 +551,16 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                var shape = activity.Type == WorldActivityType.CaravanStop ? DiamondShape : TriangleShape;
+                var shape = activity.Type == WorldActivityType.CaravanStop ? caravanStopShape : activityShape;
                 var factionId = IsKnownFactionId(activity.FactionId, factions)
                     ? activity.FactionId
                     : cells[activity.CellId].OwnerFactionId;
                 var color = GetFactionMarkerColor(factionId);
-                AddFlatIcon(vertices, normals, colors, triangles, cells[activity.CellId], shape, LegacyActivityMarkerSize, color, 0.032f);
+                AddFlatIcon(vertices, normals, colors, triangles, cells[activity.CellId], shape, settings.LegacyActivityMarkerSize, color, settings.LegacyActivitySurfaceOffset);
             }
 
-            markerIconsObject = CreateGeneratedMeshObject(LegacyMarkersObjectName, "GlobalMap Markers", vertices, normals, colors, triangles, vertexColorMaterial);
-            ApplyMarkerIconsVisibility();
+            SetGeneratedMesh(markerIconsLayer, "GlobalMap Markers", vertices, normals, colors, triangles, vertexColorMaterial);
+            ApplyMapPointLayerVisibility();
         }
 
         private bool RenderTexturedMarkers(WorldModel worldModel)
@@ -504,6 +579,7 @@ namespace MercLord.Global.Rendering
                 return false;
             }
 
+            var settings = RenderSettings;
             var settlements = worldModel.Settlements ?? Array.Empty<SettlementData>();
             var activities = worldModel.Activities ?? Array.Empty<WorldActivityData>();
             var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
@@ -531,8 +607,8 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                var size = iconId == GlobalMapIconSpriteId.Capital ? CapitalMarkerIconSize : SettlementMarkerIconSize;
-                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[settlement.CellId], sprite, size, Color.white, 0.04f);
+                var size = iconId == GlobalMapIconSpriteId.Capital ? settings.CapitalMarkerIconSize : settings.SettlementMarkerIconSize;
+                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[settlement.CellId], sprite, size, Color.white, settings.SettlementIconSurfaceOffset);
             }
 
             for (var activityIndex = 0; activityIndex < activities.Length; activityIndex++)
@@ -548,12 +624,112 @@ namespace MercLord.Global.Rendering
                     continue;
                 }
 
-                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[activity.CellId], sprite, ActivityMarkerIconSize, Color.white, 0.038f);
+                AddSpriteMarker(vertices, normals, colors, uvs, triangles, cells[activity.CellId], sprite, settings.ActivityMarkerIconSize, Color.white, settings.ActivityIconSurfaceOffset);
             }
 
-            markerIconsObject = CreateGeneratedTexturedMeshObject(MarkerIconsObjectName, "GlobalMap Marker Icons", vertices, normals, colors, uvs, triangles, iconMaterial);
-            ApplyMarkerIconsVisibility();
-            return markerIconsObject != null;
+            SetGeneratedTexturedMesh(markerIconsLayer, "GlobalMap Marker Icons", vertices, normals, colors, uvs, triangles, iconMaterial);
+            ApplyMapPointLayerVisibility();
+            return markerIconsLayer != null && markerIconsLayer.HasMesh;
+        }
+
+        private void RenderFeatureTextures(WorldModel worldModel)
+        {
+            RenderSettlementFeatureTextures(worldModel);
+            RenderActivityFeatureTextures(worldModel);
+            ApplyMapPointLayerVisibility();
+        }
+
+        private void RenderSettlementFeatureTextures(WorldModel worldModel)
+        {
+            if (artAtlas == null ||
+                artAtlas.SettlementFeatureAtlasTexture == null ||
+                artAtlas.SettlementFeatureSprites == null ||
+                artAtlas.SettlementFeatureSprites.Length == 0 ||
+                settlementFeatureMaterial == null)
+            {
+                ClearLayer(settlementFeaturesLayer);
+                return;
+            }
+
+            var settings = RenderSettings;
+            var settlements = worldModel.Settlements ?? Array.Empty<SettlementData>();
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            var factions = worldModel.Factions ?? Array.Empty<FactionData>();
+            var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
+            const int expectedVerticesPerTile = 7;
+            var vertices = new List<Vector3>(settlements.Length * expectedVerticesPerTile);
+            var normals = new List<Vector3>(settlements.Length * expectedVerticesPerTile);
+            var colors = new List<Color>(settlements.Length * expectedVerticesPerTile);
+            var uvs = new List<Vector2>(settlements.Length * expectedVerticesPerTile);
+            var triangles = new List<int>(settlements.Length * NeighbourCount * 3);
+            var directNeighbours = new List<int>(NeighbourCount);
+            var cornerNormals = new List<Vector3>(NeighbourCount);
+
+            for (var settlementIndex = 0; settlementIndex < settlements.Length; settlementIndex++)
+            {
+                var settlement = settlements[settlementIndex];
+                if (!IsValidCell(settlement.CellId, cells.Length))
+                {
+                    continue;
+                }
+
+                var spriteId = GetSettlementFeatureSpriteId(settlement, factions);
+                if (!artAtlas.TryGetSettlementFeatureSprite(spriteId, out var sprite))
+                {
+                    continue;
+                }
+
+                var tintStrength = spriteId == GlobalMapSettlementFeatureSpriteId.Level5 ? 0.18f : 0.08f;
+                var tint = Color.Lerp(Color.white, GetFactionMarkerColor(settlement.FactionId), tintStrength);
+                tint.a = 1f;
+                AddCellSpriteTile(vertices, normals, colors, uvs, triangles, cells, neighbours, settlement.CellId, sprite, tint, settings.SettlementFeatureSurfaceOffset, directNeighbours, cornerNormals);
+            }
+
+            SetGeneratedTexturedMesh(settlementFeaturesLayer, "GlobalMap Settlement Features", vertices, normals, colors, uvs, triangles, settlementFeatureMaterial);
+        }
+
+        private void RenderActivityFeatureTextures(WorldModel worldModel)
+        {
+            if (artAtlas == null ||
+                artAtlas.ActivityFeatureAtlasTexture == null ||
+                artAtlas.ActivityFeatureSprites == null ||
+                artAtlas.ActivityFeatureSprites.Length == 0 ||
+                activityFeatureMaterial == null)
+            {
+                ClearLayer(activityFeaturesLayer);
+                return;
+            }
+
+            var settings = RenderSettings;
+            var activities = worldModel.Activities ?? Array.Empty<WorldActivityData>();
+            var cells = worldModel.Cells ?? Array.Empty<WorldCell>();
+            var neighbours = worldModel.Neighbours ?? Array.Empty<CellNeighbours>();
+            const int expectedVerticesPerTile = 7;
+            var vertices = new List<Vector3>(activities.Length * expectedVerticesPerTile);
+            var normals = new List<Vector3>(activities.Length * expectedVerticesPerTile);
+            var colors = new List<Color>(activities.Length * expectedVerticesPerTile);
+            var uvs = new List<Vector2>(activities.Length * expectedVerticesPerTile);
+            var triangles = new List<int>(activities.Length * NeighbourCount * 3);
+            var directNeighbours = new List<int>(NeighbourCount);
+            var cornerNormals = new List<Vector3>(NeighbourCount);
+
+            for (var activityIndex = 0; activityIndex < activities.Length; activityIndex++)
+            {
+                var activity = activities[activityIndex];
+                if (!IsValidCell(activity.CellId, cells.Length))
+                {
+                    continue;
+                }
+
+                if (!artAtlas.TryGetActivityFeatureSprite(GetActivityIconId(activity.Type), out var sprite))
+                {
+                    continue;
+                }
+
+                AddCellSpriteTile(vertices, normals, colors, uvs, triangles, cells, neighbours, activity.CellId, sprite, Color.white, settings.ActivityFeatureSurfaceOffset, directNeighbours, cornerNormals);
+            }
+
+            SetGeneratedTexturedMesh(activityFeaturesLayer, "GlobalMap Activity Features", vertices, normals, colors, uvs, triangles, activityFeatureMaterial);
         }
 
         private void RenderSelection()
@@ -566,9 +742,9 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            EnsureRoot();
+            EnsureRenderLayers();
             EnsureMaterials();
-            DestroySelectionObject();
+            ClearLayer(selectionLayer);
 
             var cell = cells[selectedCellId];
             var normal = ToVector(cell.SpherePosition).normalized;
@@ -580,7 +756,8 @@ namespace MercLord.Global.Rendering
                 return;
             }
 
-            var terrainRadius = planetRadius + SelectionSurfaceOffset;
+            var settings = RenderSettings;
+            var terrainRadius = settings.PlanetRadius + settings.SelectionSurfaceOffset;
             var vertices = new List<Vector3>(cornerNormals.Count + 1);
             var normals = new List<Vector3>(cornerNormals.Count + 1);
             var colors = new List<Color>(cornerNormals.Count + 1);
@@ -588,14 +765,14 @@ namespace MercLord.Global.Rendering
             var centerIndex = vertices.Count;
             vertices.Add(normal * terrainRadius);
             normals.Add(normal);
-            colors.Add(SelectionColor);
+            colors.Add(settings.SelectionColor);
 
             for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
             {
                 var ringNormal = cornerNormals[vertexIndex];
                 vertices.Add(ringNormal * terrainRadius);
                 normals.Add(ringNormal);
-                colors.Add(SelectionColor);
+                colors.Add(settings.SelectionColor);
             }
 
             for (var vertexIndex = 0; vertexIndex < cornerNormals.Count; vertexIndex++)
@@ -609,21 +786,15 @@ namespace MercLord.Global.Rendering
             mesh.SetNormals(normals);
             mesh.RecalculateBounds();
 
-            selectionObject = CreateGeneratedGameObject(SelectionObjectName);
-            selectionObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = selectionObject.AddComponent<MeshFilter>();
-            var meshRenderer = selectionObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = vertexColorMaterial;
-            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
+            SetGeneratedMesh(selectionLayer, mesh, vertexColorMaterial);
         }
 
         private bool TryRaycastPlanet(Ray worldRay, out Vector3 hitNormal)
         {
             var localOrigin = transform.InverseTransformPoint(worldRay.origin);
             var localDirection = transform.InverseTransformDirection(worldRay.direction).normalized;
-            var radius = planetRadius + SelectionSurfaceOffset;
+            var settings = RenderSettings;
+            var radius = settings.PlanetRadius + settings.SelectionSurfaceOffset;
             var b = Vector3.Dot(localOrigin, localDirection);
             var c = localOrigin.sqrMagnitude - radius * radius;
             var discriminant = b * b - c;
@@ -663,13 +834,14 @@ namespace MercLord.Global.Rendering
         {
             var fromNormal = ToVector(from.SpherePosition).normalized;
             var toNormal = ToVector(to.SpherePosition).normalized;
-            var radius = planetRadius + offset;
+            var radius = RenderSettings.PlanetRadius + offset;
             var halfWidth = width * 0.5f;
 
-            for (var segment = 0; segment < LineSegments; segment++)
+            var lineSegments = RenderSettings.LineSegments;
+            for (var segment = 0; segment < lineSegments; segment++)
             {
-                var t = segment / (float)LineSegments;
-                var nextT = (segment + 1) / (float)LineSegments;
+                var t = segment / (float)lineSegments;
+                var nextT = (segment + 1) / (float)lineSegments;
                 var startNormal = SlerpNormal(fromNormal, toNormal, t);
                 var endNormal = SlerpNormal(fromNormal, toNormal, nextT);
                 var start = startNormal * radius;
@@ -718,8 +890,9 @@ namespace MercLord.Global.Rendering
             var position = GetCellPosition(cell, offset);
             GetMarkerBasis(normal, out var tangentRight, out var tangentUp);
 
-            AddFlatIconPart(vertices, normals, colors, triangles, shape, size * 1.14f, Color.black, position, normal, tangentRight, tangentUp);
-            AddFlatIconPart(vertices, normals, colors, triangles, shape, size, color, normal * 0.003f + position, normal, tangentRight, tangentUp);
+            var settings = RenderSettings;
+            AddFlatIconPart(vertices, normals, colors, triangles, shape, size * settings.LegacyFlatIconOutlineScale, Color.black, position, normal, tangentRight, tangentUp);
+            AddFlatIconPart(vertices, normals, colors, triangles, shape, size, color, normal * settings.LegacyFlatIconNudge + position, normal, tangentRight, tangentUp);
         }
 
         private static void AddFlatIconPart(
@@ -783,7 +956,7 @@ namespace MercLord.Global.Rendering
             var halfHeight = size;
             var halfWidth = size * aspect;
             var vertexStart = vertices.Count;
-            var nudgedPosition = position + normal * 0.004f;
+            var nudgedPosition = position + normal * RenderSettings.SpriteMarkerNudge;
 
             vertices.Add(nudgedPosition - tangentRight * halfWidth - tangentUp * halfHeight);
             vertices.Add(nudgedPosition + tangentRight * halfWidth - tangentUp * halfHeight);
@@ -817,6 +990,67 @@ namespace MercLord.Global.Rendering
             triangles.Add(vertexStart + 3);
         }
 
+        private void AddCellSpriteTile(
+            List<Vector3> vertices,
+            List<Vector3> normals,
+            List<Color> colors,
+            List<Vector2> uvs,
+            List<int> triangles,
+            WorldCell[] cells,
+            CellNeighbours[] neighbours,
+            int cellId,
+            Sprite sprite,
+            Color color,
+            float offset,
+            List<int> directNeighbours,
+            List<Vector3> cornerNormals)
+        {
+            if (!IsValidCell(cellId, cells.Length) || sprite == null || sprite.texture == null)
+            {
+                return;
+            }
+
+            BuildGeodesicTileCornerNormals(cells, neighbours, cellId, directNeighbours, cornerNormals);
+            if (cornerNormals.Count < 3)
+            {
+                return;
+            }
+
+            var cell = cells[cellId];
+            var centerNormal = ToVector(cell.SpherePosition).normalized;
+            var radius = RenderSettings.PlanetRadius + offset;
+            GetMarkerBasis(centerNormal, out var tangentRight, out var tangentUp);
+            var maxProjection = GetMaxCornerProjection(cornerNormals, tangentRight, tangentUp);
+
+            var centerIndex = vertices.Count;
+            vertices.Add(centerNormal * radius);
+            normals.Add(centerNormal);
+            colors.Add(color);
+            uvs.Add(GetSpriteUv(sprite, new Vector2(0.5f, 0.5f)));
+
+            for (var cornerIndex = 0; cornerIndex < cornerNormals.Count; cornerIndex++)
+            {
+                var cornerNormal = cornerNormals[cornerIndex];
+                vertices.Add(cornerNormal * radius);
+                normals.Add(cornerNormal);
+                colors.Add(color);
+                uvs.Add(GetSpriteUv(
+                    sprite,
+                    GetBiomeTileUv(
+                        cornerNormal,
+                        tangentRight,
+                        tangentUp,
+                        maxProjection)));
+            }
+
+            for (var cornerIndex = 0; cornerIndex < cornerNormals.Count; cornerIndex++)
+            {
+                triangles.Add(centerIndex);
+                triangles.Add(centerIndex + 1 + cornerIndex);
+                triangles.Add(centerIndex + 1 + ((cornerIndex + 1) % cornerNormals.Count));
+            }
+        }
+
         private Vector3 GetCellPosition(WorldCell cell, float offset)
         {
             return ToVector(cell.SpherePosition).normalized * GetSurfaceRadius(cell, offset);
@@ -824,12 +1058,12 @@ namespace MercLord.Global.Rendering
 
         private float GetSurfaceRadius(WorldCell cell, float offset)
         {
-            return planetRadius + offset;
+            return RenderSettings.PlanetRadius + offset;
         }
 
         private float GetSurfaceRadius(SurfaceSample sample, float offset)
         {
-            return planetRadius + offset;
+            return RenderSettings.PlanetRadius + offset;
         }
 
         private static void BuildGeodesicTileCornerNormals(
@@ -903,7 +1137,7 @@ namespace MercLord.Global.Rendering
                 seedRadius = Mathf.Max(seedRadius, projected.magnitude);
             }
 
-            CreateSeedPolygon(Mathf.Max(fallbackRadius, seedRadius * tileVoronoiSeedRadiusMultiplier), polygon);
+            CreateSeedPolygon(Mathf.Max(fallbackRadius, seedRadius * RenderSettings.TileVoronoiSeedRadiusMultiplier), polygon);
             for (var neighbourIndex = 0; neighbourIndex < clipNeighbours.Count && polygon.Count >= 3; neighbourIndex++)
             {
                 var neighbourNormal = ToVector(cells[clipNeighbours[neighbourIndex]].SpherePosition).normalized;
@@ -927,7 +1161,7 @@ namespace MercLord.Global.Rendering
 
         private void CreateSeedPolygon(float radius, List<Vector2> polygon)
         {
-            var vertexCount = Mathf.Max(12, tileVoronoiSeedVertexCount);
+            var vertexCount = RenderSettings.TileVoronoiSeedVertexCount;
             polygon.Clear();
             for (var vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++)
             {
@@ -1052,7 +1286,94 @@ namespace MercLord.Global.Rendering
             }
         }
 
-        private static Color GetTileCenterColor(WorldCell cell, int seed)
+        private bool TryGetBiomeTerrainSprite(BiomeType biome, out Sprite sprite)
+        {
+            sprite = null;
+            return artAtlas != null && artAtlas.TryGetBiomeSprite(biome, out sprite);
+        }
+
+        private Color GetTileTextureCenterTint(WorldCell cell, int seed)
+        {
+            var normal = ToVector(cell.SpherePosition).normalized;
+            var broadNoise = Noise3(normal, seed, 6f, cell.Id * 0.071f + 3.1f);
+            var fineNoise = Noise3(normal, seed, 18f, cell.Id * 0.037f + 17.3f);
+            var heightShade = cell.Biome == BiomeType.Ocean || cell.Biome == BiomeType.Coast
+                ? 1f
+                : Mathf.Lerp(0.96f, 1.04f, cell.Height);
+            var textureShade = Mathf.Lerp(0.965f, 1.035f, broadNoise * 0.8f + fineNoise * 0.2f);
+
+            if (cell.Biome == BiomeType.Forest || cell.Biome == BiomeType.DeadForest)
+            {
+                textureShade = Mathf.Lerp(0.955f, 1.03f, broadNoise * 0.65f + fineNoise * 0.35f);
+            }
+            else if (cell.Biome == BiomeType.Mountains)
+            {
+                textureShade = Mathf.Lerp(0.94f, 1.075f, broadNoise * 0.55f + fineNoise * 0.45f);
+            }
+            else if (cell.Biome == BiomeType.Ocean || cell.Biome == BiomeType.Coast)
+            {
+                textureShade = Mathf.Lerp(0.98f, 1.025f, broadNoise * 0.7f + fineNoise * 0.3f);
+            }
+
+            var shade = Mathf.Clamp(heightShade * textureShade, 0.88f, 1.10f);
+            return new Color(shade, shade, shade, 1f);
+        }
+
+        private static Color GetTileTextureEdgeTint(WorldCell cell, int seed, int side, Color centerTint)
+        {
+            var normal = ToVector(cell.SpherePosition).normalized;
+            var sideNoise = Noise3(normal, seed + side * 101, 14f, cell.Id * 0.053f + side * 11.7f);
+            var edgeShade = Mathf.Lerp(0.988f, 1.012f, sideNoise);
+            var shade = Mathf.Clamp01(centerTint.r * edgeShade);
+            return new Color(shade, shade, shade, 1f);
+        }
+
+        private static float GetMaxCornerProjection(
+            IReadOnlyList<Vector3> cornerNormals,
+            Vector3 tangentRight,
+            Vector3 tangentUp)
+        {
+            var maxProjection = 0f;
+            for (var cornerIndex = 0; cornerIndex < cornerNormals.Count; cornerIndex++)
+            {
+                var corner = cornerNormals[cornerIndex];
+                var projected = new Vector2(
+                    Vector3.Dot(corner, tangentRight),
+                    Vector3.Dot(corner, tangentUp));
+                maxProjection = Mathf.Max(maxProjection, projected.magnitude);
+            }
+
+            return Mathf.Max(maxProjection, 0.000001f);
+        }
+
+        private static Vector2 GetBiomeTileUv(
+            Vector3 ringNormal,
+            Vector3 tangentRight,
+            Vector3 tangentUp,
+            float maxProjection)
+        {
+            var local = new Vector2(
+                Vector3.Dot(ringNormal, tangentRight),
+                Vector3.Dot(ringNormal, tangentUp)) / Mathf.Max(0.000001f, maxProjection);
+            local = Vector2.ClampMagnitude(local, 1f);
+            return new Vector2(
+                Mathf.Clamp01(0.5f + local.x * 0.5f),
+                Mathf.Clamp01(0.5f + local.y * 0.5f));
+        }
+
+        private Vector2 GetSpriteUv(Sprite sprite, Vector2 localUv)
+        {
+            var texture = sprite.texture;
+            var rect = sprite.textureRect;
+            var uvPadding = RenderSettings.BiomeTileUvPadding;
+            var paddingX = Mathf.Min(rect.width * uvPadding, rect.width * 0.45f);
+            var paddingY = Mathf.Min(rect.height * uvPadding, rect.height * 0.45f);
+            var x = Mathf.Lerp(rect.xMin + paddingX, rect.xMax - paddingX, Mathf.Clamp01(localUv.x));
+            var y = Mathf.Lerp(rect.yMin + paddingY, rect.yMax - paddingY, Mathf.Clamp01(localUv.y));
+            return new Vector2(x / texture.width, y / texture.height);
+        }
+
+        private Color GetTileCenterColor(WorldCell cell, int seed)
         {
             var normal = ToVector(cell.SpherePosition).normalized;
             var color = GetBiomeColor(cell.Biome);
@@ -1063,15 +1384,15 @@ namespace MercLord.Global.Rendering
 
             if (cell.Biome == BiomeType.Forest || cell.Biome == BiomeType.DeadForest)
             {
-                color = Color.Lerp(color, new Color(0.14f, 0.25f, 0.09f, 1f), fineNoise * 0.45f);
+                color = Color.Lerp(color, RenderSettings.ForestTextureTint, fineNoise * 0.45f);
             }
             else if (cell.Biome == BiomeType.Mountains)
             {
-                color = Color.Lerp(color, new Color(0.70f, 0.68f, 0.62f, 1f), Mathf.Clamp01((cell.Height - 0.62f) * 2.5f));
+                color = Color.Lerp(color, RenderSettings.MountainTextureTint, Mathf.Clamp01((cell.Height - 0.62f) * 2.5f));
             }
             else if (cell.Biome == BiomeType.Ocean)
             {
-                color = Color.Lerp(new Color(0.07f, 0.16f, 0.28f, 1f), color, Mathf.Lerp(0.65f, 1f, fineNoise));
+                color = Color.Lerp(RenderSettings.OceanTextureTint, color, Mathf.Lerp(0.65f, 1f, fineNoise));
                 textureShade = Mathf.Lerp(0.94f, 1.06f, fineNoise);
             }
 
@@ -1243,7 +1564,7 @@ namespace MercLord.Global.Rendering
             return BiomeType.Plains;
         }
 
-        private static Color GetVisualColor(
+        private Color GetVisualColor(
             BiomeType biome,
             float height,
             Vector3 normal,
@@ -1253,9 +1574,9 @@ namespace MercLord.Global.Rendering
             var color = GetBiomeColor(biome);
             if (height < terrainSettings.CoastThreshold + 0.12f)
             {
-                var deepWater = new Color(0.06f, 0.14f, 0.26f, 1f);
-                var shallowWater = new Color(0.16f, 0.31f, 0.44f, 1f);
-                var shore = new Color(0.48f, 0.45f, 0.30f, 1f);
+                var deepWater = RenderSettings.DeepWaterTint;
+                var shallowWater = RenderSettings.ShallowWaterTint;
+                var shore = RenderSettings.ShoreTint;
                 var waterColor = Color.Lerp(deepWater, shallowWater, Mathf.SmoothStep(0.16f, terrainSettings.OceanThreshold + 0.08f, height));
                 var shoreColor = Color.Lerp(shore, color, Mathf.SmoothStep(terrainSettings.CoastThreshold - 0.02f, terrainSettings.CoastThreshold + 0.12f, height));
                 color = Color.Lerp(waterColor, shoreColor, Mathf.SmoothStep(terrainSettings.OceanThreshold - 0.05f, terrainSettings.CoastThreshold + 0.08f, height));
@@ -1277,7 +1598,7 @@ namespace MercLord.Global.Rendering
             }
             else if (biome == BiomeType.Mountains)
             {
-                color = Color.Lerp(color, new Color(0.72f, 0.70f, 0.66f, 1f), Mathf.Clamp01((height - 0.62f) * 2.4f));
+                color = Color.Lerp(color, RenderSettings.VisualMountainTint, Mathf.Clamp01((height - 0.62f) * 2.4f));
                 textureShade = Mathf.Lerp(0.72f, 1.16f, fineNoise);
             }
 
@@ -1288,67 +1609,32 @@ namespace MercLord.Global.Rendering
             return color;
         }
 
-        private static Color GetBiomeColor(BiomeType biome)
+        private Color GetBiomeColor(BiomeType biome)
         {
-            switch (biome)
+            var biomes = configDatabase?.Biomes;
+            if (biomes != null)
             {
-                case BiomeType.Ocean:
-                    return new Color(0.08f, 0.18f, 0.31f, 1f);
-                case BiomeType.Coast:
-                    return new Color(0.43f, 0.43f, 0.24f, 1f);
-                case BiomeType.Plains:
-                    return new Color(0.42f, 0.41f, 0.20f, 1f);
-                case BiomeType.Forest:
-                    return new Color(0.20f, 0.31f, 0.14f, 1f);
-                case BiomeType.Desert:
-                    return new Color(0.58f, 0.44f, 0.31f, 1f);
-                case BiomeType.Snow:
-                    return new Color(0.78f, 0.80f, 0.76f, 1f);
-                case BiomeType.Swamp:
-                    return new Color(0.28f, 0.34f, 0.22f, 1f);
-                case BiomeType.Mountains:
-                    return new Color(0.46f, 0.42f, 0.36f, 1f);
-                case BiomeType.AshWastes:
-                    return new Color(0.25f, 0.23f, 0.22f, 1f);
-                case BiomeType.RustDesert:
-                    return new Color(0.55f, 0.35f, 0.25f, 1f);
-                case BiomeType.DeadForest:
-                    return new Color(0.29f, 0.32f, 0.22f, 1f);
-                case BiomeType.IndustrialRuins:
-                    return new Color(0.34f, 0.35f, 0.33f, 1f);
-                case BiomeType.DemonScar:
-                    return new Color(0.43f, 0.12f, 0.12f, 1f);
-                case BiomeType.ToxicSwamp:
-                    return new Color(0.31f, 0.42f, 0.16f, 1f);
-                default:
-                    return Color.magenta;
+                for (var biomeIndex = 0; biomeIndex < biomes.Count; biomeIndex++)
+                {
+                    var config = biomes[biomeIndex];
+                    if (config != null && config.BiomeType == biome && config.MapColor.a > 0f)
+                    {
+                        return config.MapColor;
+                    }
+                }
             }
+
+            return RenderSettings.GetFallbackBiomeColor(biome);
         }
 
-        private static float GetRoadWidth(RoadType roadType)
+        private Color GetFactionMarkerColor(int factionId)
         {
-            switch (roadType)
+            if (factionId >= 0 && configDatabase != null && configDatabase.TryGetFaction(factionId, out var factionConfig))
             {
-                case RoadType.Large:
-                    return 0.011f;
-                case RoadType.Medium:
-                    return 0.0075f;
-                default:
-                    return 0.0045f;
+                return factionConfig.Color;
             }
-        }
 
-        private static Color GetRoadColor(RoadType roadType)
-        {
-            switch (roadType)
-            {
-                case RoadType.Large:
-                    return LargeRoadColor;
-                case RoadType.Medium:
-                    return MediumRoadColor;
-                default:
-                    return SmallRoadColor;
-            }
+            return RenderSettings.GetFactionMarkerColor(factionId);
         }
 
         private static GlobalMapIconSpriteId GetActivityIconId(WorldActivityType activityType)
@@ -1366,14 +1652,13 @@ namespace MercLord.Global.Rendering
             }
         }
 
-        private static Color GetFactionMarkerColor(int factionId)
+        private static GlobalMapSettlementFeatureSpriteId GetSettlementFeatureSpriteId(
+            SettlementData settlement,
+            FactionData[] factions)
         {
-            if (factionId < 0)
-            {
-                return new Color(0.68f, 0.72f, 0.78f, 1f);
-            }
-
-            return FactionMarkerColors[factionId % FactionMarkerColors.Length];
+            return IsCapitalCell(settlement.CellId, factions)
+                ? GlobalMapSettlementFeatureSpriteId.Level5
+                : GlobalMapSettlementFeatureSpriteId.Level2;
         }
 
         private static bool IsKnownFactionId(int factionId, IReadOnlyList<FactionData> factions)
@@ -1389,102 +1674,214 @@ namespace MercLord.Global.Rendering
             return false;
         }
 
-        private void EnsureRoot()
+        private void EnsureRenderLayers()
         {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                TryAutoWireRenderLayers();
+            }
+#endif
+
+            if (generatedRoot == null)
+            {
+                throw new InvalidOperationException("ProceduralGlobalMapRenderer requires a generated root reference.");
+            }
+
+            if (renderSettings == null)
+            {
+                throw new InvalidOperationException("ProceduralGlobalMapRenderer requires a GlobalMapProceduralRenderSettings reference.");
+            }
+
+            ValidateLayer(starfieldLayer, nameof(starfieldLayer));
+            ValidateLayer(biomeUnderlayLayer, nameof(biomeUnderlayLayer));
+            ValidateLayer(terrainLayer, nameof(terrainLayer));
+            ValidateLayer(riversLayer, nameof(riversLayer));
+            ValidateLayer(roadsLayer, nameof(roadsLayer));
+            ValidateLayer(markerIconsLayer, nameof(markerIconsLayer));
+            ValidateLayer(settlementFeaturesLayer, nameof(settlementFeaturesLayer));
+            ValidateLayer(activityFeaturesLayer, nameof(activityFeaturesLayer));
+            ValidateLayer(selectionLayer, nameof(selectionLayer));
+        }
+
+        private static void ValidateLayer(GlobalMapMeshLayer layer, string fieldName)
+        {
+            if (layer == null)
+            {
+                throw new InvalidOperationException($"ProceduralGlobalMapRenderer requires {fieldName}.");
+            }
+        }
+
+#if UNITY_EDITOR
+        private void Reset()
+        {
+            TryAutoWireRenderLayers();
+        }
+
+        private void OnValidate()
+        {
+            TryAutoWireRenderLayers();
+        }
+
+        private void TryAutoWireRenderLayers()
+        {
+            var changed = false;
+            changed |= AssignIfMissing(ref generatedRoot, transform.Find(GeneratedRootName));
             if (generatedRoot != null)
             {
-                generatedRoot.gameObject.hideFlags = GetGeneratedHideFlags();
-                return;
+                changed |= AssignIfMissing(ref renderSettings, generatedRoot.GetComponent<GlobalMapProceduralRenderSettings>());
+                changed |= AssignIfMissing(ref starfieldLayer, FindLayer(GeneratedRootName, "Starfield Mesh"));
+                changed |= AssignIfMissing(ref biomeUnderlayLayer, FindLayer(GeneratedRootName, "Biome Underlay Mesh"));
+                changed |= AssignIfMissing(ref terrainLayer, FindLayer(GeneratedRootName, "Terrain Mesh"));
+                changed |= AssignIfMissing(ref riversLayer, FindLayer(GeneratedRootName, "Rivers Mesh"));
+                changed |= AssignIfMissing(ref roadsLayer, FindLayer(GeneratedRootName, "Roads Mesh"));
+                changed |= AssignIfMissing(ref markerIconsLayer, FindLayer(GeneratedRootName, MarkerIconsObjectName) ?? FindLayer(GeneratedRootName, LegacyMarkersObjectName));
+                changed |= AssignIfMissing(ref settlementFeaturesLayer, FindLayer(GeneratedRootName, SettlementFeaturesObjectName));
+                changed |= AssignIfMissing(ref activityFeaturesLayer, FindLayer(GeneratedRootName, ActivityFeaturesObjectName));
+                changed |= AssignIfMissing(ref selectionLayer, FindLayer(GeneratedRootName, SelectionObjectName));
             }
 
-            var existingRoot = transform.Find(GeneratedRootName);
-            if (existingRoot != null)
+            if (changed)
             {
-                generatedRoot = existingRoot;
-                generatedRoot.gameObject.hideFlags = GetGeneratedHideFlags();
-                return;
+                UnityEditor.EditorUtility.SetDirty(this);
             }
-
-            var root = CreateGeneratedGameObject(GeneratedRootName);
-            root.transform.SetParent(transform, false);
-            generatedRoot = root.transform;
         }
 
-        private void DestroySelectionObject()
+        private GlobalMapMeshLayer FindLayer(string rootName, string layerName)
         {
-            if (selectionObject == null && generatedRoot != null)
-            {
-                var existing = generatedRoot.Find(SelectionObjectName);
-                if (existing != null)
-                {
-                    selectionObject = existing.gameObject;
-                }
-            }
-
-            if (selectionObject == null)
-            {
-                return;
-            }
-
-            DestroyGeneratedObject(selectionObject);
-            selectionObject = null;
+            var root = generatedRoot != null ? generatedRoot : transform.Find(rootName);
+            var child = root != null ? root.Find(layerName) : null;
+            return child != null ? child.GetComponent<GlobalMapMeshLayer>() : null;
         }
+
+        private static bool AssignIfMissing<T>(ref T target, T value)
+            where T : UnityEngine.Object
+        {
+            if (target != null || value == null)
+            {
+                return false;
+            }
+
+            target = value;
+            return true;
+        }
+#endif
 
         private void EnsureMaterials()
         {
-            vertexColorMaterial ??= CreateMaterial(new Color(1f, 1f, 1f, 1f), true);
-            var iconTexture = artAtlas != null ? artAtlas.IconAtlasTexture : null;
-            if (iconTexture == null)
-            {
-                DestroyUnityObject(iconMaterial);
-                iconMaterial = null;
-                return;
-            }
-
-            if (iconMaterial != null && iconMaterial.mainTexture == iconTexture)
-            {
-                return;
-            }
-
-            DestroyUnityObject(iconMaterial);
-            iconMaterial = CreateTexturedMaterial(iconTexture);
+            var settings = RenderSettings;
+            EnsureMaterialInstance(
+                ref vertexColorMaterial,
+                ref vertexColorMaterialTemplateSource,
+                settings.VertexColorMaterialTemplate,
+                null,
+                nameof(settings.VertexColorMaterialTemplate));
+            EnsureTexturedMaterial(
+                ref biomeMaterial,
+                ref biomeMaterialTemplateSource,
+                settings.BiomeMaterialTemplate,
+                artAtlas != null ? artAtlas.BiomeAtlasTexture : null,
+                nameof(settings.BiomeMaterialTemplate));
+            EnsureTexturedMaterial(
+                ref iconMaterial,
+                ref iconMaterialTemplateSource,
+                settings.IconMaterialTemplate,
+                artAtlas != null ? artAtlas.IconAtlasTexture : null,
+                nameof(settings.IconMaterialTemplate));
+            EnsureTexturedMaterial(
+                ref settlementFeatureMaterial,
+                ref settlementFeatureMaterialTemplateSource,
+                settings.IconMaterialTemplate,
+                artAtlas != null ? artAtlas.SettlementFeatureAtlasTexture : null,
+                nameof(settings.IconMaterialTemplate));
+            EnsureTexturedMaterial(
+                ref activityFeatureMaterial,
+                ref activityFeatureMaterialTemplateSource,
+                settings.IconMaterialTemplate,
+                artAtlas != null ? artAtlas.ActivityFeatureAtlasTexture : null,
+                nameof(settings.IconMaterialTemplate));
         }
 
-        private static Material CreateMaterial(Color color, bool vertexColor)
+        private static void EnsureMaterialInstance(
+            ref Material material,
+            ref Material templateSource,
+            Material template,
+            Texture texture,
+            string templateName)
         {
-            var shader = vertexColor
-                ? FindShader("MercLord/GlobalMapVertexColor", "Sprites/Default", "Universal Render Pipeline/Unlit", "Standard")
-                : FindShader("Sprites/Default", "Universal Render Pipeline/Unlit", "Standard");
-            var material = new Material(shader)
+            if (template == null)
             {
-                color = color,
+                DestroyUnityObject(material);
+                material = null;
+                templateSource = null;
+                throw new InvalidOperationException($"GlobalMapProceduralRenderSettings requires {templateName}.");
+            }
+
+            if (material != null && templateSource == template && MaterialTextureMatches(material, texture))
+            {
+                return;
+            }
+
+            DestroyUnityObject(material);
+            material = CreateRuntimeMaterial(template, texture);
+            templateSource = template;
+        }
+
+        private static void EnsureTexturedMaterial(
+            ref Material material,
+            ref Material templateSource,
+            Material template,
+            Texture texture,
+            string templateName)
+        {
+            if (texture == null)
+            {
+                DestroyUnityObject(material);
+                material = null;
+                templateSource = null;
+                return;
+            }
+
+            EnsureMaterialInstance(ref material, ref templateSource, template, texture, templateName);
+        }
+
+        private static Material CreateRuntimeMaterial(Material template, Texture texture)
+        {
+            var material = new Material(template)
+            {
                 hideFlags = GetGeneratedHideFlags()
             };
-            if (material.HasProperty("_BaseColor"))
+            if (texture != null)
             {
-                material.SetColor("_BaseColor", color);
+                ApplyMaterialTexture(material, texture);
             }
 
             SetEditorDirty(material);
             return material;
         }
 
-        private static Material CreateTexturedMaterial(Texture texture)
+        private static bool MaterialTextureMatches(Material material, Texture texture)
         {
-            var material = CreateMaterial(Color.white, false);
-            material.mainTexture = texture;
-            if (material.HasProperty("_MainTex"))
+            if (texture == null)
             {
-                material.SetTexture("_MainTex", texture);
+                return true;
             }
 
+            return (material.HasProperty("_BaseMap") && material.GetTexture("_BaseMap") == texture) ||
+                   (material.HasProperty("_MainTex") && material.GetTexture("_MainTex") == texture);
+        }
+
+        private static void ApplyMaterialTexture(Material material, Texture texture)
+        {
             if (material.HasProperty("_BaseMap"))
             {
                 material.SetTexture("_BaseMap", texture);
             }
 
-            SetEditorDirty(material);
-            return material;
+            if (material.HasProperty("_MainTex"))
+            {
+                material.SetTexture("_MainTex", texture);
+            }
         }
 
         private static Mesh CreateMesh(string meshName, List<Vector3> vertices, List<Color> colors, List<int> triangles)
@@ -1508,8 +1905,8 @@ namespace MercLord.Global.Rendering
             return mesh;
         }
 
-        private GameObject CreateGeneratedMeshObject(
-            string objectName,
+        private void SetGeneratedMesh(
+            GlobalMapMeshLayer layer,
             string meshName,
             List<Vector3> vertices,
             List<Vector3> normals,
@@ -1519,7 +1916,8 @@ namespace MercLord.Global.Rendering
         {
             if (vertices.Count == 0 || triangles.Count == 0)
             {
-                return null;
+                ClearLayer(layer);
+                return;
             }
 
             var mesh = CreateMesh(meshName, vertices, colors, triangles);
@@ -1529,20 +1927,11 @@ namespace MercLord.Global.Rendering
             }
 
             mesh.RecalculateBounds();
-
-            var meshObject = CreateGeneratedGameObject(objectName);
-            meshObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = meshObject.AddComponent<MeshFilter>();
-            var meshRenderer = meshObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = material;
-            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
-            return meshObject;
+            SetGeneratedMesh(layer, mesh, material);
         }
 
-        private GameObject CreateGeneratedTexturedMeshObject(
-            string objectName,
+        private void SetGeneratedTexturedMesh(
+            GlobalMapMeshLayer layer,
             string meshName,
             List<Vector3> vertices,
             List<Vector3> normals,
@@ -1553,7 +1942,8 @@ namespace MercLord.Global.Rendering
         {
             if (vertices.Count == 0 || triangles.Count == 0)
             {
-                return null;
+                ClearLayer(layer);
+                return;
             }
 
             var mesh = CreateMesh(meshName, vertices, colors, triangles);
@@ -1568,64 +1958,44 @@ namespace MercLord.Global.Rendering
             }
 
             mesh.RecalculateBounds();
-
-            var meshObject = CreateGeneratedGameObject(objectName);
-            meshObject.transform.SetParent(generatedRoot, false);
-            var meshFilter = meshObject.AddComponent<MeshFilter>();
-            var meshRenderer = meshObject.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterial = material;
-            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
-            return meshObject;
+            SetGeneratedMesh(layer, mesh, material);
         }
 
-        private void ApplyMarkerIconsVisibility()
+        private static void SetGeneratedMesh(GlobalMapMeshLayer layer, Mesh mesh, Material material)
         {
-            if (markerIconsObject == null)
+            if (layer == null)
             {
-                markerIconsObject = FindGeneratedMarkerIconsObject();
+                DestroyUnityObject(mesh);
+                throw new InvalidOperationException("ProceduralGlobalMapRenderer has an unassigned mesh layer.");
             }
 
-            if (markerIconsObject != null && markerIconsObject.activeSelf != markerIconsVisible)
+            layer.SetMesh(mesh, material);
+        }
+
+        private static void ClearLayer(GlobalMapMeshLayer layer)
+        {
+            if (layer != null)
             {
-                markerIconsObject.SetActive(markerIconsVisible);
-                SetEditorDirty(markerIconsObject);
+                layer.Clear();
             }
         }
 
-        private GameObject FindGeneratedMarkerIconsObject()
+        private void ApplyMapPointLayerVisibility()
         {
-            if (generatedRoot == null)
+            if (markerIconsLayer != null)
             {
-                var existingRoot = transform.Find(GeneratedRootName);
-                if (existingRoot == null)
-                {
-                    return null;
-                }
-
-                generatedRoot = existingRoot;
-                generatedRoot.gameObject.hideFlags = GetGeneratedHideFlags();
+                markerIconsLayer.SetVisible(markerIconsVisible && markerIconsLayer.HasMesh);
             }
 
-            var markerIcons = generatedRoot.Find(MarkerIconsObjectName);
-            if (markerIcons != null)
+            if (settlementFeaturesLayer != null)
             {
-                return markerIcons.gameObject;
+                settlementFeaturesLayer.SetVisible(featureTexturesVisible && settlementFeaturesLayer.HasMesh);
             }
 
-            var legacyMarkers = generatedRoot.Find(LegacyMarkersObjectName);
-            return legacyMarkers != null ? legacyMarkers.gameObject : null;
-        }
-
-        private static GameObject CreateGeneratedGameObject(string objectName)
-        {
-            var gameObject = new GameObject(objectName)
+            if (activityFeaturesLayer != null)
             {
-                hideFlags = GetGeneratedHideFlags()
-            };
-            SetEditorDirty(gameObject);
-            return gameObject;
+                activityFeaturesLayer.SetVisible(featureTexturesVisible && activityFeaturesLayer.HasMesh);
+            }
         }
 
         private static HideFlags GetGeneratedHideFlags()
@@ -1641,20 +2011,6 @@ namespace MercLord.Global.Rendering
                 UnityEditor.EditorUtility.SetDirty(target);
             }
 #endif
-        }
-
-        private static Shader FindShader(params string[] names)
-        {
-            for (var nameIndex = 0; nameIndex < names.Length; nameIndex++)
-            {
-                var shader = Shader.Find(names[nameIndex]);
-                if (shader != null)
-                {
-                    return shader;
-                }
-            }
-
-            return Shader.Find("Standard");
         }
 
         private static Vector3 ToVector(WorldSpherePoint point)
@@ -1809,54 +2165,6 @@ namespace MercLord.Global.Rendering
             return cellId >= 0 && cellId < cellCount;
         }
 
-        private void DestroyGeneratedObject(GameObject target)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            var meshFilters = target.GetComponentsInChildren<MeshFilter>();
-            for (var meshIndex = 0; meshIndex < meshFilters.Length; meshIndex++)
-            {
-                DestroyUnityObject(meshFilters[meshIndex].sharedMesh);
-            }
-
-            var meshRenderers = target.GetComponentsInChildren<MeshRenderer>();
-            var materials = new HashSet<Material>();
-            for (var rendererIndex = 0; rendererIndex < meshRenderers.Length; rendererIndex++)
-            {
-                var sharedMaterials = meshRenderers[rendererIndex].sharedMaterials;
-                for (var materialIndex = 0; materialIndex < sharedMaterials.Length; materialIndex++)
-                {
-                    var material = sharedMaterials[materialIndex];
-                    if (material != null &&
-                        material != vertexColorMaterial &&
-                        material != iconMaterial &&
-                        !IsPersistentAsset(material))
-                    {
-                        materials.Add(material);
-                    }
-                }
-            }
-
-            foreach (var material in materials)
-            {
-                DestroyUnityObject(material);
-            }
-
-            DestroyUnityObject(target);
-        }
-
-        private static bool IsPersistentAsset(UnityEngine.Object target)
-        {
-#if UNITY_EDITOR
-            return !Application.isPlaying && UnityEditor.EditorUtility.IsPersistent(target);
-#else
-            return false;
-#endif
-        }
-
         private static void DestroyUnityObject(UnityEngine.Object target)
         {
             if (target == null)
@@ -1879,7 +2187,15 @@ namespace MercLord.Global.Rendering
             if (Application.isPlaying)
             {
                 DestroyUnityObject(vertexColorMaterial);
+                DestroyUnityObject(biomeMaterial);
                 DestroyUnityObject(iconMaterial);
+                DestroyUnityObject(settlementFeatureMaterial);
+                DestroyUnityObject(activityFeatureMaterial);
+                vertexColorMaterialTemplateSource = null;
+                biomeMaterialTemplateSource = null;
+                iconMaterialTemplateSource = null;
+                settlementFeatureMaterialTemplateSource = null;
+                activityFeatureMaterialTemplateSource = null;
             }
         }
 
@@ -1889,5 +2205,6 @@ namespace MercLord.Global.Rendering
             public float Height;
             public Color Color;
         }
+
     }
 }

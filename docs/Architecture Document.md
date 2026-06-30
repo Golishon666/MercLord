@@ -168,7 +168,33 @@ BattleScene загружается только на время боя.
 - AddressablesService
 - SceneLoader
 
-## 3.2 GlobalScene
+`GameLifetimeScope` is a persistent `DontDestroyOnLoad` root. It owns the
+project-level container and must survive `LoadSceneMode.Single` transitions.
+`UnitySceneLoader` loads scenes with this root enqueued as the parent scope, so
+scene lifetime scopes can receive shared game services without service locators.
+
+BootstrapScene invalid if:
+
+- no `GameLifetimeScope`
+- `GameLifetimeScope` has no `ConfigDatabase`
+- BootstrapScene is not the first enabled build scene
+
+## 3.2 MainMenuScene
+
+Содержит:
+
+- MainMenuRoot prefab instance
+- MainMenuLifetimeScope
+- MainMenuSceneRoot
+- TextMeshPro menu text
+- New Game button
+- Main Menu Camera
+- Directional Light
+
+MainMenu UI is prefab-based. The scene may instance the prefab as an authored
+scene asset, but runtime code must not build menu hierarchy manually.
+
+## 3.3 GlobalScene
 
 Содержит:
 
@@ -179,7 +205,7 @@ BattleScene загружается только на время боя.
 - GlobalCamera
 - GlobalUI
 
-## 3.3 BattleScene
+## 3.4 BattleScene
 
 Содержит:
 
@@ -191,7 +217,7 @@ BattleScene загружается только на время боя.
 - View Pools
 - BattleWorld runner
 
-## 3.4 LoadingScene
+## 3.5 LoadingScene
 
 Опционально.
 
@@ -374,6 +400,14 @@ InputConfig optional
 
 Текущая модель влияния `Influence4` поддерживает до 4 активных слотов влияния.
 Это ограничение модели влияния, а не параметр интерфейса генерации.
+
+The foundation database lives at `Assets/Game/Configs/ConfigDatabase.asset`.
+It references individual config assets under `Assets/Game/Configs/Foundation`.
+
+Every `ScriptableObject` config class must live in a C# file whose name matches
+the class name, for example `FactionConfig.cs`, `WeaponConfig.cs` and
+`BattleSimulationConfig.cs`. This is required for stable Unity `MonoScript`
+links and valid `.asset` serialization.
 
 ## 6.3 FactionConfig
 
@@ -582,6 +616,11 @@ Prefab хранит:
 - enter/exit points
 - DOTween animation settings
 - UI layout settings
+- mesh layer objects and their renderer settings
+
+Процедурная геометрия не отменяет prefab rule. Если система генерирует `Mesh`,
+то GameObject/Component hierarchy всё равно живёт в prefab, а runtime-код только
+записывает mesh data в заранее настроенный слой.
 
 ## 7.3 Gameplay Configs vs Prefabs
 
@@ -745,6 +784,7 @@ public sealed class WorldModel
 
     public FactionData[] Factions;
     public SettlementData[] Settlements;
+    public WorldActivityData[] Activities;
     public ArmyData[] Armies;
 
     public PlayerGlobalData Player;
@@ -775,6 +815,80 @@ public struct WorldCell
     public bool IsPassable;
 }
 ~~~
+
+## 10.2.1 Settlement Feature Data
+
+Multi-cell cities are stored as gameplay data first. Rendering reads this data but never decides city size, district type, or valid cells.
+
+~~~csharp
+public enum SettlementLevel
+{
+    Level1 = 1,
+    Level2 = 2,
+    Level3 = 3,
+    Level4 = 4,
+    Level5 = 5
+}
+
+public enum SettlementDistrictType
+{
+    Core,
+    Residential,
+    Industrial,
+    Farming,
+    Military,
+    Science,
+    Trade,
+    Administrative,
+    PortAdjacent,
+    Mining
+}
+
+public struct SettlementData
+{
+    public int Id;
+    public int FactionId;
+    public int CellId;
+    public SettlementLevel Level;
+    public int CenterCellId;
+    public int[] OccupiedCellIds;
+    public SettlementDistrictData[] Districts;
+}
+
+public struct SettlementDistrictData
+{
+    public SettlementDistrictType Type;
+    public int CellId;
+}
+~~~
+
+`CellId` remains a compatibility alias for `CenterCellId`. Every cell in `OccupiedCellIds` must store the same `SettlementId` in `WorldCell`.
+
+Settlement footprint sizes:
+
+- `Level1` = 1 cell
+- `Level2` = 3 cells
+- `Level3` = 5 cells
+- `Level4` = 7 cells
+- `Level5` = 9 cells
+
+Only a faction capital may use `Level5`, and each faction may have one `Level5` settlement at most.
+
+Footprint generation rule:
+
+- start from `CenterCellId`;
+- collect the nearest valid neighboring cells until the required size is reached;
+- valid cells must be passable land and must not be `Ocean`, `Coast` / shallow water, or impassable mountains;
+- no occupied cell may already belong to another settlement;
+- if the requested footprint cannot be satisfied, generation must downgrade the level or choose a different center before saving the settlement.
+
+District assignment rule:
+
+- the center cell is always `Core`;
+- remaining cells are assigned district types from gameplay context and nearby terrain;
+- `PortAdjacent` requires adjacency to water but must still occupy passable land;
+- `Mining` prefers mountains or high resource cells;
+- `Farming` prefers fertile passable cells.
 
 ## 10.3 Influence4
 
@@ -1421,6 +1535,93 @@ View не может:
 `IWorldCellLayout` отделяет способ раскладки сот от presenter. Текущая
 configured grid layout является заменяемой стратегией для раннего global view.
 
+Процедурная spherical global map использует отдельный prefab contract:
+
+- `GlobalMapProceduralLayers.prefab` содержит hierarchy слоёв процедурной карты
+- scene instance этого prefab называется `Generated Map`
+- root prefab instance имеет `GlobalMapProceduralRenderSettings`
+- каждый render layer имеет `GlobalMapMeshLayer`, `MeshFilter`, `MeshRenderer`
+- обязательные слои: starfield, biome underlay, terrain, rivers, roads, marker icons, feature textures, selection
+- `ProceduralGlobalMapRenderer` не создаёт GameObject hierarchy и не добавляет components
+- renderer только генерирует `Mesh` и передаёт mesh/material в готовый `GlobalMapMeshLayer`
+- `GlobalMapSceneBootstrap` хранит явные ссылки на renderer, debug controller, cell info controller, camera controller, tooltip, Cinemachine orbital follow и input camera
+- global map controllers не ищут camera/renderer/orbital follow через runtime `Find*`; все scene references задаются в сцене или prefab instance
+- mesh detail, marker sizes, offsets, fallback shapes, material templates, colors, visibility и shadow settings принадлежат prefab settings
+- biome colors берутся из `BiomeConfig.MapColor`; prefab colors используются только как editor-preview fallback
+- faction marker colors берутся из `FactionConfig.Color`; prefab colors используются только как fallback для отсутствующего config
+
+Zoom-dependent map point rendering:
+
+- far zoom renders settlements and activities through `IconSprites` on the marker icons layer;
+- near zoom fades marker icons out and renders settlements and activities through physical `FeatureSprites` on the feature textures layer;
+- cities use `SettlementLevel` and `SettlementDistrictData` to select city-level and district feature sprites;
+- activities use their current point type to select the matching near zoom feature sprite;
+- armies remain marker views unless a later design explicitly gives them near zoom physical features;
+- rendering may tint only faction accents; it must not recolor the whole city texture into a flat faction blob.
+
+`GlobalMapArtAtlas` future extension:
+
+~~~csharp
+public enum GlobalMapFeatureSpriteId
+{
+    CapitalCore,
+    CityCore,
+    TownCore,
+    VillageCore,
+    HarborCityDistrict,
+    RiverCityDistrict,
+    MountainOutpost,
+    ForestStation,
+    ExpeditionCamp,
+    HostileCamp,
+    LogisticsStop,
+    Mine,
+    AncientRuins,
+    IndustrialRuins,
+    ResearchMonolith,
+    Watchtower,
+    CaveLair,
+    AnomalyMarker,
+    ToxicZone,
+    BiomassResource,
+    OreResource,
+    FoodResource,
+    WaterResource,
+    RelicCache,
+    Mission,
+    Battle,
+    Danger,
+    Trade,
+    BlueOutpost,
+    PurpleOutpost,
+    RedOutpost,
+    NeutralPoint,
+    DistrictCore,
+    DistrictResidential,
+    DistrictIndustrial,
+    DistrictFarming,
+    DistrictMilitary,
+    DistrictScience,
+    DistrictTrade,
+    DistrictAdministrative,
+    DistrictPortAdjacent,
+    DistrictMining
+}
+~~~
+
+`GlobalMapProceduralRenderSettings` owns zoom visual thresholds and sizes:
+
+- `markerIconFadeOutStartZoom`
+- `markerIconFadeOutEndZoom`
+- `featureTextureFadeInStartZoom`
+- `featureTextureFadeInEndZoom`
+- `featureTextureSurfaceOffset`
+- `cityFeatureSizeByLevel`
+- `districtFeatureSize`
+- `activityFeatureSize`
+
+The camera provides zoom state. The renderer consumes normalized zoom values and updates mesh alpha/visibility only; it does not mutate `WorldModel`.
+
 ## 21.3 InfantryView
 
 ~~~csharp
@@ -1570,6 +1771,9 @@ Input systems создают intent/components.
 - orbit/rotation around planet
 - zoom
 - selection raycast
+- normalized zoom value for map point visual LOD
+
+Global camera owns input and zoom state only. It may expose normalized zoom to `ProceduralGlobalMapRenderer`, but it must not decide settlement level, activity type, footprint validity, or district assignment.
 
 ## 25.2 Battle Camera
 
@@ -1839,6 +2043,12 @@ Debug commands must not be part of release UI.
 
 ## 32.1 Config Validation
 
+Project ConfigDatabase invalid if:
+
+- missing `Assets/Game/Configs/ConfigDatabase.asset`
+- any referenced config asset has a missing `MonoScript`
+- `ConfigValidator` reports any error
+
 CultureConfig invalid if:
 
 - StartingCellId is outside generated world cells
@@ -1939,6 +2149,39 @@ Global map prefab invalid if:
 - cell visual scale <= 0
 - influence overlay alpha is outside 0..1
 
+Procedural global map layers prefab invalid if:
+
+- no root for generated map layers
+- missing `GlobalMapProceduralRenderSettings`
+- missing vertex-color/biome/icon material templates on `GlobalMapProceduralRenderSettings`
+- missing `GlobalMapMeshLayer` on any required layer
+- missing `MeshFilter` or `MeshRenderer` on any required layer
+- renderer does not reference starfield/biome/terrain/river/road/marker/selection layers
+- renderer does not reference `GlobalMapProceduralRenderSettings`
+- procedural fallback palette does not cover all supported `BiomeType` values
+- runtime code creates visual GameObjects instead of filling prefab-backed layers
+
+Global scene root invalid if:
+
+- `GlobalMapSceneBootstrap` is missing renderer/debug/cell-info/camera/tooltip references
+- `GlobalMapSceneBootstrap` is missing Cinemachine orbital follow or input camera reference
+- cell info controller is missing input camera reference
+- camera controller is missing orbital follow or procedural renderer reference
+
+BootstrapScene invalid if:
+
+- no `GameLifetimeScope`
+- `GameLifetimeScope` is missing `ConfigDatabase`
+- BootstrapScene is not first enabled build scene
+
+MainMenuScene invalid if:
+
+- no `MainMenuLifetimeScope`
+- `MainMenuLifetimeScope` is missing `MainMenuSceneRoot`
+- `MainMenuSceneRoot` is missing New Game button
+- New Game button has no TextMeshProUGUI label
+- menu prefab uses legacy Unity UI Text
+
 Infantry prefab invalid if:
 
 - no InfantryView
@@ -1958,6 +2201,23 @@ Vehicle prefab invalid if:
 - no MuzzlePoint
 - no EnterPoint
 - no ExitPoint
+
+BattleViewCatalog invalid if:
+
+- cell size <= 0
+- no unit/vehicle view prefabs are registered
+- view entry address is empty
+- view entry address is duplicated
+- view entry prefab is missing
+- view entry prefab has no supported battle unit view component
+
+BattleScene invalid if:
+
+- no `BattleLifetimeScope`
+- `BattleLifetimeScope` is missing `BattleSceneRoot`
+- `BattleLifetimeScope` is missing `BattleViewCatalog`
+- `BattleLifetimeScope` is missing `BattleInputSource`
+- `BattleSceneRoot` is missing unit view root
 
 Text prefab invalid if:
 
@@ -2062,6 +2322,16 @@ Gameplay map generation is complete before visual Tilemap generation when
 - UI uses TextMeshProUGUI
 - world labels use TextMeshPro
 - floating damage text uses TMP prefab
+
+## 34.9 GlobalMapFeatureLayer Done When
+
+- settlement footprint cell count matches `SettlementLevel`
+- no settlement footprint occupies `Ocean`, `Coast` / shallow water, impassable cells, or impassable mountains
+- each faction has at most one `Level5` settlement, and only its capital may be `Level5`
+- every occupied settlement cell stores the same `SettlementId`
+- far zoom renders point icons through `IconSprites`
+- near zoom fades icons out and renders physical feature textures through `FeatureSprites`
+- renderer changes only visual mesh/material state and never mutates `WorldModel`
 
 # 35. Prototype Technical Roadmap
 

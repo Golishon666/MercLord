@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411b71ac06506a54c8245bc3b0291bdc, type: 3}
+  m_Name: Biome_Mountains
+  m_EditorClassIdentifier: Assembly-CSharp::MercLord.Game.Configs.BiomeConfig
+  id: 4008
+  displayName: Mountains
+  biomeType: 7
+  mapColor: {r: 0.34, g: 0.34, b: 0.36, a: 1}
+  tileSetId: 3008
+  isPassableByDefault: 1
